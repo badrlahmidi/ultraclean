@@ -2,14 +2,16 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
-{
-    public function up(): void
+{    public function up(): void
     {
-        // Ajouter le palier "platinum" à l'enum loyalty_tier
-        DB::statement("ALTER TABLE clients MODIFY loyalty_tier ENUM('standard','silver','gold','platinum') NOT NULL DEFAULT 'standard'");
+        // Ajouter le palier "platinum" à l'enum loyalty_tier (MySQL uniquement — SQLite gère ENUM comme TEXT)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE clients MODIFY loyalty_tier ENUM('standard','silver','gold','platinum') NOT NULL DEFAULT 'standard'");
+        }
 
         // Historique des transactions fidélité
         Schema::create('loyalty_transactions', function (Blueprint $table) {
@@ -25,11 +27,11 @@ return new class extends Migration
 
             $table->index(['client_id', 'created_at']);
         });
-    }
-
-    public function down(): void
+    }    public function down(): void
     {
         Schema::dropIfExists('loyalty_transactions');
-        DB::statement("ALTER TABLE clients MODIFY loyalty_tier ENUM('standard','silver','gold') NOT NULL DEFAULT 'standard'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE clients MODIFY loyalty_tier ENUM('standard','silver','gold') NOT NULL DEFAULT 'standard'");
+        }
     }
 };

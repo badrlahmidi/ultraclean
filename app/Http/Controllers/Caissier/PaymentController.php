@@ -19,13 +19,11 @@ class PaymentController extends Controller
             ! $ticket->canTransitionTo(Ticket::STATUS_PAID),
             422,
             "Ce ticket ne peut pas être encaissé (statut actuel : {$ticket->status})."
-        );
-
-        $request->validate([
+        );        $request->validate([
             'method'              => ['required', 'in:cash,card,mobile,mixed'],
-            'amount_cash_cents'   => ['required_if:method,cash,mixed',   'integer', 'min:0'],
-            'amount_card_cents'   => ['required_if:method,card,mixed',   'integer', 'min:0'],
-            'amount_mobile_cents' => ['required_if:method,mobile,mixed', 'integer', 'min:0'],
+            'amount_cash_cents'   => ['nullable', 'integer', 'min:0'],
+            'amount_card_cents'   => ['nullable', 'integer', 'min:0'],
+            'amount_mobile_cents' => ['nullable', 'integer', 'min:0'],
             'note'                => ['nullable', 'string', 'max:255'],
         ]);
 
