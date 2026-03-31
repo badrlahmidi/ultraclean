@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Impression ticket ── */
+@media print {
+
+    #app-sidebar,
+    #app-topbar,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    #app-main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Show the receipt only */
+    #print-receipt {
+        display: block !important;
+    }
+
+    /* Ticket receipt page setup */
+    @page {
+        margin: 8mm;
+        size: 80mm auto;
+    }
+
+    .shadow-sm,
+    .shadow {
+        box-shadow: none !important;
+    }
+}
