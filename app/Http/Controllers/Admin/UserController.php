@@ -53,6 +53,28 @@ class UserController extends Controller
         return back()->with('success', "Utilisateur « {$user->name} » créé.");
     }
 
+    public function show(User $user): Response
+    {
+        $activity = ActivityLog::where('user_id', $user->id)
+            ->latest()
+            ->limit(30)
+            ->get(['id', 'action', 'subject_type', 'properties', 'ip_address', 'created_at']);
+
+        $ticketStats = \Illuminate\Support\Facades\DB::table('tickets')
+            ->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id);
+            })
+            ->selectRaw("COUNT(*) as total, SUM(CASE WHEN status = 'paid' THEN total_cents ELSE 0 END) as revenue")
+            ->first();
+
+        return Inertia::render('Admin/Users/Show', [
+            'user'        => $user,
+            'activity'    => $activity,
+            'ticketStats' => $ticketStats,
+        ]);
+    }
+
     public function update(Request $request, User $user): RedirectResponse
     {
         $request->validate([

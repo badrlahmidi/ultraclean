@@ -55,6 +55,22 @@ class TicketFactory extends Factory
             'completed_at' => now()->subMinutes(5),
             'paid_at'      => now(),
         ]);
+    }    public function paused(): static
+    {
+        return $this->state([
+            'status'     => Ticket::STATUS_PAUSED,
+            'started_at' => now()->subMinutes(10),
+            'paused_at'  => now(),
+        ]);
+    }
+
+    public function partial(int $balanceDueCents = 5000): static
+    {
+        return $this->state([
+            'status'            => Ticket::STATUS_PARTIAL,
+            'balance_due_cents' => $balanceDueCents,
+            'started_at'        => now()->subMinutes(30),
+        ]);
     }
 
     public function withTotal(int $cents): static

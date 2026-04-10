@@ -6,12 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
-{
-    protected $fillable = [
+{    protected $fillable = [
         'ticket_id',
         'amount_cents',
         'method',
-        'amount_cash_cents', 'amount_card_cents', 'amount_mobile_cents',
+        'amount_cash_cents', 'amount_card_cents', 'amount_mobile_cents', 'amount_wire_cents',
         'change_given_cents',
         'reference',
         'processed_by',
@@ -22,6 +21,7 @@ class Payment extends Model
         'amount_cash_cents'   => 'integer',
         'amount_card_cents'   => 'integer',
         'amount_mobile_cents' => 'integer',
+        'amount_wire_cents'   => 'integer',
         'change_given_cents'  => 'integer',
     ];
 
@@ -37,9 +37,7 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'processed_by');
     }
 
-    // ---------- Helpers ----------
-
-    /** Valide la cohérence des montants mixtes. */
+    // ---------- Helpers ----------    /** Valide la cohérence des montants mixtes. */
     public function validateAmounts(): bool
     {
         if ($this->method !== 'mixed') {
@@ -47,7 +45,8 @@ class Payment extends Model
         }
         $sum = $this->amount_cash_cents
              + $this->amount_card_cents
-             + $this->amount_mobile_cents;
+             + $this->amount_mobile_cents
+             + $this->amount_wire_cents;   // BUG-FIX: wire was missing from mixed sum
         return $sum === $this->amount_cents;
     }
 

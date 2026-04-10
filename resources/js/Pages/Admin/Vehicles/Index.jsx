@@ -76,7 +76,7 @@ function BrandModal({ brand, onClose }) {
 
                 <form onSubmit={submit} className="p-5 space-y-5">
                     {/* Zone logo cliquable */}
-                    <div className="flex flex-col items-center gap-2 cursor-pointer select-none" onClick={() => fileRef.current.click()}>
+                    <div className="flex flex-col items-center gap-2 cursor-pointer select-none" role="button" tabIndex={0} onClick={() => fileRef.current.click()} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileRef.current.click(); } }}>
                         <div className={clsx(
                             'w-28 h-28 rounded-2xl border-2 border-dashed flex items-center justify-center bg-gray-50 overflow-hidden transition-colors',
                             'hover:border-blue-400 hover:bg-blue-50',
@@ -354,7 +354,9 @@ function ImportModal({ onClose }) {
                         brand_name, model_name, model_name, …
                     </p>
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
-                        onClick={() => fileRef.current.click()}>
+                        role="button" tabIndex={0}
+                        onClick={() => fileRef.current.click()}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileRef.current.click(); } }}>
                         {file
                             ? <div className="flex items-center justify-center gap-2 text-green-600"><Check size={15} /><span className="text-sm">{file.name}</span></div>
                             : <><Upload size={22} className="mx-auto text-gray-300 mb-1" /><p className="text-sm text-gray-400">Choisir un fichier CSV</p></>

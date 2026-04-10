@@ -41,7 +41,7 @@ export default function ClientDrawer({ selected, onSelect, onClose }) {
     return (
         <>
             {/* Backdrop */}
-            <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
+            <div className="fixed inset-0 z-40 bg-black/40" role="button" tabIndex={-1} aria-label="Fermer" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
 
             {/* Drawer */}
             <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-white shadow-2xl flex flex-col">
@@ -157,7 +157,7 @@ function QuickAddForm({ initialName, onSaved, onCancel }) {
         setSaving(true);
         setErrors({});
         try {
-            const res = await axios.post(route('caissier.clients.quickStore'), form);
+            const res = await axios.post(route('caissier.clients.quick'), form);
             onSaved(res.data);
         } catch (err) {
             if (err.response?.status === 422) setErrors(err.response.data.errors ?? {});

@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { router, usePage, Link } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { Gift, Users, Star, TrendingUp, Search, ChevronRight, Award } from 'lucide-react';
 import clsx from 'clsx';

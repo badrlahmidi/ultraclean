@@ -1,15 +1,14 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { router, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { Users, Search, Plus, ChevronRight, Star, Pencil, Trash2, X } from 'lucide-react';
+import { Users, Search, ChevronRight, Pencil, Trash2, X } from 'lucide-react';
 import clsx from 'clsx';
-import { formatMAD } from '@/utils/format';
 import toast from 'react-hot-toast';
 
 const TIER_CONFIG = {
     standard: { label: 'Standard', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300', dot: 'bg-gray-400' },
-    silver:   { label: 'Silver',   color: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200', dot: 'bg-slate-400' },
-    gold:     { label: 'Gold',     color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', dot: 'bg-amber-400' },
+    silver: { label: 'Silver', color: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200', dot: 'bg-slate-400' },
+    gold: { label: 'Gold', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', dot: 'bg-amber-400' },
     platinum: { label: 'Platinum', color: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', dot: 'bg-violet-500' },
 };
 
@@ -44,8 +43,9 @@ function EditModal({ client, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="button" tabIndex={-1} aria-label="Fermer" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
                     <h3 className="font-bold text-gray-900 dark:text-white">Modifier le client</h3>
                     <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"><X size={18} /></button>

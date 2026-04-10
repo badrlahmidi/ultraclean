@@ -1,7 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { formatMAD, formatDateTime } from '@/utils/format';
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, Clock, TrendingUp, Ticket, AlertTriangle, CheckCircle2, History } from 'lucide-react';
+import { ArrowLeft, Clock, Ticket, AlertTriangle, CheckCircle2, History, Printer } from 'lucide-react';
 import clsx from 'clsx';
 
 function DiffBadge({ cents }) {
@@ -112,6 +112,7 @@ export default function ShiftHistory({ shifts, totals }) {
                                         <th className="text-right px-4 py-3">Caisse fermée</th>
                                         <th className="text-right px-4 py-3">Attendu</th>
                                         <th className="text-center px-4 py-3">Écart</th>
+                                        <th className="text-center px-4 py-3">Rapport</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -143,6 +144,15 @@ export default function ShiftHistory({ shifts, totals }) {
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <DiffBadge cents={s.difference_cents} />
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <Link
+                                                    href={route('caissier.shift.rapport', s.id)}
+                                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                                    title="Imprimer le rapport Z"
+                                                >
+                                                    <Printer size={12} /> Z
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))}

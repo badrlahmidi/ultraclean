@@ -62,9 +62,9 @@ class StockProduct extends Model
 
     /**
      * Add stock (movement type: in).
-     */
-    public function addStock(float $qty, string $note = null, string $reference = null, int $userId = null): StockMovement
+     */    public function addStock(float $qty, string $note = null, string $reference = null, int $userId = null): StockMovement
     {
+        /** @var StockMovement $movement */
         $movement = $this->movements()->create([
             'type'      => 'in',
             'quantity'  => $qty,
@@ -80,9 +80,9 @@ class StockProduct extends Model
 
     /**
      * Consume stock (movement type: out). Allows negative stock with a warning.
-     */
-    public function consumeStock(float $qty, string $reference = null, int $ticketId = null, int $userId = null): StockMovement
+     */    public function consumeStock(float $qty, string $reference = null, int $ticketId = null, int $userId = null): StockMovement
     {
+        /** @var StockMovement $movement */
         $movement = $this->movements()->create([
             'type'      => 'out',
             'quantity'  => $qty,
@@ -99,11 +99,11 @@ class StockProduct extends Model
 
     /**
      * Adjust stock to exact value (movement type: adjustment).
-     */
-    public function adjustStock(float $newQty, string $note = null, int $userId = null): StockMovement
+     */    public function adjustStock(float $newQty, string $note = null, int $userId = null): StockMovement
     {
         $diff = $newQty - $this->current_quantity;
 
+        /** @var StockMovement $movement */
         $movement = $this->movements()->create([
             'type'      => 'adjustment',
             'quantity'  => abs($diff),

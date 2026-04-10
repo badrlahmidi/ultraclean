@@ -5,17 +5,27 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "lint": "eslint resources/js --ext .jsx,.js",
+        "lint:fix": "eslint resources/js --ext .jsx,.js --fix",
         "dev:all": "concurrently --names \"PHP,REVERB,VITE\" --prefix-colors \"green,magenta,yellow\" \"php artisan serve\" \"php artisan reverb:start\" \"vite\""
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.11.1",
+        "@eslint/js": "^10.0.1",
         "@headlessui/react": "^2.0.0",
         "@inertiajs/react": "^2.0.0",
+        "@playwright/test": "^1.59.1",
         "@tailwindcss/forms": "^0.5.3",
-        "@tailwindcss/vite": "^4.0.0",
         "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.12",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
+        "eslint": "^9.39.4",
+        "eslint-plugin-jsx-a11y": "^6.10.2",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "eslint-plugin-unused-imports": "^4.4.1",
+        "globals": "^17.4.0",
         "laravel-vite-plugin": "^2.0.0",
         "postcss": "^8.4.31",
         "react": "^18.2.0",
@@ -34,7 +44,9 @@
         "pusher-js": "^8.4.3",
         "qrcode.react": "^4.2.0",
         "react-hot-toast": "^2.6.0",
+        "react-is": "^18.3.1",
         "recharts": "^3.8.1",
-        "tailwind-merge": "^3.5.0"
+        "tailwind-merge": "^3.5.0",
+        "zod": "^4.3.6"
     }
 }

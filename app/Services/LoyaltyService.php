@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Client;
 use App\Models\LoyaltyTransaction;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\DB;
 
 class LoyaltyService
 {
@@ -52,48 +53,56 @@ class LoyaltyService
         if ($totalVisits >= 25) return 50 - $totalVisits;
         if ($totalVisits >= 10) return 25 - $totalVisits;
         return 10 - $totalVisits;
-    }
-
-    // ─── Effets de bord ──────────────────────────────────────────────────────
+    }    // ─── Effets de bord ──────────────────────────────────────────────────────
 
     /**
      * Crédite les points d'un client après le paiement d'un ticket.
      * Met à jour total_visits, total_spent_cents, last_visit_date et le palier.
+     *
+     * ARCH-ITEM-2.7 (F-06): All writes are wrapped in a DB::transaction with a
+     * row-level lock (lockForUpdate) so concurrent payments for the same client
+     * cannot produce a lost-update or inconsistent loyalty state.
      */
     public static function awardPoints(Client $client, Ticket $ticket, ?int $operatorId = null): int
     {
-        $points = self::calculatePointsEarned($ticket->total_cents);
+        return DB::transaction(function () use ($client, $ticket, $operatorId) {
+            // Re-fetch with a write lock to prevent concurrent update races.
+            $locked = Client::lockForUpdate()->find($client->id);
+            if (! $locked) {
+                return 0;
+            }
 
-        // Mise à jour des stats client
-        $client->increment('total_visits');
-        $client->increment('total_spent_cents', $ticket->total_cents);
-        $client->update(['last_visit_date' => $ticket->paid_at?->toDateString() ?? now()->toDateString()]);
+            $points = self::calculatePointsEarned($ticket->total_cents);
 
-        if ($points > 0) {
-            $newBalance = $client->loyalty_points + $points;
-            $client->increment('loyalty_points', $points);
+            // Atomic increments — avoids lost-update under concurrent transactions.
+            $locked->increment('total_visits');
+            $locked->increment('total_spent_cents', $ticket->total_cents);
+            $locked->update(['last_visit_date' => $ticket->paid_at?->toDateString() ?? now()->toDateString()]);
 
-            LoyaltyTransaction::create([
-                'client_id'     => $client->id,
-                'ticket_id'     => $ticket->id,
-                'created_by'    => $operatorId,
-                'type'          => 'earned',
-                'points'        => $points,
-                'balance_after' => $newBalance,
-                'note'          => "Ticket {$ticket->ticket_number}",
-            ]);
+            if ($points > 0) {
+                $locked->increment('loyalty_points', $points);
+                $locked->refresh();
 
-            $ticket->update(['loyalty_points_earned' => $points]);
-        }
+                LoyaltyTransaction::create([
+                    'client_id'     => $locked->id,
+                    'ticket_id'     => $ticket->id,
+                    'created_by'    => $operatorId,
+                    'type'          => 'earned',
+                    'points'        => $points,
+                    'balance_after' => $locked->loyalty_points,
+                    'note'          => "Ticket {$ticket->ticket_number}",
+                ]);
 
-        // Mise à niveau du palier
-        $freshVisits = $client->fresh()->total_visits;
-        $newTier = self::calculateTier($freshVisits);
-        if ($newTier !== $client->loyalty_tier) {
-            $client->update(['loyalty_tier' => $newTier]);
-        }
+                $ticket->update(['loyalty_points_earned' => $points]);
+            }
 
-        return $points;
+            // Recalculate tier after all increments.
+            $locked->refresh();
+            $newTier = self::calculateTier($locked->total_visits);
+            if ($newTier !== $locked->loyalty_tier) {
+                $locked->update(['loyalty_tier' => $newTier]);
+            }        return $points;
+        });
     }
 
     /**

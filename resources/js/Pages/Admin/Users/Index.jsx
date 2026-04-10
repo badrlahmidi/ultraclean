@@ -30,7 +30,7 @@ function UserModal({ user, roles, onClose }) {
 
     const submit = (e) => {
         e.preventDefault();
-        const action = isEdit
+        const _action = isEdit
             ? router.put(route('admin.users.update', user.id), form, {
                 onError: setErrors, onSuccess: onClose,
             })

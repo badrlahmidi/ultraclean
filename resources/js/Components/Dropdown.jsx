@@ -23,12 +23,16 @@ const Trigger = ({ children }) => {
 
     return (
         <>
-            <div onClick={toggleOpen}>{children}</div>
+            <div role="button" tabIndex={0} onClick={toggleOpen} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleOpen(); } }}>{children}</div>
 
             {open && (
                 <div
                     className="fixed inset-0 z-40"
+                    role="button"
+                    tabIndex={-1}
+                    aria-label="Close dropdown"
                     onClick={() => setOpen(false)}
+                    onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
                 ></div>
             )}
         </>
@@ -70,7 +74,10 @@ const Content = ({
             >
                 <div
                     className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    role="menu"
+                    tabIndex={-1}
                     onClick={() => setOpen(false)}
+                    onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
                 >
                     <div
                         className={

@@ -24,7 +24,9 @@ class StockProductTest extends TestCase
         $this->assertInstanceOf(StockMovement::class, $movement);
         $this->assertEquals('in', $movement->type);
         $this->assertEquals(5.0, $movement->quantity);
-        $this->assertEquals('REF-001', $movement->reference);        $this->assertEquals(15.0, $product->fresh()->current_quantity);
+        $this->assertEquals('REF-001', $movement->reference);
+
+        $this->assertEquals(15.0, $product->fresh()->current_quantity);
     }
 
     public function test_add_stock_with_user_id_stores_it(): void

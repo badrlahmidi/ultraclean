@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Caissier;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ClientQuickStoreRequest;
+use App\Http\Resources\ClientResource;
 use App\Models\ActivityLog;
 use App\Models\Client;
 use App\Services\LoyaltyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,9 +42,7 @@ class ClientController extends Controller
             'filters' => $request->only('search', 'tier'),
             'tiers'   => LoyaltyService::TIERS,
         ]);
-    }
-
-    public function show(Client $client): Response
+    }    public function show(Client $client): Response
     {
         $client->loadCount('tickets');
         $recentTickets = $client->tickets()
@@ -54,18 +54,20 @@ class ClientController extends Controller
         $transactions = $client->loyaltyTransactions()
             ->with('ticket:id,ticket_number')
             ->take(15)
-            ->get();
-
-        return Inertia::render('Caissier/Clients/Show', [
-            'client'       => $client,
+            ->get();        // URL de checkin QR (signed route — prevents ULID enumeration)
+        $checkinUrl = $client->ulid
+            ? URL::signedRoute('client.checkin', ['ulid' => $client->ulid])
+            : null;return Inertia::render('Caissier/Clients/Show', [
+            'client'       => new ClientResource($client),
             'recentTickets'=> $recentTickets,
             'transactions' => $transactions,
             'tiers'        => LoyaltyService::TIERS,
+            'checkinUrl'   => $checkinUrl,
         ]);
-    }
-
-    public function store(Request $request): RedirectResponse
+    }    public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Client::class);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:100'],
             'phone'         => ['nullable', 'string', 'max:20'],
@@ -78,10 +80,10 @@ class ClientController extends Controller
         ActivityLog::log('client.created', $client, ['name' => $client->name]);
 
         return back()->with('success', "Client {$client->name} créé.");
-    }
-
-    public function update(Request $request, Client $client): RedirectResponse
+    }    public function update(Request $request, Client $client): RedirectResponse
     {
+        $this->authorize('update', $client);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:100'],
             'phone'         => ['nullable', 'string', 'max:20'],
@@ -95,10 +97,10 @@ class ClientController extends Controller
         ActivityLog::log('client.updated', $client, ['name' => $client->name]);
 
         return back()->with('success', 'Client mis à jour.');
-    }
-
-    public function destroy(Client $client): RedirectResponse
+    }    public function destroy(Client $client): RedirectResponse
     {
+        $this->authorize('delete', $client);
+
         $client->delete();
         ActivityLog::log('client.deleted', $client, ['name' => $client->name]);
 
@@ -122,15 +124,13 @@ class ClientController extends Controller
             ->get(['id', 'name', 'phone', 'is_company', 'ice', 'vehicle_plate', 'loyalty_tier', 'loyalty_points']);
 
         return response()->json($clients);
-    }
-
-    public function quickStore(ClientQuickStoreRequest $request): JsonResponse
+    }    public function quickStore(ClientQuickStoreRequest $request): JsonResponse
     {
         $client = Client::create([
             'name'       => $request->name,
-            'phone'      => $request->phone,
+            'phone'      => $request->filled('phone') ? $request->phone : null,
             'is_company' => (bool) $request->is_company,
-            'ice'        => $request->is_company ? $request->ice : null,
+            'ice'        => ($request->is_company && $request->filled('ice')) ? $request->ice : null,
         ]);
 
         ActivityLog::log('client.created', $client, [
@@ -147,5 +147,29 @@ class ClientController extends Controller
             'loyalty_tier' => $client->loyalty_tier,
             'loyalty_points'=> $client->loyalty_points,
         ], 201);
+    }    /**
+     * Checkin rapide via QR code.
+     *
+     * Redirige vers le formulaire de création de ticket
+     * avec les champs client et plaque préremplis.
+     * Accessible sans authentification (lien QR scannable en accueil).
+     */    public function checkin(string $ulid): RedirectResponse
+    {
+        // Validate ULID format to prevent enumeration via error messages
+        if (! preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $ulid)) {
+            abort(404);
+        }
+
+        $client = Client::where('ulid', $ulid)->first();
+
+        if (! $client || ! $client->is_active) {
+            // Generic response to prevent client existence enumeration
+            abort(404);
+        }
+
+        return redirect()->route('caissier.tickets.create', [
+            'prefill_client' => $client->id,
+            'prefill_plate'  => $client->vehicle_plate,
+        ]);
     }
 }

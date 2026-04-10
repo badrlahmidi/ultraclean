@@ -3,7 +3,7 @@ import { router, usePage } from '@inertiajs/react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Trophy, Ticket, Timer, TrendingUp, Car } from 'lucide-react';
 import clsx from 'clsx';
-import { formatMAD, formatDateTime } from '@/utils/format';
+import { formatMAD } from '@/utils/format';
 
 const PERIODS = [
     { key: 'today', label: "Aujourd'hui" },

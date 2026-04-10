@@ -6,9 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreServiceRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }    public function rules(): array
+    /** Only admins can manage services. */
+    public function authorize(): bool
     {
-        $id = $this->route('service')?->id;
+        return $this->user()?->isAdmin() ?? false;
+    }    public function rules(): array
+    {
+        /** @var \App\Models\Service|null $service */
+        $service = $this->route('service');
+        $id = $service?->id;
 
         return [
             'name'             => ['required', 'string', 'max:100', "unique:services,name,{$id}"],

@@ -1,7 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { router, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, Gift, Star, TrendingUp, Calendar, Ticket, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Gift, Star, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { formatMAD } from '@/utils/format';
 

@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\DB;
 
 class PromotionController extends Controller
 {
@@ -87,15 +88,50 @@ class PromotionController extends Controller
             return response()->json(['valid' => false, 'message' => 'Code invalide ou expiré.'], 422);
         }
 
-        $discount = $promo->computeDiscount((int) $request->amount);
-
-        return response()->json([
+        $discount = $promo->computeDiscount((int) $request->amount);        return response()->json([
             'valid'        => true,
             'promotion_id' => $promo->id,
             'label'        => $promo->label ?? $promo->code,
             'type'         => $promo->type,
             'value'        => $promo->value,
             'discount'     => $discount,
+        ]);
+    }
+
+    public function show(Promotion $promotion): Response
+    {
+        $promotion->loadCount('usages');
+
+        // Tickets qui ont utilisé ce code
+        $usages = $promotion->usages()
+            ->with('ticket:id,ticket_number,total_cents,status,created_at')
+            ->latest()
+            ->take(50)
+            ->get();
+
+        // CA généré par cette promo (tickets payés)
+        $revenueGenerated = $usages
+            ->filter(fn($u) => $u->ticket?->status === 'paid')
+            ->sum(fn($u) => $u->ticket->total_cents);        // Tendance mensuelle — utilisations par mois (6 mois)
+        $monthExpr = DB::getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', created_at)"
+            : "DATE_FORMAT(created_at, '%Y-%m')";
+
+        $monthlyUsage = DB::table('promotion_usages')
+            ->where('promotion_id', $promotion->id)
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->selectRaw("{$monthExpr} as month, COUNT(*) as count")
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();y('month')
+            ->orderBy('month')
+            ->get();
+
+        return Inertia::render('Admin/Promotions/Show', [
+            'promotion'        => $promotion,
+            'usages'           => $usages,
+            'revenueGenerated' => $revenueGenerated,
+            'monthlyUsage'     => $monthlyUsage,
         ]);
     }
 }

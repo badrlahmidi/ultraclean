@@ -37,13 +37,13 @@ class ActivityLog extends Model
      * @param Model|null $subject     Entité concernée
      * @param array $properties       Données contextuelles (before/after…)
      * @param int|null $userId        Remplace l'utilisateur connecté si fourni
-     */
-    public static function log(
+     */    public static function log(
         string $action,
         ?Model $subject = null,
         array  $properties = [],
         ?int   $userId = null
     ): static {
+        /** @var static */
         return static::create([
             'user_id'      => $userId ?? auth()->id(),
             'action'       => $action,

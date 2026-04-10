@@ -3,7 +3,7 @@ import { useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     Package, Plus, Pencil, Trash2, TrendingDown, TrendingUp,
-    AlertTriangle, RefreshCw, History, ChevronDown, X, Filter,
+    AlertTriangle, RefreshCw, History, X, Filter,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -194,7 +194,7 @@ function Modal({ open, title, onClose, children }) {
     if (!open) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" role="button" tabIndex={-1} aria-label="Fermer" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
             <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
                 <div className="flex items-center justify-between mb-5">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>

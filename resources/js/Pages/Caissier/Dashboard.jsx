@@ -1,7 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Ticket, TrendingUp, Clock, CheckCircle, Plus, ChevronRight } from 'lucide-react';
-import { formatMAD, formatDateTime } from '@/utils/format';
+import { Ticket, TrendingUp, Clock, CheckCircle, Plus, ChevronRight, Banknote, Wallet } from 'lucide-react';
+import { formatMAD } from '@/utils/format';
 import StatusBadge from '@/Components/StatusBadge';
 
 function StatCard({ label, value, icon: Icon, color }) {
@@ -46,6 +46,30 @@ export default function CaissierDashboard({ stats, recentTickets, activeShift })
                     <StatCard label="En cours" value={stats.tickets_wip} icon={CheckCircle} color="bg-purple-500" />
                 </div>
 
+                {/* Stats shift (si shift actif) */}
+                {activeShift && stats.revenue_shift !== null && (
+                    <div className="grid grid-cols-3 gap-3">
+                        <StatCard
+                            label="CA du shift"
+                            value={formatMAD(stats.revenue_shift)}
+                            icon={Banknote}
+                            color="bg-teal-500"
+                        />
+                        <StatCard
+                            label="Dépenses shift"
+                            value={formatMAD(stats.expenses_shift)}
+                            icon={Banknote}
+                            color="bg-orange-400"
+                        />
+                        <StatCard
+                            label="CA net shift"
+                            value={formatMAD(stats.net_shift)}
+                            icon={Wallet}
+                            color={stats.net_shift >= 0 ? 'bg-green-500' : 'bg-red-500'}
+                        />
+                    </div>
+                )}
+
                 {/* Actions rapides */}
                 <div className="flex gap-3">
                     <Link href={route('caissier.tickets.create')}
@@ -69,7 +93,7 @@ export default function CaissierDashboard({ stats, recentTickets, activeShift })
                     </div>
                     <div className="divide-y divide-gray-50">
                         {recentTickets.map(t => (
-                            <Link key={t.id} href={route('caissier.tickets.show', t.id)}
+                            <Link key={t.id} href={route('caissier.tickets.show', t.ulid)}
                                 className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors">
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-800">{t.ticket_number}</p>

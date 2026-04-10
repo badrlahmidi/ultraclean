@@ -31,7 +31,7 @@ class PaymentControllerTest extends TestCase
     {
         $ticket = Ticket::factory()->completed()->create(['created_by' => $this->caissier->id]);
 
-        $response = $this->post(route('caissier.tickets.pay', $ticket->id), [
+        $response = $this->post(route('caissier.tickets.pay', $ticket), [
             'method' => 'cash',
         ]);
 
@@ -47,11 +47,11 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
-        $response->assertRedirect(route('caissier.tickets.show', $ticket->id));
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
         $response->assertSessionHas('success');
 
         $this->assertEquals('paid', $ticket->fresh()->status);
@@ -65,7 +65,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
@@ -86,7 +86,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'card']
         );
 
@@ -107,7 +107,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             [
                 'method'            => 'mixed',
                 'amount_cash_cents' => 6000,
@@ -133,7 +133,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             [
                 'method'            => 'mixed',
                 'amount_cash_cents' => 3000,
@@ -143,23 +143,42 @@ class PaymentControllerTest extends TestCase
 
         $response->assertSessionHasErrors('amount');
         $this->assertEquals('completed', $ticket->fresh()->status);
-    }
+    }    // ─── Wrong status ────────────────────────────────────────────────────
 
-    // ─── Wrong status ────────────────────────────────────────────────────
-
-    public function test_cannot_pay_pending_ticket(): void
+    /**
+     * Cash (full) payment on a pending ticket is now valid — it acts as a
+     * pre-payment (is_prepaid=true) and transitions the ticket to `paid`.
+     * Sprint 5: pending → paid is an allowed transition.
+     */
+    public function test_cash_payment_on_pending_ticket_transitions_to_paid(): void
     {
-        $ticket = Ticket::factory()->pending()->create([
+        $ticket = Ticket::factory()->pending()->withTotal(5000)->create([
             'created_by' => $this->caissier->id,
         ]);
 
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'cash']
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+        $this->assertEquals('paid', $ticket->fresh()->status);
+        $this->assertTrue((bool) $ticket->fresh()->is_prepaid);
+    }
+
+    public function test_cannot_pay_paused_ticket(): void
+    {
+        $ticket = Ticket::factory()->paused()->withTotal(5000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
         $response->assertStatus(422);
-        $this->assertEquals('pending', $ticket->fresh()->status);
+        $this->assertEquals('paused', $ticket->fresh()->status);
     }
 
     public function test_cannot_pay_already_paid_ticket(): void
@@ -169,11 +188,286 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
         $response->assertStatus(422);
+    }
+
+    // ─── Sprint 5: advance partial (TC-13) ──────────────────────────────
+
+    /**
+     * TC-13 — Advance < total → STATUS_PARTIAL with balance_due tracked.
+     * BUG-2 regression test.
+     */
+    public function test_advance_partial_transitions_ticket_to_partial(): void
+    {
+        $ticket = Ticket::factory()->pending()->withTotal(20000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'advance',
+                'amount_cash_cents' => 8000,
+            ]
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+        $response->assertSessionHas('success');
+
+        $fresh = $ticket->fresh();
+        $this->assertEquals('partial', $fresh->status);
+        $this->assertEquals(12000, $fresh->balance_due_cents);
+        $this->assertFalse((bool) $fresh->is_prepaid);
+
+        $this->assertDatabaseHas('payments', [
+            'ticket_id'   => $ticket->id,
+            'method'      => 'advance',
+            'amount_cents' => 8000,
+        ]);
+    }
+
+    /**
+     * TC-13 flash — advance partial success message contains remaining balance.
+     */
+    public function test_advance_partial_success_message_contains_balance_due(): void
+    {
+        $ticket = Ticket::factory()->pending()->withTotal(20000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'advance',
+                'amount_cash_cents' => 8000,
+            ]
+        );
+
+        $response->assertSessionHas('success', fn ($msg) =>
+            str_contains($msg, '80.00 MAD') && str_contains($msg, '120.00 MAD')
+        );
+    }
+
+    /**
+     * TC-11 — Advance >= total on pending ticket → STATUS_PAID, is_prepaid=true.
+     */
+    public function test_advance_full_prepayment_transitions_to_paid(): void
+    {
+        $ticket = Ticket::factory()->pending()->withTotal(10000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'advance',
+                'amount_cash_cents' => 10000,
+            ]
+        );
+
+        $fresh = $ticket->fresh();
+        $this->assertEquals('paid', $fresh->status);
+        $this->assertTrue((bool) $fresh->is_prepaid);
+        $this->assertEquals(0, $fresh->balance_due_cents);
+    }
+
+    /**
+     * TC-15 — Advance = 0 is rejected with validation error.
+     */
+    public function test_advance_zero_amount_returns_validation_error(): void
+    {
+        $ticket = Ticket::factory()->pending()->withTotal(10000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'advance',
+                'amount_cash_cents' => 0,
+            ]
+        );
+
+        $response->assertSessionHasErrors('amount');
+        $this->assertEquals('pending', $ticket->fresh()->status);
+    }
+
+    // ─── Sprint 5: credit / deferred (TC-18) ────────────────────────────
+
+    /**
+     * TC-18 — Credit on completed ticket → STATUS_PARTIAL with full balance_due.
+     * BUG-3 regression test.
+     */
+    public function test_credit_transitions_ticket_to_partial_with_full_balance_due(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(18000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'credit']
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+
+        $fresh = $ticket->fresh();
+        $this->assertEquals('partial', $fresh->status);
+        $this->assertEquals(18000, $fresh->balance_due_cents);
+        $this->assertFalse((bool) $fresh->is_prepaid);
+
+        $this->assertDatabaseHas('payments', [
+            'ticket_id'    => $ticket->id,
+            'method'       => 'credit',
+            'amount_cents' => 0,
+        ]);
+    }
+
+    /**
+     * TC-18 flash — credit success message mentions balance and deferred wording.
+     */
+    public function test_credit_success_message_mentions_deferred_balance(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(18000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'credit']
+        );
+
+        $response->assertSessionHas('success', fn ($msg) =>
+            str_contains($msg, '180.00 MAD') && str_contains($msg, 'différé')
+        );
+    }
+
+    /**
+     * TC-35 — Credit does NOT award loyalty points even if client is attached.
+     */
+    public function test_credit_does_not_award_loyalty_points(): void
+    {
+        $client = Client::factory()->create(['loyalty_points' => 0]);
+
+        $ticket = Ticket::factory()->completed()->withTotal(10000)->create([
+            'created_by' => $this->caissier->id,
+            'client_id'  => $client->id,
+        ]);
+
+        $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'credit']
+        );
+
+        $this->assertEquals(0, $client->fresh()->loyalty_points);
+        $this->assertDatabaseCount('loyalty_transactions', 0);
+    }
+
+    // ─── Sprint 5: balance collection on partial ticket (TC-16) ─────────
+
+    /**
+     * TC-16 — Collecting the remaining balance on a partial ticket → STATUS_PAID.
+     */
+    public function test_balance_collection_on_partial_ticket_transitions_to_paid(): void
+    {
+        // Ticket already partial with 12000 balance remaining (advance of 8000 on 20000 total)
+        $ticket = Ticket::factory()->partial(12000)->withTotal(20000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'cash',
+                'amount_cash_cents' => 12000,
+            ]
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+
+        $fresh = $ticket->fresh();
+        $this->assertEquals('paid', $fresh->status);
+        $this->assertEquals(0, $fresh->balance_due_cents);
+        $this->assertNotNull($fresh->paid_at);
+    }
+
+    /**
+     * TC-16 — requiredCents for balance collection is balance_due, not total.
+     * Paying exactly balance_due (12000) on a 20000 ticket must succeed.
+     */
+    public function test_balance_collection_requires_only_balance_due_not_total(): void
+    {
+        $ticket = Ticket::factory()->partial(12000)->withTotal(20000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        // Paying 12000 (= balance_due) on a 20000 ticket — would fail if total were checked
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'cash',
+                'amount_cash_cents' => 12000,
+            ]
+        );
+
+        $response->assertRedirect();
+        $this->assertEquals('paid', $ticket->fresh()->status);
+    }
+
+    /**
+     * TC-16 — Loyalty is awarded at balance collection (final paid), not at advance.
+     */
+    public function test_loyalty_awarded_at_balance_collection_not_at_advance(): void
+    {
+        $client = Client::factory()->create(['loyalty_points' => 0]);
+
+        $ticket = Ticket::factory()->partial(12000)->withTotal(20000)->create([
+            'created_by' => $this->caissier->id,
+            'client_id'  => $client->id,
+        ]);
+
+        $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'cash',
+                'amount_cash_cents' => 12000,
+            ]
+        );
+
+        // Points > 0 — loyalty awarded on final collection (20 pts for 200 MAD total)
+        $this->assertGreaterThan(0, $client->fresh()->loyalty_points);
+        $this->assertDatabaseHas('loyalty_transactions', [
+            'client_id' => $client->id,
+            'ticket_id' => $ticket->id,
+            'type'      => 'earned',
+        ]);
+    }
+
+    /**
+     * TC-22 — Double credit on an already-partial ticket is blocked at the
+     * backend: a credit on a partial ticket resolves to STATUS_PAID (amount=0),
+     * but the UI must prevent this. Verify the backend behaviour matches the spec.
+     */
+    public function test_credit_on_partial_ticket_resolves_to_paid_not_double_partial(): void
+    {
+        $ticket = Ticket::factory()->partial(18000)->withTotal(18000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        // Backend: partial → resolveTargetStatus returns STATUS_PAID regardless of method
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'credit']
+        );
+
+        // Should redirect (not 422), and ticket ends up paid (backend closes it)
+        $response->assertRedirect();
+        $this->assertEquals('paid', $ticket->fresh()->status);
+        $this->assertEquals(0, $ticket->fresh()->balance_due_cents);
     }
 
     // ─── Change calculation ───────────────────────────────────────────────
@@ -186,7 +480,7 @@ class PaymentControllerTest extends TestCase
 
         // Pay 60 MAD for a 50 MAD ticket → 10 MAD change
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             [
                 'method'            => 'mixed',
                 'amount_cash_cents' => 6000,
@@ -219,7 +513,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
@@ -237,7 +531,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
@@ -258,11 +552,11 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
-        $response->assertSessionHas('success', fn ($msg) => str_contains($msg, '+10 points'));
+        $response->assertSessionHas('success', fn ($msg) => str_contains($msg, '+10 pts fidélité'));
     }
 
     public function test_payment_without_client_awards_no_points(): void
@@ -273,7 +567,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 
@@ -293,7 +587,7 @@ class PaymentControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->caissier)->post(
-            route('caissier.tickets.pay', $ticket->id),
+            route('caissier.tickets.pay', $ticket),
             ['method' => 'cash']
         );
 

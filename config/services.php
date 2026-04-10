@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    // Webhook paiement async (clé secrète HMAC-SHA256)
+    'payment_webhook_secret' => env('PAYMENT_WEBHOOK_SECRET'),
+
 ];

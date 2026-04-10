@@ -61,6 +61,14 @@ class StockController extends Controller
             'lowStockCount' => StockProduct::lowStock()->count(),
             'filters'      => $request->only(['q', 'category', 'low_stock']),
         ]);
+    }    /**
+     * Page de création dédiée.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('Admin/Stock/Create', [
+            'categories' => StockProduct::distinct()->pluck('category'),
+        ]);
     }
 
     /**
@@ -139,16 +147,17 @@ class StockController extends Controller
         $data = $request->validate([
             'type'      => 'required|in:in,out,adjustment',
             'quantity'  => 'required|numeric|min:0.001',
-            'note'      => 'nullable|string|max:255',
-            'reference' => 'nullable|string|max:100',
+            'note'      => 'nullable|string|max:255',            'reference' => 'nullable|string|max:100',
         ]);
 
-        $qty = (float) $data['quantity'];
+        $qty  = (float) $data['quantity'];
+        $type = (string) $data['type'];
 
-        match ($data['type']) {
+        match ($type) {
             'in'         => $stock->addStock($qty, $data['note'] ?? null, $data['reference'] ?? null, auth()->id()),
             'out'        => $stock->consumeStock($qty, $data['reference'] ?? null, null, auth()->id()),
             'adjustment' => $stock->adjustStock($qty, $data['note'] ?? null, auth()->id()),
+            default      => throw new \InvalidArgumentException("Unknown movement type: {$type}"),
         };
 
         return back()->with('success', 'Mouvement enregistré.');

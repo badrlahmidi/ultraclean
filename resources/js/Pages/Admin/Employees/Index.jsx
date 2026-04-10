@@ -6,7 +6,7 @@ import {
     BarChart, Bar, LineChart, Line, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { Users, Ticket, Clock, TrendingUp, Award, Zap } from 'lucide-react';
+import { Ticket, Clock, TrendingUp, Award, Zap } from 'lucide-react';
 import clsx from 'clsx';
 
 const PERIODS = [

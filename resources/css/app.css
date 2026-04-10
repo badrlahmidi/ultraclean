@@ -28,10 +28,12 @@
         display: block !important;
     }
 
-    /* Ticket receipt page setup */
+    /* @page is injected dynamically by the PrintReceipt component
+       based on the receipt_paper_width setting (58mm or 80mm).
+       This fallback handles edge cases (e.g. direct Ctrl+P with no JS). */
     @page {
-        margin: 8mm;
         size: 80mm auto;
+        margin: 2mm 3mm;
     }
 
     .shadow-sm,

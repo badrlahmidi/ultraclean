@@ -17,7 +17,10 @@ class TicketAssigned implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        $channels = [new PrivateChannel('admin')];
+        $channels = [
+            new PrivateChannel('admin'),
+            new PrivateChannel('laveur'),  // nouveau ticket visible dans la file
+        ];
 
         if ($this->ticket->assigned_to) {
             $channels[] = new PrivateChannel("user.{$this->ticket->assigned_to}");
@@ -34,13 +37,15 @@ class TicketAssigned implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'id'            => $this->ticket->id,
-            'ticket_number' => $this->ticket->ticket_number,
-            'vehicle_plate' => $this->ticket->vehicle_plate,
-            'vehicle_brand' => $this->ticket->vehicle_brand,
-            'assigned_to'   => $this->ticket->assigned_to,
-            'status'        => $this->ticket->status,
-            'created_at'    => $this->ticket->created_at?->toISOString(),
+            'id'                 => $this->ticket->id,
+            'ticket_number'      => $this->ticket->ticket_number,
+            'vehicle_plate'      => $this->ticket->vehicle_plate,
+            'vehicle_brand'      => $this->ticket->vehicle_brand,
+            'assigned_to'        => $this->ticket->assigned_to,
+            'status'             => $this->ticket->status,
+            'due_at'             => $this->ticket->due_at?->toISOString(),
+            'ticket_template_id' => $this->ticket->ticket_template_id,
+            'created_at'         => $this->ticket->created_at?->toISOString(),
         ];
     }
 }

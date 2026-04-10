@@ -2,11 +2,11 @@ import AppLayout from '@/Layouts/AppLayout';
 import { formatMAD, formatDateTime } from '@/utils/format';
 import { Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { Clock, DollarSign, TrendingUp, AlertTriangle, CheckCircle2, XCircle, History } from 'lucide-react';
+import { AlertTriangle, Banknote, CheckCircle2, CreditCard, History, Printer, Smartphone, Wifi } from 'lucide-react';
 import clsx from 'clsx';
 
-/* ─── Carte statistique ─── */
-function StatCard({ label, value, sub, color = 'slate', icon: Icon }) {
+/* ─── Carte statistique (reserved for future use) ─── */
+function _StatCard({ label, value, sub, color = 'slate', icon: Icon }) {
     const colors = {
         slate: 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
         green: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800',
@@ -43,11 +43,12 @@ function OpenShiftForm() {
 
             <form onSubmit={submit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="opening_cash" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Fond de caisse initial
                     </label>
                     <div className="relative">
                         <input
+                            id="opening_cash"
                             type="number" min={0} step={100}
                             value={data.opening_cash_cents}
                             onChange={e => setData('opening_cash_cents', parseInt(e.target.value) || 0)}
@@ -72,8 +73,89 @@ function OpenShiftForm() {
     );
 }
 
+/* ─── Breakdown récap par mode de paiement ─── */
+function PaymentBreakdown({ bd }) {
+    if (!bd) return null;
+
+    const cash = bd.cash_cents ?? 0;
+    const card = bd.card_cents ?? 0;
+    const mobile = bd.mobile_cents ?? 0;
+    const wire = bd.wire_cents ?? 0;
+    const credit = bd.credit_deferred_cents ?? 0;
+    const creditCount = bd.credit_count ?? 0;
+    const totalCollected = cash + card + mobile + wire;
+    const pendingBalance = bd.pending_balance_cents ?? 0;
+
+    const rows = [
+        { icon: Banknote, label: 'Espèces', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20', value: cash },
+        { icon: CreditCard, label: 'Carte', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', value: card },
+        { icon: Smartphone, label: 'Mobile', color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-900/20', value: mobile },
+        { icon: Wifi, label: 'Virement', color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-900/20', value: wire },
+    ].filter(r => r.value > 0);
+
+    return (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-5">
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">
+                Récap encaissements du shift
+            </h3>
+
+            {rows.length === 0 && !creditCount ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+                    Aucun paiement enregistré pour ce shift.
+                </p>
+            ) : (
+                <div className="space-y-2">
+                    {rows.map(({ icon: Icon, label, color, bg, value }) => (
+                        <div key={label} className={clsx('flex items-center justify-between rounded-xl px-4 py-2.5', bg)}>
+                            <div className="flex items-center gap-2.5">
+                                <Icon size={15} className={color} />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+                            </div>
+                            <span className={clsx('text-sm font-bold', color)}>{formatMAD(value)}</span>
+                        </div>
+                    ))}
+
+                    {/* Crédit différé — hors encaissement */}
+                    {creditCount > 0 && (
+                        <div className="flex items-center justify-between rounded-xl px-4 py-2.5 bg-orange-50 dark:bg-orange-900/20">
+                            <div className="flex items-center gap-2.5">
+                                <AlertTriangle size={15} className="text-orange-500 dark:text-orange-400" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Crédit différé
+                                    <span className="ml-1.5 text-xs bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 rounded-full px-1.5 py-0.5">
+                                        {creditCount}×
+                                    </span>
+                                </span>
+                            </div>
+                            <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                                {formatMAD(credit)} <span className="text-xs font-normal opacity-70">non encaissé</span>
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Soldes en attente (tickets partial) */}
+                    {pendingBalance > 0 && (
+                        <div className="flex items-center justify-between rounded-xl px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Soldes restants (partial)</span>
+                            <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                                {formatMAD(pendingBalance)} <span className="text-xs font-normal opacity-70">dû</span>
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Total collecté */}
+                    <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-gray-900 dark:bg-slate-600 mt-1">
+                        <span className="text-sm font-bold text-white">Total encaissé</span>
+                        <span className="text-base font-bold text-white">{formatMAD(totalCollected)}</span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 /* ─── Formulaire fermeture shift ─── */
-function CloseShiftForm({ shift }) {
+function CloseShiftForm({ shift, breakdown }) {
     const [confirm, setConfirm] = useState(false);
     const { data, setData, patch, processing, errors } = useForm({
         closing_cash_cents: 0,
@@ -109,6 +191,9 @@ function CloseShiftForm({ shift }) {
             </div>
         </div>
 
+        {/* Récap paiements */}
+        <PaymentBreakdown bd={breakdown} />
+
         {/* Formulaire clôture */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">Clôturer le shift</h2>
@@ -116,11 +201,12 @@ function CloseShiftForm({ shift }) {
             {!confirm ? (
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="closing_cash" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Caisse réelle comptée
                         </label>
                         <div className="relative">
                             <input
+                                id="closing_cash"
                                 type="number" min={0} step={100}
                                 value={data.closing_cash_cents}
                                 onChange={e => setData('closing_cash_cents', parseInt(e.target.value) || 0)}
@@ -128,7 +214,14 @@ function CloseShiftForm({ shift }) {
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">MAD</span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">= {formatMAD(data.closing_cash_cents)}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            = {formatMAD(data.closing_cash_cents)}
+                            {breakdown && (
+                                <span className="ml-2 text-gray-300 dark:text-gray-500">
+                                    · Espèces attendues : {formatMAD((shift.opening_cash_cents ?? 0) + (breakdown.cash_cents ?? 0))}
+                                </span>
+                            )}
+                        </p>
                         {errors.closing_cash_cents && <p className="text-xs text-red-600 mt-1">{errors.closing_cash_cents}</p>}
                     </div>
 
@@ -160,6 +253,28 @@ function CloseShiftForm({ shift }) {
                             <p className="text-gray-500 dark:text-gray-400 text-xs">Comptée</p>
                             <p className="font-bold text-gray-900 dark:text-white">{formatMAD(data.closing_cash_cents)}</p>
                         </div>
+                        {breakdown && (breakdown.card_cents > 0 || breakdown.mobile_cents > 0 || breakdown.wire_cents > 0) && (
+                            <>
+                                {breakdown.card_cents > 0 && (
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
+                                        <p className="text-blue-500 dark:text-blue-400 text-xs">Carte</p>
+                                        <p className="font-bold text-blue-700 dark:text-blue-300">{formatMAD(breakdown.card_cents)}</p>
+                                    </div>
+                                )}
+                                {breakdown.mobile_cents > 0 && (
+                                    <div className="bg-violet-50 dark:bg-violet-900/20 rounded-xl p-3">
+                                        <p className="text-violet-500 dark:text-violet-400 text-xs">Mobile</p>
+                                        <p className="font-bold text-violet-700 dark:text-violet-300">{formatMAD(breakdown.mobile_cents)}</p>
+                                    </div>
+                                )}
+                                {breakdown.wire_cents > 0 && (
+                                    <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-3">
+                                        <p className="text-cyan-500 dark:text-cyan-400 text-xs">Virement</p>
+                                        <p className="font-bold text-cyan-700 dark:text-cyan-300">{formatMAD(breakdown.wire_cents)}</p>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
 
                     {diff !== 0 && (
@@ -194,7 +309,7 @@ function CloseShiftForm({ shift }) {
 }
 
 /* ─── Page principale ─── */
-export default function ShiftIndex({ activeShift, history }) {
+export default function ShiftIndex({ activeShift, paymentBreakdown, history }) {
     return (
         <AppLayout title="Shift / Caisse">
             <div className="max-w-2xl mx-auto space-y-8">
@@ -213,7 +328,7 @@ export default function ShiftIndex({ activeShift, history }) {
                 </div>
 
                 {activeShift ? (
-                    <CloseShiftForm shift={activeShift} />
+                    <CloseShiftForm shift={activeShift} breakdown={paymentBreakdown} />
                 ) : (
                     <OpenShiftForm />
                 )}
@@ -242,14 +357,23 @@ export default function ShiftIndex({ activeShift, history }) {
                                                 Fond : {formatMAD(s.opening_cash_cents)} · Clôture : {formatMAD(s.closing_cash_cents)}
                                             </p>
                                         </div>
-                                        <span className={clsx(
-                                            'flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full',
-                                            diff === 0 ? 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300' :
-                                                diff > 0 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400' :
-                                                    'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
-                                        )}>
-                                            {diff === 0 ? 'OK' : diff > 0 ? `+${formatMAD(diff)}` : formatMAD(diff)}
-                                        </span>
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            <span className={clsx(
+                                                'text-xs font-bold px-2.5 py-1 rounded-full',
+                                                diff === 0 ? 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300' :
+                                                    diff > 0 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400' :
+                                                        'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
+                                            )}>
+                                                {diff === 0 ? 'OK' : diff > 0 ? `+${formatMAD(diff)}` : formatMAD(diff)}
+                                            </span>
+                                            <Link
+                                                href={route('caissier.shift.rapport', s.id)}
+                                                className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                                title="Rapport Z"
+                                            >
+                                                <Printer size={12} /> Z
+                                            </Link>
+                                        </div>
                                     </div>
                                 );
                             })}

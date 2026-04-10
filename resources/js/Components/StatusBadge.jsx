@@ -1,11 +1,13 @@
 import clsx from 'clsx';
 
 const STATUS_CONFIG = {
-    pending: { label: 'En attente', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-400' },
-    in_progress: { label: 'En cours', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', pulse: true },
-    completed: { label: 'Terminé', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
-    paid: { label: 'Payé', bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-600' },
-    cancelled: { label: 'Annulé', bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-400' },
+    pending:         { label: 'En attente',   bg: 'bg-yellow-100',  text: 'text-yellow-800',  dot: 'bg-yellow-400' },
+    in_progress:     { label: 'En cours',     bg: 'bg-blue-100',    text: 'text-blue-800',    dot: 'bg-blue-500',   pulse: true },
+    completed:       { label: 'Terminé',      bg: 'bg-green-100',   text: 'text-green-800',   dot: 'bg-green-500' },
+    paid:            { label: 'Payé',         bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-600' },
+    partial:         { label: 'Solde dû',     bg: 'bg-orange-100',  text: 'text-orange-800',  dot: 'bg-orange-400', pulse: true },
+    cancelled:       { label: 'Annulé',       bg: 'bg-red-100',     text: 'text-red-700',     dot: 'bg-red-400' },
+    payment_pending: { label: 'Paiement…',   bg: 'bg-violet-100',  text: 'text-violet-800',  dot: 'bg-violet-400', pulse: true },
 };
 
 export default function StatusBadge({ status, size = 'sm' }) {

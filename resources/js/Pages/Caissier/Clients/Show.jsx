@@ -1,30 +1,29 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, Car, Ticket, Star, Calendar, Gift, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Car, Ticket, Star, Gift } from 'lucide-react';
 import clsx from 'clsx';
-import { formatMAD, formatDateTime } from '@/utils/format';
+import { formatMAD } from '@/utils/format';
+import { TICKET_STATUS } from '@/utils/constants';
 
 const TIER_CONFIG = {
-    standard: { label: 'Standard', bar: 'bg-gray-400',   text: 'text-gray-500', dot: 'bg-gray-400' },
-    silver:   { label: 'Silver',   bar: 'bg-slate-400',  text: 'text-slate-500', dot: 'bg-slate-400' },
-    gold:     { label: 'Gold',     bar: 'bg-amber-400',  text: 'text-amber-600', dot: 'bg-amber-400' },
+    standard: { label: 'Standard', bar: 'bg-gray-400', text: 'text-gray-500', dot: 'bg-gray-400' },
+    silver: { label: 'Silver', bar: 'bg-slate-400', text: 'text-slate-500', dot: 'bg-slate-400' },
+    gold: { label: 'Gold', bar: 'bg-amber-400', text: 'text-amber-600', dot: 'bg-amber-400' },
     platinum: { label: 'Platinum', bar: 'bg-violet-500', text: 'text-violet-700', dot: 'bg-violet-500' },
 };
 
-const STATUS_COLOR = {
-    pending:     'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    completed:   'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    paid:        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    cancelled:   'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-};
-const STATUS_LABEL = { pending: 'En attente', in_progress: 'En lavage', completed: 'Terminé', paid: 'Payé', cancelled: 'Annulé' };
+const STATUS_COLOR = Object.fromEntries(
+    Object.entries(TICKET_STATUS).map(([k, v]) => [k, v.cls])
+);
+const STATUS_LABEL = Object.fromEntries(
+    Object.entries(TICKET_STATUS).map(([k, v]) => [k, v.label])
+);
 
 const TYPE_CONFIG = {
-    earned:   { label: '+pts', color: 'text-emerald-600 dark:text-emerald-400' },
+    earned: { label: '+pts', color: 'text-emerald-600 dark:text-emerald-400' },
     redeemed: { label: '-pts', color: 'text-rose-500 dark:text-rose-400' },
     adjusted: { label: 'Ajusté', color: 'text-blue-500 dark:text-blue-400' },
-    expired:  { label: 'Exp.',  color: 'text-gray-400' },
+    expired: { label: 'Exp.', color: 'text-gray-400' },
 };
 
 function PointsBar({ client, tiers }) {

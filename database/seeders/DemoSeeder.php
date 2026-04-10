@@ -21,11 +21,14 @@ class DemoSeeder extends Seeder
         $this->command->info('');
 
         $this->call([
-            DemoUsersSeeder::class,      // 9 utilisateurs (admin + 2 caissiers + 6 laveurs)
-            DemoClientsSeeder::class,    // 12 clients avec historique fidélité
-            DemoTicketsSeeder::class,    // ~60 tickets sur 30 jours
-            DemoStockSeeder::class,      // 10 produits stock (3 en stock bas)
-            DemoPromotionsSeeder::class, // 4 codes promo
+            DemoUsersSeeder::class,            // 9 utilisateurs (admin + 2 caissiers + 6 laveurs)
+            DemoClientsSeeder::class,          // 12 clients avec historique fidélité
+            DemoTicketsSeeder::class,          // ~60 tickets sur 30 jours
+            DemoStockSeeder::class,            // 10 produits stock (3 en stock bas)
+            DemoPromotionsSeeder::class,       // 4 codes promo
+            DemoAppointmentsSeeder::class,     // 15 rendez-vous (passés, aujourd'hui, futurs)
+            DemoQuotesInvoicesSeeder::class,   // 6 devis + 5 factures avec lignes
+            DemoTicketTemplatesSeeder::class,  // 4 templates récurrents (3 actifs, 1 inactif)
         ]);
 
         $this->command->info('');

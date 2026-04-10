@@ -174,13 +174,14 @@ class VehicleBrandController extends Controller
                 $rows[] = [
                     $brand->name, $brand->country ?? '', $brand->sort_order, $brand->is_active ? '1' : '0',
                     '', '', '', '',
-                ];
-            } else {
+                ];            } else {                /** @var \App\Models\VehicleModel $model */
                 foreach ($brand->allModels as $model) {
+                    /** @var \App\Models\VehicleType|null $vt */
+                    $vt = $model->suggestedVehicleType;
                     $rows[] = [
                         $brand->name, $brand->country ?? '', $brand->sort_order, $brand->is_active ? '1' : '0',
                         $model->name, $model->sort_order, $model->is_active ? '1' : '0',
-                        $model->suggestedVehicleType?->name ?? '',
+                        $vt->name ?? '',
                     ];
                 }
             }
@@ -244,7 +245,7 @@ class VehicleBrandController extends Controller
             if (!empty($modelName)) {
                 $slug = Str::slug($modelName);
                 if (!$brand->allModels()->where('slug', $slug)->exists()) {
-                    $vtId = $vehicleTypes[trim($vtName)]?->id ?? null;
+                    $vtId = isset($vehicleTypes[trim($vtName)]) ? $vehicleTypes[trim($vtName)]->id : null;
                     VehicleModel::create([
                         'brand_id'                  => $brand->id,
                         'name'                      => $modelName,

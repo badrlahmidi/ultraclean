@@ -1,0 +1,230 @@
+/**
+ * navConfig.js
+ * ─────────────────────────────────────────────────────────────────
+ * Source unique de vérité pour :
+ *   - La configuration de navigation par rôle (ROLE_NAV)
+ *   - Les labels, couleurs et routes de dashboard par rôle
+ *   - Les helpers de routing et de détection de route active
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+import {
+    LayoutDashboard, Ticket, Users, Settings,
+    Wrench, ClipboardList, Car, BarChart3, ShieldCheck, Tag, CarFront, CalendarDays, CalendarRange,
+    UserCheck, History, Search, Percent, Package, Gift, FileText, Receipt, RefreshCw,
+    ScrollText, CreditCard, FilePlus, ShoppingCart, Truck, PlusSquare, ReceiptText,
+    PieChart, Wallet, Gauge, Star, ListOrdered, Banknote,
+} from 'lucide-react';
+
+/* ─── Helper : route Ziggy safe (ne throw pas si route inconnue) ─── */
+export function safeRoute(name, params = {}) {
+    try {
+        return route(name, params);
+    } catch {
+        return '#';
+    }
+}
+
+/* ─── Helper : détection de route active (robuste, par segment de nom) ─── */
+export function isRouteActive(currentRoute, itemHref) {
+    // On retire les suffixes terminaux pour obtenir la racine du groupe
+    const base = itemHref.replace(
+        /\.(index|show|edit|history|search|stats|queue)$/,
+        ''
+    );
+    const baseParts = base.split('.');
+    const currentParts = currentRoute.split('.');
+    // La route courante doit matcher EXACTEMENT tous les segments de base
+    // Exemple : base = 'admin.settings', current = 'admin.settings.index' → ✅
+    //           base = 'admin.settings', current = 'admin.settings-other'  → ❌
+    return (
+        currentParts.length >= baseParts.length &&
+        baseParts.every((part, i) => currentParts[i] === part)
+    );
+}
+
+/* ─── Routes de dashboard par rôle ─── */
+export const ROLE_DASHBOARD = {
+    admin: 'admin.dashboard',
+    caissier: 'caissier.dashboard',
+    laveur: 'laveur.queue',
+};
+
+/* ─── Labels et couleurs d'avatar par rôle ─── */
+export const ROLE_LABELS = {
+    admin: 'Administrateur',
+    caissier: 'Caissier',
+    laveur: 'Laveur',
+};
+
+export const ROLE_COLORS = {
+    admin: 'bg-purple-600',
+    caissier: 'bg-blue-600',
+    laveur: 'bg-green-600',
+};
+
+/* ─── Configuration de navigation par rôle ─────────────────────────
+ *
+ * Structure d'un item :
+ *   { label, href, icon, accent?, alertKey? }
+ *
+ * Structure d'un groupe :
+ *   { type: 'group', label, icon, key, activeRoutes: string[], children: item[] }
+ *
+ * Séparateur :
+ *   { type: 'divider' }
+ * ─────────────────────────────────────────────────────────────────── */
+export const ROLE_NAV = {
+    admin: [
+        /* ── 1. Tableau de bord ── */
+        { label: 'Tableau de bord', href: 'admin.dashboard', icon: LayoutDashboard },
+        { type: 'divider' },
+
+        /* ── 2. Rendez-vous ── */
+        {
+            type: 'group', icon: CalendarDays, key: 'appointments',
+            label: 'Rendez-vous',
+            activeRoutes: ['admin.appointments'],
+            children: [
+                { label: 'Liste', href: 'admin.appointments.index', icon: CalendarDays },
+                { label: 'Calendrier', href: 'admin.appointments.calendar', icon: CalendarRange },
+            ],
+        },
+        { type: 'divider' },        /* ── 3. Tickets / Caisse ── */
+        {
+            type: 'group', icon: Ticket, key: 'caisse',
+            label: 'Tickets / Caisse',
+            activeRoutes: ['caissier', 'admin.payments', 'laveur'],
+            children: [
+                { label: 'Accès Caisse', href: 'caissier.dashboard', icon: ShieldCheck },
+                { label: 'Tickets en cours', href: 'caissier.tickets.index', icon: ListOrdered },
+                { label: 'Nouveau ticket', href: 'caissier.tickets.create', icon: FilePlus, accent: true },
+                { label: 'Historique paiements', href: 'admin.payments.index', icon: CreditCard },
+                { label: 'Shifts / Caisse', href: 'caissier.shift.index', icon: ShieldCheck },
+                { label: 'Dépenses', href: 'caissier.depenses.index', icon: Banknote },
+                { label: "File d'attente", href: 'laveur.queue', icon: Car },
+            ],
+        },
+        { type: 'divider' },
+
+        /* ── 4. Gestion commerciale ── */
+        {
+            type: 'group', icon: ReceiptText, key: 'commercial',
+            label: 'Gestion commerciale',
+            activeRoutes: ['admin.quotes', 'admin.invoices', 'admin.ticket-templates'],
+            children: [
+                { label: 'Liste Devis', href: 'admin.quotes.index', icon: FileText },
+                { label: 'Créer Devis', href: 'admin.quotes.create', icon: FilePlus },
+                { label: 'Liste Factures', href: 'admin.invoices.index', icon: Receipt },
+                { label: 'Créer Facture', href: 'admin.invoices.create', icon: FilePlus },
+                { label: 'Templates récurrents', href: 'admin.ticket-templates.index', icon: RefreshCw },
+            ],
+        },
+        { type: 'divider' },
+
+        /* ── 5. Clients ── */
+        {
+            type: 'group', icon: Users, key: 'clients',
+            label: 'Clients',
+            activeRoutes: ['admin.clients', 'admin.promotions', 'admin.loyalty'],
+            children: [
+                { label: 'Liste clients', href: 'admin.clients.index', icon: Users },
+                { label: 'Ajouter client', href: 'admin.clients.create', icon: PlusSquare },
+                { label: 'Promotions & codes', href: 'admin.promotions.index', icon: Percent },
+                { label: 'Fidélité clients', href: 'admin.loyalty.index', icon: Gift },
+            ],
+        },
+        { type: 'divider' },
+
+        /* ── 6. Gestion du stock ── */
+        {
+            type: 'group', icon: Package, key: 'stock',
+            label: 'Gestion du stock',
+            activeRoutes: ['admin.stock', 'admin.suppliers', 'admin.purchases'],
+            children: [
+                { label: 'Liste produits', href: 'admin.stock.index', icon: Package, alertKey: 'stockAlerts' },
+                { label: 'Nouveau produit', href: 'admin.stock.create', icon: PlusSquare },
+                { label: 'Fournisseurs', href: 'admin.suppliers.index', icon: Truck },
+                { label: 'Nouvel Achat', href: 'admin.purchases.create', icon: ShoppingCart },
+            ],
+        },
+        { type: 'divider' },
+
+        /* ── 7. Rapports & exports ── */
+        {
+            type: 'group', icon: BarChart3, key: 'reports',
+            label: 'Rapports & exports',
+            activeRoutes: ['admin.reports', 'admin.payments', 'admin.employees'],
+            children: [
+                { label: 'Rapport Tickets', href: 'admin.reports.tickets', icon: ClipboardList },
+                { label: 'Rapport Caisse', href: 'admin.reports.caisse', icon: Wallet },
+                { label: 'Rapport paiements', href: 'admin.payments.index', icon: CreditCard },
+                { label: 'Rapport véhicules', href: 'admin.reports.vehicles', icon: Car },
+                { label: 'Rapport shifts', href: 'admin.reports.shifts', icon: Gauge },
+                { label: 'Performance laveurs', href: 'admin.employees.index', icon: UserCheck },
+            ],
+        },
+        { type: 'divider' },
+
+        /* ── 8. Configuration ── */
+        {
+            type: 'group', icon: Settings, key: 'config',
+            label: 'Configuration',
+            activeRoutes: [
+                'admin.settings', 'admin.users', 'admin.services',
+                'admin.price-categories', 'admin.vehicles', 'admin.activity-log',
+            ],
+            children: [
+                { label: 'Paramètres', href: 'admin.settings.index', icon: Settings },
+                { label: 'Utilisateurs', href: 'admin.users.index', icon: Users },
+                { label: 'Services & tarifs', href: 'admin.services.index', icon: Wrench },
+                { label: 'Catégories de prix', href: 'admin.price-categories.index', icon: Tag },
+                { label: 'Marques & Modèles', href: 'admin.vehicles.index', icon: CarFront },
+                { label: "Journal d'audit", href: 'admin.activity-log.index', icon: ScrollText },
+            ],
+        },
+    ],
+
+    caissier: [
+        { label: 'Tableau de bord', href: 'caissier.dashboard', icon: LayoutDashboard },
+        { type: 'divider' },
+        { label: 'Nouveau ticket', href: 'caissier.tickets.create', icon: Ticket, accent: true },
+        { type: 'divider' },
+
+        { label: 'Tickets du jour', href: 'caissier.tickets.index', icon: ClipboardList },
+        { label: 'Recherche tickets', href: 'caissier.tickets.search', icon: Search },
+
+        /* ── Rendez-vous (sous-menu) ── */
+        {
+            type: 'group', icon: CalendarDays, key: 'caissier-appointments',
+            label: 'Rendez-vous',
+            activeRoutes: ['caissier.appointments'],
+            children: [
+                { label: 'Liste', href: 'caissier.appointments.index', icon: CalendarDays },
+                { label: 'Calendrier', href: 'caissier.appointments.calendar', icon: CalendarRange },
+            ],
+        },
+        { label: 'Planning', href: 'caissier.planning', icon: CalendarRange },
+        { label: 'Clients', href: 'caissier.clients.index', icon: Users },
+
+        { type: 'divider' },        /* ── Caisse (sous-menu) ── */
+        {
+            type: 'group', icon: ShieldCheck, key: 'caisse',
+            label: 'Caisse',
+            activeRoutes: ['caissier.shift', 'caissier.depenses'],
+            children: [
+                { label: 'Shift courant', href: 'caissier.shift.index', icon: ShieldCheck },
+                { label: 'Historique', href: 'caissier.shift.history', icon: History },
+                { label: 'Dépenses', href: 'caissier.depenses.index', icon: Banknote },
+            ],
+        },
+        { label: 'Promotions', href: 'caissier.promotions.index', icon: Percent },
+        { type: 'divider' },
+        { label: "File d'attente", href: 'laveur.queue', icon: Car },
+    ],
+
+    laveur: [
+        { label: "File d'attente", href: 'laveur.queue', icon: Car },
+        { label: 'Mes stats', href: 'laveur.stats', icon: BarChart3 },
+    ],
+};

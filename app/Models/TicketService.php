@@ -32,11 +32,17 @@ class TicketService extends Model
                 0,
                 ($item->unit_price_cents * $item->quantity) - $item->discount_cents
             );
+        });        // Recalcule les totaux du ticket après création/mise à jour/suppression
+        static::saved(function (TicketService $item): void {
+            /** @var \App\Models\Ticket|null $ticket */
+            $ticket = $item->ticket;
+            $ticket?->recalculateTotals();
         });
-
-        // Recalcule les totaux du ticket après création/mise à jour/suppression
-        static::saved(fn(TicketService $item)    => $item->ticket?->recalculateTotals());
-        static::deleted(fn(TicketService $item)  => $item->ticket?->recalculateTotals());
+        static::deleted(function (TicketService $item): void {
+            /** @var \App\Models\Ticket|null $ticket */
+            $ticket = $item->ticket;
+            $ticket?->recalculateTotals();
+        });
     }
 
     // ---------- Relations ----------

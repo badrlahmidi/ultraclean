@@ -23,7 +23,39 @@ class ServiceController extends Controller
             'services'     => $services,
             'vehicleTypes' => $vehicleTypes,
         ]);
-    }    public function store(StoreServiceRequest $request): RedirectResponse
+    }    public function show(Service $service): Response
+    {
+        $service->load('prices.vehicleType');
+
+        $usageStats = \Illuminate\Support\Facades\DB::table('ticket_services')
+            ->join('tickets', 'tickets.id', '=', 'ticket_services.ticket_id')
+            ->where('ticket_services.service_id', $service->id)
+            ->where('tickets.status', 'paid')
+            ->selectRaw('COUNT(*) as total_uses, SUM(ticket_services.line_total_cents) as total_revenue')
+            ->first();
+
+        $monthExpr = \Illuminate\Support\Facades\DB::getDriverName() === 'sqlite'
+            ? 'strftime("%Y-%m", tickets.paid_at)'
+            : 'DATE_FORMAT(tickets.paid_at, "%Y-%m")';
+
+        $monthlyTrend = \Illuminate\Support\Facades\DB::table('ticket_services')
+            ->join('tickets', 'tickets.id', '=', 'ticket_services.ticket_id')
+            ->where('ticket_services.service_id', $service->id)
+            ->where('tickets.status', 'paid')
+            ->where('tickets.paid_at', '>=', now()->subMonths(6))
+            ->groupBy(\Illuminate\Support\Facades\DB::raw($monthExpr))
+            ->selectRaw("{$monthExpr} as month, COUNT(*) as count, SUM(ticket_services.line_total_cents) as revenue")
+            ->orderBy('month')
+            ->get();
+
+        return Inertia::render('Admin/Services/Show', [
+            'service'      => $service,
+            'usageStats'   => $usageStats,
+            'monthlyTrend' => $monthlyTrend,
+        ]);
+    }
+
+    public function store(StoreServiceRequest $request): RedirectResponse
     {
         $service = Service::create([
             'name'             => $request->name,

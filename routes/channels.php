@@ -25,3 +25,8 @@ Broadcast::channel('admin', function ($user) {
 Broadcast::channel('caissier', function ($user) {
     return in_array($user->role, ['caissier', 'admin']);
 });
+
+// Canal laveur global (tous les laveurs + admin voient la file complète)
+Broadcast::channel('laveur', function ($user) {
+    return in_array($user->role, ['laveur', 'admin']);
+});

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\ActivityLog;
-use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,17 +17,15 @@ class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
-     * On passe la liste des utilisateurs actifs pour le PIN pad.
      */
     public function create(): Response
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status'           => session('status'),
-            'users'            => User::where('is_active', true)
-                                      ->orderBy('role')
-                                      ->orderBy('name')
-                                      ->get(['id', 'name', 'role', 'avatar']),
+            // Centre branding (logo + nom configurés dans Paramètres)
+            'centerName'       => Setting::get('center_name', ''),
+            'centerLogo'       => Setting::get('center_logo', ''),
         ]);
     }
 

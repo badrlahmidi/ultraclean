@@ -164,6 +164,7 @@ FILESYSTEM_DISK=local
 | `PUSHER_APP_KEY` | Clé Pusher | ✅ (si broadcast) |
 | `PUSHER_APP_SECRET` | Secret Pusher | ✅ (si broadcast) |
 | `PUSHER_APP_CLUSTER` | Cluster Pusher (ex: `eu`) | ✅ (si broadcast) |
+| `PAYMENT_WEBHOOK_SECRET` | Secret HMAC webhook paiement — `openssl rand -hex 32` | ⚡ si intégration paiement |
 | `MAIL_*` | Config SMTP Hostinger | ⚡ optionnel |
 | `VITE_PUSHER_APP_KEY` | Idem Pusher (côté JS) — rebuild requis | ✅ |
 
@@ -183,4 +184,73 @@ php artisan migrate:status
 
 # Vérifier le statut
 php artisan about
+```
+
+---
+
+## 10. Configuration initiale en base (Admin → Paramètres)
+
+Après le premier déploiement, se connecter en tant qu'admin et remplir :
+
+| Section | Clé | Valeur recommandée |
+|---|---|---|
+| **Centre** | `center_name` | Ex: `UltraClean Casablanca` |
+| **Centre** | `center_address` | Adresse complète |
+| **Centre** | `center_phone` | `+212 6XX XXX XXX` |
+| **Centre** | `ticket_prefix` | `TK` |
+| **Horaires** | `business_open_hour` | `8` |
+| **Horaires** | `business_close_hour` | `21` |
+| **Fiscal** | `tax_rate` | `20` (TVA Maroc) |
+| **Fiscal** | `invoice_prefix` | `FAC` |
+| **Portail** | `portal_show_team` | `true` |
+| **Portail** | `portal_show_price` | `true` |
+
+---
+
+## 11. Variables d'environnement — Production `.env` complet
+
+```env
+APP_NAME="UltraClean"
+APP_ENV=production
+APP_KEY=base64:VOTRE_CLE_GENEREE
+APP_DEBUG=false
+APP_URL=https://ultraclean.ma
+
+APP_LOCALE=fr
+APP_FALLBACK_LOCALE=fr
+
+LOG_CHANNEL=daily
+LOG_LEVEL=warning
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=uXXXX_ultraclean
+DB_USERNAME=uXXXX_user
+DB_PASSWORD=VotreMotDePasse
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+BROADCAST_CONNECTION=pusher
+
+PUSHER_APP_ID=123456
+PUSHER_APP_KEY=abc123
+PUSHER_APP_SECRET=secret789
+PUSHER_APP_CLUSTER=eu
+PUSHER_PORT=443
+PUSHER_SCHEME=https
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+
+# Webhook paiement (générer avec: openssl rand -hex 32)
+PAYMENT_WEBHOOK_SECRET=votre_secret_genere
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.hostinger.com
+MAIL_PORT=587
+MAIL_USERNAME=contact@ultraclean.ma
+MAIL_PASSWORD=VotreMotDePasseMail
+MAIL_FROM_ADDRESS=contact@ultraclean.ma
+MAIL_FROM_NAME="UltraClean"
 ```

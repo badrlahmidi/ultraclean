@@ -26,6 +26,8 @@ Thumbs.db
 # Temp helper scripts
 wr_*.py
 write_routes*.py
+write_show.py
+_write_*.py
 _write_migration.php
 test_py.py
 routes_loyalty.txt
@@ -33,3 +35,50 @@ routes_output.txt
 routes_output2.txt
 r2.txt
 wr.py
+
+# Test output / debug artifacts
+_test_node.txt
+appointment_test_out.txt
+blade_compiled_quote.txt
+final-err.txt
+final-out.txt
+full-test-results.txt
+phpstan_l7_output.txt
+test_conflict.php
+test_out_arch.txt
+test_output_now.txt
+test_resource.php
+test_results.txt
+test_results2.txt
+test_stderr.txt
+test_stdout.txt
+test_wrap.php
+test-checkin.txt
+test-checkin2.txt
+test-err.txt
+test-full-out.txt
+test-out.txt
+test-output.txt
+test-policy-out.txt
+test-washer-out.txt
+test-results/
+
+# Dev-only notes / audit scratch
+audit_phase1.md
+frontend-design-SKILL.md
+TODO_backend-architect.md
+project_context.md
+stack.md
+rules.md
+
+# Backup files
+*.bak
+
+# SQLite dev database
+database/database.sqlite
+
+# Playwright
+playwright-report/
+
+# Playwright auth state (session cookies - never commit)
+tests/ui-ux/.auth/

@@ -76,20 +76,35 @@ export default function ServiceGrid({ services, priceGrid, vehicleTypes, suggest
 
     return (
         <>
-            {/* Tabs catégories */}
-            <div className="flex gap-1 px-4 py-3 border-b border-gray-100 bg-white overflow-x-auto shrink-0">
-                {categories.map(cat => (
-                    <button key={cat} onClick={() => setActiveCategory(cat)}
-                        className={clsx(
-                            'px-4 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap transition-all',
-                            activeCategory === cat
-                                ? (CATEGORY_COLORS[cat] ?? CATEGORY_COLORS['Autre'])
-                                : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                        )}>
-                        {cat}
-                        <span className="ml-1.5 text-[10px] opacity-60">({services[cat]?.length ?? 0})</span>
-                    </button>
-                ))}
+            {/* Tabs catégories — style soulignement */}
+            <div className="flex px-4 border-b border-gray-200 bg-white overflow-x-auto shrink-0">
+                {categories.map(cat => {
+                    const catActiveQty = lines
+                        .filter(l => services[cat]?.some(s => s.id === l.service_id))
+                        .reduce((s, l) => s + l.quantity, 0);
+                    return (
+                        <button key={cat} onClick={() => setActiveCategory(cat)}
+                            className={clsx(
+                                'flex items-center gap-2 px-4 py-3 text-xs font-semibold whitespace-nowrap transition-all border-b-2 -mb-px',
+                                activeCategory === cat
+                                    ? 'border-blue-600 text-blue-700'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            )}>
+                            {cat}
+                            {catActiveQty > 0
+                                ? <span className={clsx(
+                                    'text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none',
+                                    activeCategory === cat
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-gray-100 text-gray-600'
+                                )}>{catActiveQty}</span>
+                                : <span className="text-[10px] text-gray-400 opacity-70">
+                                    ({services[cat]?.length ?? 0})
+                                </span>
+                            }
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Grille prestations */}
@@ -106,12 +121,14 @@ export default function ServiceGrid({ services, priceGrid, vehicleTypes, suggest
                         return (
                             <div key={svc.id}
                                 className={clsx(
-                                    'relative flex flex-col rounded-2xl border p-3 transition-all cursor-pointer select-none',
+                                    'relative flex flex-col rounded-2xl border p-4 min-h-[80px] transition-all cursor-pointer select-none active:scale-[0.97]',
                                     qty > 0
                                         ? 'border-blue-400 bg-blue-50 shadow-sm'
                                         : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
                                 )}
-                                onClick={() => handleServiceClick(svc)}>
+                                role="button" tabIndex={0}
+                                onClick={() => handleServiceClick(svc)}
+                                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleServiceClick(svc); } }}>
 
                                 {/* Badge quantité */}
                                 {qty > 0 && (
@@ -143,16 +160,19 @@ export default function ServiceGrid({ services, priceGrid, vehicleTypes, suggest
 
                                 {/* Contrôle +/- si déjà dans le ticket */}
                                 {qty > 0 && (
+                                    /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */
                                     <div className="flex items-center gap-1 mt-2"
-                                        onClick={e => e.stopPropagation()}>
+                                        role="group" aria-label="Quantité"
+                                        onClick={e => e.stopPropagation()}
+                                        onKeyDown={e => e.stopPropagation()}>
                                         <button onClick={() => onRemove(svc.id)}
-                                            className="w-6 h-6 rounded-lg bg-white border border-blue-200 flex items-center justify-center
+                                            className="w-8 h-8 rounded-xl bg-white border border-blue-200 flex items-center justify-center
                                                        text-blue-600 hover:bg-blue-100">
                                             <Minus size={12} />
                                         </button>
                                         <span className="flex-1 text-center text-xs font-bold text-blue-700">{qty}</span>
                                         <button onClick={() => handleServiceClick(svc)}
-                                            className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center
+                                            className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center
                                                        text-white hover:bg-blue-700">
                                             <Plus size={12} />
                                         </button>
@@ -164,7 +184,7 @@ export default function ServiceGrid({ services, priceGrid, vehicleTypes, suggest
                 </div>
 
                 {(services[activeCategory] ?? []).length === 0 && (
-                    <p className="text-center text-gray-300 text-sm mt-16">Aucune prestation dans cette catégorie</p>
+                    <p className="text-center text-gray-400 text-sm mt-16">Aucune prestation dans cette catégorie</p>
                 )}
             </div>
 

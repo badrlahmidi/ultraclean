@@ -23,9 +23,10 @@ class TicketStatusUpdated implements ShouldBroadcastNow
         $channels = [
             new PrivateChannel('admin'),
             new PrivateChannel('caissier'),
+            new PrivateChannel('laveur'),  // tous les laveurs voient la file
         ];
 
-        // Notify the assigned laveur as well
+        // Notifier aussi le laveur assigné sur son canal personnel
         if ($this->ticket->assigned_to) {
             $channels[] = new PrivateChannel("user.{$this->ticket->assigned_to}");
         }
@@ -41,14 +42,16 @@ class TicketStatusUpdated implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'id'            => $this->ticket->id,
-            'ticket_number' => $this->ticket->ticket_number,
-            'vehicle_plate' => $this->ticket->vehicle_plate,
-            'vehicle_brand' => $this->ticket->vehicle_brand,
-            'old_status'    => $this->oldStatus,
-            'new_status'    => $this->ticket->status,
-            'assigned_to'   => $this->ticket->assigned_to,
-            'updated_at'    => $this->ticket->updated_at?->toISOString(),
+            'id'                  => $this->ticket->id,
+            'ticket_number'       => $this->ticket->ticket_number,
+            'vehicle_plate'       => $this->ticket->vehicle_plate,
+            'vehicle_brand'       => $this->ticket->vehicle_brand,
+            'old_status'          => $this->oldStatus,
+            'new_status'          => $this->ticket->status,
+            'assigned_to'         => $this->ticket->assigned_to,
+            'due_at'              => $this->ticket->due_at?->toISOString(),
+            'ticket_template_id'  => $this->ticket->ticket_template_id,
+            'updated_at'          => $this->ticket->updated_at?->toISOString(),
         ];
     }
 }

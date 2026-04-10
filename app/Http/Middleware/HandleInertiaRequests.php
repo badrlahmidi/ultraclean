@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Shift;
 use App\Models\StockProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -18,10 +19,28 @@ class HandleInertiaRequests extends Middleware
 
     /**
      * Props partagées avec toutes les pages Inertia.
+     *
+     * ARCH-ITEM-2.9: All setting reads are batched into a single Setting::getMany()
+     * call instead of 3–4 individual Setting::get() calls per request.
      */
     public function share(Request $request): array
     {
         $user = $request->user();
+
+        // Single batched DB round-trip for all shared settings.
+        $settings = \App\Models\Setting::getMany([
+            'center_logo',
+            'enabled_payment_methods',
+            'auto_print_receipt',
+        ], [
+            'center_logo'             => '',
+            'enabled_payment_methods' => null,
+            'auto_print_receipt'      => false,
+        ]);
+
+        $paymentMethods = (is_array($settings['enabled_payment_methods']) && count($settings['enabled_payment_methods']) > 0)
+            ? $settings['enabled_payment_methods']
+            : ['cash', 'card', 'mobile', 'wire', 'mixed', 'advance', 'credit'];
 
         return [
             ...parent::share($request),
@@ -33,7 +52,7 @@ class HandleInertiaRequests extends Middleware
                     'role'   => $user->role,
                     'avatar' => $user->avatar,
                 ] : null,
-                'activeShift' => $user
+                'activeShift' => $user && in_array($user->role, ['admin', 'caissier'])
                     ? Shift::where('user_id', $user->id)->whereNull('closed_at')->first()
                     : null,
             ],
@@ -42,9 +61,12 @@ class HandleInertiaRequests extends Middleware
                 'error'   => session('error'),
                 'warning' => session('warning'),
             ],
-            'appName' => config('app.name'),
-            'stockAlerts' => $user?->role === 'admin'
-                ? StockProduct::lowStock()->count()
+            'appName'               => config('app.name'),
+            'centerLogo'            => $settings['center_logo'] ?? '',
+            'enabledPaymentMethods' => $paymentMethods,
+            'autoPrintReceipt'      => (bool) ($settings['auto_print_receipt'] ?? false),
+            'stockAlerts'           => $user?->role === 'admin'
+                ? Cache::remember('stock_alerts_count', 60, fn () => StockProduct::lowStock()->count())
                 : 0,
         ];
     }

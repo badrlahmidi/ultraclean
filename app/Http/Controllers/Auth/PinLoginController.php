@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class PinLoginController extends Controller
@@ -21,11 +22,20 @@ class PinLoginController extends Controller
      * Body: { user_id: int, pin: string(4) }
      */
     public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
+    {        $request->validate([
             'user_id' => ['required', 'integer'],
             'pin'     => ['required', 'string', 'digits:4'],
         ]);
+
+        // ── Rate Limiting : max 5 tentatives par minute par IP+user_id ──
+        $throttleKey = 'pin-login:' . $request->ip() . ':' . $request->user_id;
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'pin' => "Trop de tentatives. Réessayez dans {$seconds} secondes.",
+            ]);
+        }
 
         /** @var User|null $user */
         $user = User::where('id', $request->user_id)
@@ -33,10 +43,13 @@ class PinLoginController extends Controller
                     ->first();
 
         if (! $user || ! Hash::check($request->pin, $user->pin)) {
+            RateLimiter::hit($throttleKey, 60);
             throw ValidationException::withMessages([
                 'pin' => 'Code PIN incorrect.',
             ]);
         }
+
+        RateLimiter::clear($throttleKey);
 
         // On déconnecte l'éventuel utilisateur précédent sur cet appareil
         Auth::logout();

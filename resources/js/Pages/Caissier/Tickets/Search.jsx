@@ -4,20 +4,19 @@ import { useState, useCallback } from 'react';
 import { Search, Ticket, Car, User, ArrowRight, Clock, CheckCircle2, Wrench, CreditCard, XCircle, Hash } from 'lucide-react';
 import clsx from 'clsx';
 import { formatMAD, formatDateTime } from '@/utils/format';
+import { TICKET_STATUS } from '@/utils/constants';
 
-const STATUS_LABEL = {
-    pending: { label: 'En attente', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400', icon: Clock },
-    in_progress: { label: 'En lavage', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400', icon: Wrench },
-    completed: { label: 'Terminé', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', icon: CheckCircle2 },
-    paid: { label: 'Payé', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400', icon: CreditCard },
-    cancelled: { label: 'Annulé', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400', icon: XCircle },
+// Icon map — kept local because icons are not part of the shared data model
+const STATUS_ICONS = {
+    pending: Clock, in_progress: Wrench, completed: CheckCircle2,
+    paid: CreditCard, cancelled: XCircle,
 };
 
 function StatusChip({ status }) {
-    const cfg = STATUS_LABEL[status] ?? STATUS_LABEL.pending;
-    const Icon = cfg.icon;
+    const cfg = TICKET_STATUS[status] ?? TICKET_STATUS.pending;
+    const Icon = STATUS_ICONS[status] ?? Clock;
     return (
-        <span className={clsx('inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full', cfg.color)}>
+        <span className={clsx('inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full', cfg.cls)}>
             <Icon size={11} />{cfg.label}
         </span>
     );

@@ -2,116 +2,52 @@
 
 namespace App\Http\Controllers\Caissier;
 
+use App\Actions\ProcessPaymentAction;
+use App\DTOs\ProcessPaymentDTO;
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
-use App\Models\Client;
-use App\Models\Payment;
 use App\Models\Ticket;
-use App\Services\LoyaltyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     public function store(Request $request, Ticket $ticket): RedirectResponse
-    {
+    {        $this->authorize('pay', $ticket);
+
+        // Allow payment from any status that can transition to STATUS_PAID or STATUS_PARTIAL.
+        // - Regular flow: completed / payment_pending → paid
+        // - Pre-payment:  pending / in_progress       → paid (is_prepaid) or partial (advance deposit)
+        // - Balance collection: partial               → paid
+        $payable = $ticket->canTransitionTo(Ticket::STATUS_PAID)
+                || $ticket->canTransitionTo(Ticket::STATUS_PARTIAL);
+
         abort_if(
-            ! $ticket->canTransitionTo(Ticket::STATUS_PAID),
+            ! $payable,
             422,
             "Ce ticket ne peut pas être encaissé (statut actuel : {$ticket->status})."
-        );        $request->validate([
-            'method'              => ['required', 'in:cash,card,mobile,mixed'],
+        );
+
+        $request->validate([
+            'method'              => ['required', 'in:cash,card,wire,mobile,mixed,advance,credit'],
             'amount_cash_cents'   => ['nullable', 'integer', 'min:0'],
             'amount_card_cents'   => ['nullable', 'integer', 'min:0'],
             'amount_mobile_cents' => ['nullable', 'integer', 'min:0'],
+            'amount_wire_cents'   => ['nullable', 'integer', 'min:0'],
             'note'                => ['nullable', 'string', 'max:255'],
         ]);
 
-        $cash   = (int) ($request->amount_cash_cents   ?? 0);
-        $card   = (int) ($request->amount_card_cents   ?? 0);
-        $mobile = (int) ($request->amount_mobile_cents ?? 0);
+        $dto = ProcessPaymentDTO::fromRequest($request);
 
-        if ($request->method === 'cash')   { $cash   = $ticket->total_cents; $card = $mobile = 0; }
-        if ($request->method === 'card')   { $card   = $ticket->total_cents; $cash = $mobile = 0; }
-        if ($request->method === 'mobile') { $mobile = $ticket->total_cents; $cash = $card   = 0; }
-
-        $totalPaid = $cash + $card + $mobile;
-
-        if ($totalPaid < $ticket->total_cents) {
-            return back()->withErrors([
-                'amount' => sprintf(
-                    'Montant insuffisant : %.2f MAD encaissé pour %.2f MAD dû.',
-                    $totalPaid / 100,
-                    $ticket->total_cents / 100
-                ),
-            ]);
-        }
-
-        $changeCents = $totalPaid - $ticket->total_cents;
-
-        $payment = Payment::create([
-            'ticket_id'           => $ticket->id,
-            'processed_by'        => auth()->id(),
-            'method'              => $request->method,
-            'amount_cents'        => $ticket->total_cents,
-            'amount_cash_cents'   => $cash,
-            'amount_card_cents'   => $card,
-            'amount_mobile_cents' => $mobile,
-            'change_given_cents'  => $changeCents,
-            'reference'           => $request->note,
-        ]);
-
-        $ticket->transitionTo(Ticket::STATUS_PAID, [
-            'paid_by' => auth()->id(),
-        ]);
-
-        // ── Consommation automatique du stock ──────────────────────────────
         try {
-            $ticket->load('services.service.stockProducts');
-            foreach ($ticket->services as $ticketService) {
-                foreach ($ticketService->service->stockProducts as $product) {
-                    $qtyToConsume = $product->pivot->quantity_per_use * ($ticketService->quantity ?? 1);
-                    $product->consumeStock(
-                        $qtyToConsume,
-                        $ticket->ticket_number,
-                        $ticket->id,
-                        auth()->id()
-                    );
-                }
-            }
+            $result = app(ProcessPaymentAction::class)->execute($ticket, $dto, auth()->id());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e; // Let Laravel handle validation errors (back with errors)
         } catch (\Throwable $e) {
-            \Log::warning('Stock consumption failed for ticket ' . $ticket->ticket_number . ': ' . $e->getMessage());
-        }
-
-        // ── Fidélité : créditer les points ──────────────────────────────────
-        $pointsEarned = 0;
-        if ($ticket->client_id) {
-            try {
-                $ticket->refresh();
-                $client = Client::find($ticket->client_id);
-                if ($client) {
-                    $pointsEarned = LoyaltyService::awardPoints($client, $ticket, auth()->id());
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('Loyalty award failed for ticket ' . $ticket->ticket_number . ': ' . $e->getMessage());
-            }
-        }
-
-        ActivityLog::log('ticket.paid', $ticket, [
-            'ticket_number'      => $ticket->ticket_number,
-            'method'             => $request->method,
-            'amount_cents'       => $ticket->total_cents,
-            'change_given_cents' => $changeCents,
-            'loyalty_points'     => $pointsEarned,
-        ]);
-
-        $successMsg = sprintf('Paiement enregistré — Rendu monnaie : %.2f MAD', $changeCents / 100);
-        if ($pointsEarned > 0) {
-            $successMsg .= sprintf(' · +%d points fidélité', $pointsEarned);
+            return back()->withErrors(['payment' => 'Erreur lors du paiement. Veuillez réessayer.']);
         }
 
         return redirect()
-            ->route('caissier.tickets.show', $ticket->id)
-            ->with('success', $successMsg);
+            ->route('caissier.tickets.show', $ticket->ulid)
+            ->with('success', $result['message']);
     }
 }

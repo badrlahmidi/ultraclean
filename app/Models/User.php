@@ -8,6 +8,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int                             $id
+ * @property string                          $name
+ * @property string                          $email
+ * @property string                          $role
+ * @property string|null                     $phone
+ * @property string|null                     $avatar
+ * @property bool                            $is_active
+ * @property \Illuminate\Support\Carbon|null $last_login_at
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon      $created_at
+ * @property \Illuminate\Support\Carbon      $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Shift> $shifts
+ * @property-read \App\Models\Shift|null $activeShift
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -92,6 +109,19 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Ticket::class, 'assigned_to');
     }
 
+    public function appointments()
+    {
+        return $this->hasMany(\App\Models\Appointment::class, 'assigned_to');
+    }
+
+    public function upcomingAppointments()
+    {
+        return $this->hasMany(\App\Models\Appointment::class, 'assigned_to')
+            ->where('scheduled_at', '>=', now())
+            ->whereNotIn('status', ['cancelled', 'no_show'])
+            ->orderBy('scheduled_at');
+    }
+
     // ── Scopes ─────────────────────────────────────────────────────────
 
     public function scopeActive($query)
@@ -102,5 +132,25 @@ class User extends Authenticatable
     public function scopeByRole($query, string $role)
     {
         return $query->where('role', $role);
+    }
+
+    /** Shortcut : laveurs actifs uniquement. */
+    public function scopeLaveurs($query)
+    {
+        return $query->where('role', self::ROLE_LAVEUR)->where('is_active', true);
+    }
+
+    // ── Relations ticket_washers ─────────────────────────────────────────────
+
+    public function ticketWashers()
+    {
+        return $this->hasMany(\App\Models\TicketWasher::class);
+    }
+
+    public function washerTickets()
+    {
+        return $this->belongsToMany(\App\Models\Ticket::class, 'ticket_washers')
+                    ->withPivot(['role', 'started_at', 'ended_at'])
+                    ->withTimestamps();
     }
 }

@@ -7,7 +7,10 @@ use Illuminate\Validation\Rule;
 
 class StoreTicketRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', \App\Models\Ticket::class);
+    }
 
     public function rules(): array
     {
@@ -19,8 +22,7 @@ class StoreTicketRequest extends FormRequest
                 'nullable',
                 Rule::requiredIf(fn () => filled($this->vehicle_brand_id)),
                 'exists:vehicle_models,id',
-            ],
-            'vehicle_brand'   => ['nullable', 'string', 'max:80'],
+            ],            'vehicle_brand'   => ['nullable', 'string', 'max:80'],
             'vehicle_plate'   => ['nullable', 'string', 'max:20'],
             'vehicle_type_id' => ['nullable', 'exists:vehicle_types,id'],
 
@@ -41,9 +43,19 @@ class StoreTicketRequest extends FormRequest
             'services.*.quantity'            => ['required', 'integer', 'min:1', 'max:10'],
             'services.*.discount_cents'      => ['nullable', 'integer', 'min:0'],
             'services.*.price_variant_id'    => ['nullable', 'exists:vehicle_types,id'],
-            'services.*.unit_price_cents'    => ['required', 'integer', 'min:0'],            // ── Divers ──────────────────────────────────────────────────
+            'services.*.unit_price_cents'    => ['required', 'integer', 'min:0'],            // ── Assistants multi-laveur ─────────────────────────────────
+            'assistant_ids'   => ['nullable', 'array', 'max:5'],
+            'assistant_ids.*' => [
+                'integer',
+                Rule::exists('users', 'id')
+                    ->where('role', 'laveur')
+                    ->where('is_active', true),
+            ],
+
+            // ── Divers ──────────────────────────────────────────────────
             'notes'               => ['nullable', 'string', 'max:1000'],
             'estimated_duration'  => ['nullable', 'integer', 'min:1', 'max:480'],
+            'payment_mode'        => ['nullable', 'in:cash,card,wire,advance,credit'],
         ];
     }
 

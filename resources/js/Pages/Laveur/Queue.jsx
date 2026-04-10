@@ -3,13 +3,14 @@ import StatusBadge from '@/Components/StatusBadge';
 import { formatMAD, formatDateTime } from '@/utils/format';
 import { router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { Car, Clock, PlayCircle, CheckCircle2, RefreshCw, Layers } from 'lucide-react';
+import { Car, Clock, PlayCircle, CheckCircle2, RefreshCw, Layers, CreditCard } from 'lucide-react';
 import clsx from 'clsx';
 
 /* ─── Carte ticket ─── */
-function TicketCard({ ticket, onStart, onComplete, isLaveur }) {
+function TicketCard({ ticket, onStart, onComplete, isLaveur: _isLaveur }) {
     const isPending = ticket.status === 'pending';
     const isInProgress = ticket.status === 'in_progress';
+    const isPrepaid = ticket.status === 'paid' && ticket.is_prepaid;
 
     // Durée depuis création
     const [elapsed, setElapsed] = useState('');
@@ -29,7 +30,8 @@ function TicketCard({ ticket, onStart, onComplete, isLaveur }) {
     return (
         <div className={clsx(
             'bg-white rounded-2xl border shadow-sm p-4 space-y-3 transition-all hover:shadow-md',
-            isInProgress && 'ring-2 ring-blue-400 ring-offset-1'
+            isInProgress && 'ring-2 ring-blue-400 ring-offset-1',
+            isPrepaid && 'ring-2 ring-emerald-400 ring-offset-1 border-emerald-200'
         )}>
             {/* En-tête */}
             <div className="flex items-start justify-between gap-2">
@@ -37,7 +39,14 @@ function TicketCard({ ticket, onStart, onComplete, isLaveur }) {
                     <p className="font-bold text-gray-900 text-sm">{ticket.ticket_number}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{formatDateTime(ticket.created_at)}</p>
                 </div>
-                <StatusBadge status={ticket.status} size="sm" />
+                <div className="flex flex-col items-end gap-1">
+                    <StatusBadge status={ticket.status} size="sm" />
+                    {isPrepaid && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">
+                            <CreditCard size={10} /> Prépayé
+                        </span>
+                    )}
+                </div>
             </div>            {/* Véhicule */}
             <div className="flex items-center gap-2">
                 <Car size={16} className="text-gray-400 flex-shrink-0" />
@@ -93,6 +102,14 @@ function TicketCard({ ticket, onStart, onComplete, isLaveur }) {
                         <PlayCircle size={14} /> Démarrer
                     </button>
                 )}
+                {isPrepaid && (
+                    <button
+                        onClick={() => onStart(ticket.id)}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-xl transition-colors"
+                    >
+                        <PlayCircle size={14} /> Démarrer le lavage
+                    </button>
+                )}
                 {isInProgress && (
                     <button
                         onClick={() => onComplete(ticket.id)}
@@ -107,7 +124,7 @@ function TicketCard({ ticket, onStart, onComplete, isLaveur }) {
 }
 
 /* ─── Colonne kanban ─── */
-function KanbanColumn({ title, status, tickets, count, colorClass, children }) {
+function KanbanColumn({ title, status: _status, tickets, count, colorClass, children }) {
     return (
         <div className="flex flex-col min-h-0">
             <div className={clsx('flex items-center gap-2 px-4 py-3 rounded-t-2xl border-b', colorClass)}>
@@ -125,9 +142,10 @@ function KanbanColumn({ title, status, tickets, count, colorClass, children }) {
 }
 
 /* ─── Page principale ─── */
-export default function Queue({ tickets, laveurs }) {
+export default function Queue({ tickets, laveurs: _laveurs }) {
     const pending = tickets.filter(t => t.status === 'pending');
     const inProgress = tickets.filter(t => t.status === 'in_progress');
+    const prepaid = tickets.filter(t => t.status === 'paid' && t.is_prepaid);
 
     const [polling, setPolling] = useState(true);
 
@@ -157,6 +175,7 @@ export default function Queue({ tickets, laveurs }) {
                         <h1 className="text-2xl font-bold text-gray-900">File d'attente lavage</h1>
                         <p className="text-sm text-gray-500 mt-0.5">
                             {pending.length} en attente · {inProgress.length} en cours
+                            {prepaid.length > 0 && ` · ${prepaid.length} prépayé(s)`}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -178,8 +197,11 @@ export default function Queue({ tickets, laveurs }) {
                     </div>
                 </div>
 
-                {/* Kanban 2 colonnes */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                {/* Kanban 2 ou 3 colonnes */}
+                <div className={clsx(
+                    'grid gap-4 flex-1',
+                    prepaid.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'
+                )}>
                     <KanbanColumn
                         title="En attente"
                         status="pending"
@@ -213,6 +235,25 @@ export default function Queue({ tickets, laveurs }) {
                             />
                         )}
                     </KanbanColumn>
+
+                    {prepaid.length > 0 && (
+                        <KanbanColumn
+                            title="Prépayés — à laver"
+                            status="paid"
+                            tickets={prepaid}
+                            count={prepaid.length}
+                            colorClass="bg-emerald-100 text-emerald-800 border-emerald-200"
+                        >
+                            {t => (
+                                <TicketCard
+                                    key={t.id}
+                                    ticket={t}
+                                    onStart={handleStart}
+                                    onComplete={handleComplete}
+                                />
+                            )}
+                        </KanbanColumn>
+                    )}
                 </div>
             </div>
         </AppLayout>

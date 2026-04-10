@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
 import echo from '@/echo';
 import toast from 'react-hot-toast';
@@ -11,16 +11,22 @@ const STATUS_LABELS = {
     cancelled: 'Annulé',
 };
 
-const MAX_NOTIFS = 30;
+const MAX_NOTIFS = 50;
+const POLL_INTERVAL = 60_000; // 60s — fallback polling for DB notifications
 
 /**
- * Subscribe to real-time ticket notifications via Laravel Reverb.
+ * Hybrid notification hook:
+ *   - Fetches database notifications on mount + periodic polling
+ *   - Subscribes to real-time Reverb channels for instant updates
+ *   - Merges & deduplicates both sources
+ *   - Persists state in localStorage for tab persistence
  *
  * Returns:
- *   notifications  — array of { id, type, title, body, at, read }
+ *   notifications  — array of { id, type, icon, title, body, at, read, data }
  *   unreadCount    — number
- *   markAllRead()  — fn
- *   dismiss(id)    — fn
+ *   markAllRead()  — marks all as read (server + local)
+ *   dismiss(id)    — removes one notification (server + local)
+ *   clearAll()     — removes all notifications (server + local)
  */
 export function useNotifications() {
     const { auth } = usePage().props;
@@ -32,21 +38,88 @@ export function useNotifications() {
         } catch {
             return [];
         }
-    }); const push = useCallback((notif) => {
+    });
+
+    const isMounted = useRef(true);
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+
+    /* ── Persist to localStorage whenever state changes ── */
+    useEffect(() => {
+        try {
+            localStorage.setItem('uc_notifications', JSON.stringify(notifications));
+        } catch { /* quota exceeded — ignore */ }
+    }, [notifications]);
+
+    /* ── Merge helper: add without duplicates ── */
+    const mergeNotifications = useCallback((incoming) => {
+        setNotifications(prev => {
+            const idSet = new Set(prev.map(n => n.id));
+            const newOnes = incoming.filter(n => !idSet.has(n.id));
+            if (newOnes.length === 0) return prev;
+            return [...newOnes, ...prev].slice(0, MAX_NOTIFS);
+        });
+    }, []);
+
+    /* ── Push a single real-time notification ── */
+    const push = useCallback((notif) => {
         setNotifications(prev => {
             const next = [{ ...notif, read: false, at: new Date().toISOString() }, ...prev].slice(0, MAX_NOTIFS);
-            localStorage.setItem('uc_notifications', JSON.stringify(next));
             return next;
         });
-        // Also fire a toast
-        toast(notif.title + '\n' + notif.body, { icon: '🔔', duration: 4000 });
-    }, []); useEffect(() => {
+        toast(notif.title + '\n' + notif.body, { icon: notif.icon ?? '🔔', duration: 4000 });
+    }, []);
+
+    /* ── Fetch database notifications from server ── */
+    const fetchFromServer = useCallback(async () => {
         if (!user) return;
+        try {
+            const res = await fetch('/notifications', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!isMounted.current) return;
+
+            if (data.notifications?.length) {
+                mergeNotifications(data.notifications.map(n => ({
+                    id: n.id,
+                    type: n.type ?? 'info',
+                    icon: n.icon ?? '🔔',
+                    title: n.title ?? '',
+                    body: n.body ?? '',
+                    at: n.at,
+                    read: n.read,
+                    data: n.data ?? {},
+                })));
+            }
+        } catch (e) {
+            console.warn('[useNotifications] fetch error:', e);
+        }
+    }, [user, mergeNotifications]);
+
+    /* ── Initial fetch + polling ── */
+    useEffect(() => {
+        if (!user) return;
+        fetchFromServer();
+        const interval = setInterval(fetchFromServer, POLL_INTERVAL);
+        return () => clearInterval(interval);
+    }, [user, fetchFromServer]);
+
+    /* ── Real-time Reverb subscriptions ── */
+    useEffect(() => {
+        if (!user || !echo) return;
 
         const channels = [];
         let active = true;
 
-        // ── Canal privé personnel (laveur reçoit ses tickets) ──
+        // Canal privé personnel
         try {
             const userChannel = echo.private(`user.${user.id}`);
             channels.push({ ch: userChannel, name: `user.${user.id}` });
@@ -56,7 +129,8 @@ export function useNotifications() {
                 push({
                     id: `assigned-${data.id}-${Date.now()}`,
                     type: 'assigned',
-                    title: '🚗 Nouveau ticket assigné',
+                    icon: '🚗',
+                    title: 'Nouveau ticket assigné',
                     body: `Ticket ${data.ticket_number} · ${data.vehicle_plate ?? ''}${data.vehicle_brand ? ' · ' + data.vehicle_brand : ''}`,
                     ticketId: data.id,
                     ticketNumber: data.ticket_number,
@@ -70,7 +144,8 @@ export function useNotifications() {
                 push({
                     id: `status-${data.id}-${Date.now()}`,
                     type: 'status',
-                    title: `🔄 Ticket ${data.ticket_number}`,
+                    icon: '🔄',
+                    title: `Ticket ${data.ticket_number}`,
                     body: `Statut → ${newLabel}${data.vehicle_plate ? ' · ' + data.vehicle_plate : ''}`,
                     ticketId: data.id,
                     ticketNumber: data.ticket_number,
@@ -80,7 +155,7 @@ export function useNotifications() {
             console.warn('[useNotifications] user channel error:', e);
         }
 
-        // ── Canal caissier global ──
+        // Canal caissier global
         if (user.role === 'caissier' || user.role === 'admin') {
             try {
                 const caissierChannel = echo.private('caissier');
@@ -92,7 +167,8 @@ export function useNotifications() {
                     push({
                         id: `completed-${data.id}-${Date.now()}`,
                         type: 'completed',
-                        title: '✅ Ticket prêt au paiement',
+                        icon: '✅',
+                        title: 'Ticket prêt au paiement',
                         body: `${data.ticket_number} · ${data.vehicle_plate ?? ''}`,
                         ticketId: data.id,
                         ticketNumber: data.ticket_number,
@@ -103,7 +179,7 @@ export function useNotifications() {
             }
         }
 
-        // ── Canal admin ──
+        // Canal admin
         if (user.role === 'admin') {
             try {
                 const adminChannel = echo.private('admin');
@@ -114,7 +190,8 @@ export function useNotifications() {
                     push({
                         id: `admin-assigned-${data.id}-${Date.now()}`,
                         type: 'assigned',
-                        title: `📋 Ticket créé · ${data.ticket_number}`,
+                        icon: '📋',
+                        title: `Ticket créé · ${data.ticket_number}`,
                         body: `Assigné au laveur · ${data.vehicle_plate ?? ''}`,
                         ticketId: data.id,
                         ticketNumber: data.ticket_number,
@@ -130,29 +207,43 @@ export function useNotifications() {
             channels.forEach(({ ch, name }) => {
                 try {
                     ch.stopListening('.ticket.assigned').stopListening('.ticket.status_updated');
-                    echo.leave(name);
+                    echo?.leave(name);
                 } catch { /* ignore cleanup errors */ }
             });
         };
-    }, [user?.id, user?.role, push]); const markAllRead = useCallback(() => {
-        setNotifications(prev => {
-            const next = prev.map(n => ({ ...n, read: true }));
-            localStorage.setItem('uc_notifications', JSON.stringify(next));
-            return next;
-        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id, user?.role, push]);
+
+    /* ── Actions (server + local) ── */
+
+    const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    const markAllRead = useCallback(() => {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        fetch('/notifications/read-all', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() },
+            credentials: 'same-origin',
+        }).catch(() => { });
     }, []);
 
     const dismiss = useCallback((id) => {
-        setNotifications(prev => {
-            const next = prev.filter(n => n.id !== id);
-            localStorage.setItem('uc_notifications', JSON.stringify(next));
-            return next;
-        });
+        setNotifications(prev => prev.filter(n => n.id !== id));
+        fetch(`/notifications/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() },
+            credentials: 'same-origin',
+        }).catch(() => { });
     }, []);
 
     const clearAll = useCallback(() => {
-        localStorage.removeItem('uc_notifications');
         setNotifications([]);
+        localStorage.removeItem('uc_notifications');
+        fetch('/notifications', {
+            method: 'DELETE',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() },
+            credentials: 'same-origin',
+        }).catch(() => { });
     }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;

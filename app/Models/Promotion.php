@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Promotion extends Model
 {
@@ -22,7 +23,14 @@ class Promotion extends Model
         'valid_from'       => 'datetime',
         'valid_until'      => 'datetime',
     ];
+    /* ─── Relations ─── */
 
+    public function usages(): HasMany
+    {
+        return $this->hasMany(PromotionUsage::class);
+    }
+
+    /* ─── Scopes ─── */
     /* ─── Scopes ─── */
 
     public function scopeActive(Builder $query): Builder

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\Service;
+use App\Models\Appointment;
+use App\Models\Invoice;
 use App\Models\Shift;
+use App\Models\StockProduct;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -57,13 +59,45 @@ class DashboardController extends Controller
             ->select('ticket_services.service_name', DB::raw('count(*) as count'), DB::raw('SUM(ticket_services.line_total_cents) as revenue'))
             ->orderByDesc('count')
             ->limit(5)
-            ->get();
+            ->get();        // ── Widgets P3.4 ───────────────────────────────────────────────────
+
+        // RDV du jour (hors annulés / no_show)
+        $appointmentsToday = Appointment::whereDate('scheduled_at', $today)
+            ->whereNotIn('status', ['cancelled', 'no_show'])
+            ->with('client:id,name,phone,vehicle_plate')
+            ->orderBy('scheduled_at')
+            ->limit(8)
+            ->get(['id', 'scheduled_at', 'status', 'client_id', 'vehicle_plate', 'estimated_duration']);
+
+        // Alertes stock bas
+        $stockAlertItems = StockProduct::where('is_active', true)
+            ->whereRaw('current_quantity <= min_quantity')
+            ->orderByRaw('current_quantity / NULLIF(min_quantity, 1)')
+            ->limit(5)
+            ->get(['id', 'name', 'current_quantity', 'min_quantity', 'unit']);
+
+        // Factures en brouillon à émettre
+        $invoicesDraft = Invoice::where('status', 'draft')
+            ->with('client:id,name')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'invoice_number', 'client_id', 'total_cents', 'created_at']);
+
+        // Dernière activité
+        $recentActivity = ActivityLog::with('user:id,name,role')
+            ->latest()
+            ->limit(8)
+            ->get(['id', 'action', 'user_id', 'subject_type', 'created_at']);
 
         return Inertia::render('Admin/Dashboard', [
-            'stats'          => $stats,
-            'statusBreakdown'=> $statusBreakdown,
-            'revenueTrend'   => $revenueTrend,
-            'topServices'    => $topServices,
+            'stats'             => $stats,
+            'statusBreakdown'   => $statusBreakdown,
+            'revenueTrend'      => $revenueTrend,
+            'topServices'       => $topServices,
+            'appointmentsToday' => $appointmentsToday,
+            'stockAlertItems'   => $stockAlertItems,
+            'invoicesDraft'     => $invoicesDraft,
+            'recentActivity'    => $recentActivity,
         ]);
     }
 }

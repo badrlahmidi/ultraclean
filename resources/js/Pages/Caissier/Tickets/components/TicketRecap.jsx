@@ -30,6 +30,7 @@ const fmtM = (min) => min >= 60
 export default function TicketRecap({
     vehicle, client, lines, washers, duration, washer,
     notes, processing, errors,
+    submitLabel,
     onOpenVehicle, onOpenClient, onRemoveLine,
     onSetDuration, onSetWasher, onSetNotes, onSubmit,
 }) {
@@ -56,8 +57,16 @@ export default function TicketRecap({
         <div className="flex flex-col h-full bg-white border-l border-gray-100">
 
             {/* ── Titre ── */}
-            <div className="px-5 py-4 border-b border-gray-100">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-700">Récap ticket</h2>
+                {washer && washers.length > 0 && (
+                    <span className="flex items-center gap-1.5 text-xs text-orange-600 font-medium">
+                        <span className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-bold">
+                            {washers.find(w => w.id === washer)?.name.slice(0, 2).toUpperCase()}
+                        </span>
+                        {washers.find(w => w.id === washer)?.name}
+                    </span>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
@@ -136,7 +145,7 @@ export default function TicketRecap({
                                         {fmt(line.unit_price_cents * line.quantity)}
                                     </span>
                                     <button onClick={() => onRemoveLine(line.service_id)}
-                                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-red-400 transition-opacity">
+                                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-red-400 transition-opacity">
                                         <Trash2 size={11} />
                                     </button>
                                 </div>
@@ -199,54 +208,28 @@ export default function TicketRecap({
                     </div>
                 </Section>
 
-                {/* ── Opérateur ── */}
-                {washers.length > 0 && (
-                    <Section label="Opérateur">
-                        <div className="flex flex-wrap gap-2">
-                            {washers.map(w => (
-                                <button key={w.id} onClick={() => onSetWasher(w.id === washer ? null : w.id)}
-                                    title={w.name}
-                                    className={clsx(
-                                        'w-10 h-10 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all',
-                                        w.id === washer
-                                            ? 'border-blue-500 bg-blue-100 text-blue-700'
-                                            : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300'
-                                    )}>
-                                    {w.avatar
-                                        ? <img src={w.avatar} alt={w.name} className="w-full h-full rounded-full object-cover" />
-                                        : w.name.slice(0, 2).toUpperCase()
-                                    }
-                                </button>
-                            ))}
-                        </div>
-                        {washer && (
-                            <p className="text-xs text-gray-400 mt-1">
-                                {washers.find(w => w.id === washer)?.name}
-                            </p>
-                        )}
-                    </Section>
-                )}
-
                 {/* ── Notes ── */}
                 <Section label="Notes">
                     <textarea value={notes} onChange={e => onSetNotes(e.target.value)}
-                        rows={2} placeholder="Remarques…"
+                        rows={3} placeholder="Remarques…"
                         className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs resize-none
                                    focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </Section>
             </div>
 
             {/* ── Total + Submit ── */}
-            <div className="px-4 py-4 border-t border-gray-100 bg-gray-50 space-y-3 shrink-0">
+            <div className="px-4 py-4 border-t border-gray-100 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] space-y-3 shrink-0">
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">Total</span>
                     <span className="text-xl font-bold text-gray-900">{fmt(total)}</span>
                 </div>
 
                 {Object.keys(errors).length > 0 && (
-                    <div className="flex items-center gap-2 p-2 bg-red-50 rounded-xl border border-red-100">
-                        <AlertCircle size={14} className="text-red-500 shrink-0" />
-                        <p className="text-xs text-red-600">Veuillez corriger les erreurs ci-dessus.</p>
+                    <div className="flex items-start gap-2 p-2 bg-red-50 rounded-xl border border-red-100">
+                        <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-red-600">
+                            {errors.ticket ?? 'Veuillez corriger les erreurs ci-dessus.'}
+                        </p>
                     </div>
                 )}
 
@@ -258,8 +241,13 @@ export default function TicketRecap({
                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     )}>
                     {processing && <Loader2 size={15} className="animate-spin" />}
-                    {processing ? 'Création…' : 'Créer le ticket'}
+                    {processing ? 'Enregistrement…' : (submitLabel ?? 'Créer le ticket')}
                 </button>
+                {!hasLines && (
+                    <p className="text-center text-xs text-gray-400">
+                        Ajoutez une prestation pour continuer
+                    </p>
+                )}
             </div>
         </div>
     );
@@ -268,7 +256,7 @@ export default function TicketRecap({
 function Section({ label, children }) {
     return (
         <div>
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</p>
             {children}
         </div>
     );

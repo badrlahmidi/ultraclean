@@ -1,0 +1,17 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 7
+
+    paths:
+        - app/
+
+    excludePaths:
+        - app/Http/Middleware/HandleInertiaRequests.php    # Ignore known patterns that are acceptable in Laravel
+    ignoreErrors:
+        # Larastan still emits unresolvable-type warnings for some Collection::map() callbacks.
+        - '#contains unresolvable type#'
+
+    treatPhpDocTypesAsCertain: false

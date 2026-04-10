@@ -1,7 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Tag, ToggleLeft, ToggleRight, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Plus, Pencil, Trash2, Tag, ToggleLeft, ToggleRight, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
 import clsx from 'clsx';
 import { formatMAD } from '@/utils/format';
 
@@ -239,6 +239,13 @@ export default function PromotionsIndex({ promotions }) {
 
                                     {/* Actions */}
                                     <div className="flex items-center gap-1 flex-shrink-0">
+                                        <Link
+                                            href={route('admin.promotions.show', promo.id)}
+                                            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                                            title="Voir le détail"
+                                        >
+                                            <Eye size={16} />
+                                        </Link>
                                         <button
                                             onClick={() => handleToggle(promo)}
                                             title={promo.is_active ? 'Désactiver' : 'Activer'}

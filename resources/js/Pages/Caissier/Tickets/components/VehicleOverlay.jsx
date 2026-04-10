@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, ChevronLeft, Car, Check, Search } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Car, Check, Search } from 'lucide-react';
 import clsx from 'clsx';
 
 /* Logo marque avec fallback */
@@ -94,19 +94,30 @@ export default function VehicleOverlay({ brands, onSelect, onClose }) {
                     </button>
                 </div>
 
-                {/* ── Fil d'Ariane ── */}
-                <div className="px-5 py-2 text-xs text-gray-400 border-b border-gray-50 shrink-0">
-                    {step === 'brands'
-                        ? 'Sélectionnez une marque'
-                        : <>
-                            <span className="font-medium text-blue-600">{activeBrand?.name}</span>
-                            <span className="mx-1">›</span>
-                            {activeModel
-                                ? <span className="font-medium text-gray-700">{activeModel.name}</span>
-                                : 'Sélectionnez un modèle'
-                            }
-                        </>
-                    }
+                {/* ── Indicateur d'étapes ── */}
+                <div className="px-5 py-2.5 border-b border-gray-100 bg-white shrink-0 flex items-center gap-2">
+                    <span className={clsx(
+                        'text-xs font-semibold px-2.5 py-1 rounded-full transition-all',
+                        step === 'brands' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'
+                    )}>
+                        1 · Marque
+                    </span>
+                    <ChevronRight size={12} className="text-gray-300 shrink-0" />
+                    <span className={clsx(
+                        'text-xs font-semibold px-2.5 py-1 rounded-full transition-all',
+                        step === 'models' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'
+                    )}>
+                        2 · Modèle
+                    </span>
+                    {step === 'models' && activeBrand && (
+                        <span className="ml-1 text-xs text-gray-500 truncate">— {activeBrand.name}</span>
+                    )}
+                    {step === 'models' && activeModel && (
+                        <span className="ml-auto flex items-center gap-1 text-xs text-green-600 font-medium shrink-0">
+                            <Check size={11} />
+                            {activeModel.name}
+                        </span>
+                    )}
                 </div>
 
                 {/* ── Grille marques ── */}

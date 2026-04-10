@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
-{    protected $fillable = [
+{
+    use HasFactory;
+
+    protected $fillable = [
         'name', 'description', 'color', 'category',
         'duration_minutes', 'sort_order', 'is_active',
         'price_type', 'base_price_cents',
@@ -53,9 +57,9 @@ class Service extends Model
 
     // ---------- Helpers ----------
 
-    /** Retourne le prix en centimes pour un type de véhicule donné. */
-    public function priceFor(int $vehicleTypeId): ?int
+    /** Retourne le prix en centimes pour un type de véhicule donné. */    public function priceFor(int $vehicleTypeId): ?int
     {
+        /** @var ServiceVehiclePrice|null $price */
         $price = $this->prices()->where('vehicle_type_id', $vehicleTypeId)->first();
         return $price?->price_cents;
     }

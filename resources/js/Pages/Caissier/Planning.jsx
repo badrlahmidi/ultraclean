@@ -1,10 +1,10 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import {
     Clock, Car, User, AlertTriangle, CheckCircle2,
     PlayCircle, Hourglass, RefreshCw, ChevronRight,
-    Timer, Loader2, X
+    Timer, Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -330,7 +330,7 @@ export default function Planning({ columns, washers, now }) {
             <div className="flex flex-col h-[calc(100vh-4rem)] -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden">
 
                 {/* ── Barre du haut ── */}
-                <div className="shrink-0 flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-200 flex-wrap">
+                <div className="shrink-0 flex items-start gap-3 px-4 sm:px-6 py-3 bg-white border-b border-gray-200 flex-wrap">
 
                     <div>
                         <h1 className="text-base font-bold text-gray-800 leading-tight">Planning du jour</h1>
@@ -406,7 +406,8 @@ export default function Planning({ columns, washers, now }) {
 
                 {/* ── Kanban ── */}
                 <div className="flex-1 overflow-hidden">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 h-full">
+                    {/* Desktop : grille 4 colonnes en hauteur fixe */}
+                    <div className="hidden lg:grid lg:grid-cols-4 gap-4 p-4 h-full">
                         {COLUMNS.map(col => (
                             <KanbanColumn
                                 key={col.key}
@@ -414,6 +415,18 @@ export default function Planning({ columns, washers, now }) {
                                 tickets={filterTickets(columns[col.key] ?? [])}
                                 onStatusChange={() => router.reload({ preserveScroll: true })}
                             />
+                        ))}
+                    </div>
+                    {/* Mobile : scroll horizontal avec snap */}
+                    <div className="flex lg:hidden gap-3 p-3 overflow-x-auto h-full snap-x snap-mandatory pb-4">
+                        {COLUMNS.map(col => (
+                            <div key={col.key} className="snap-start shrink-0 w-[82vw] flex flex-col">
+                                <KanbanColumn
+                                    col={col}
+                                    tickets={filterTickets(columns[col.key] ?? [])}
+                                    onStatusChange={() => router.reload({ preserveScroll: true })}
+                                />
+                            </div>
                         ))}
                     </div>
                 </div>

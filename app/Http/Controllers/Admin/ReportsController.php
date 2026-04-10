@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Expense;
 use App\Models\Shift;
 use App\Models\Ticket;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -14,13 +15,24 @@ use League\Csv\Writer;
 use SplTempFileObject;
 
 class ReportsController extends Controller
-{
-    public function index(Request $request): \Inertia\Response
+{    /* ── Tab aliases (alternative rapide — même page, onglet pré-sélectionné) ── */
+
+    public function indexTickets(Request $r): \Inertia\Response  { return $this->indexWithTab($r, 'tickets');  }
+    public function indexCaisse(Request $r): \Inertia\Response   { return $this->indexWithTab($r, 'caisse');   }
+    public function indexVehicles(Request $r): \Inertia\Response { return $this->indexWithTab($r, 'vehicles'); }
+    public function indexShifts(Request $r): \Inertia\Response   { return $this->indexWithTab($r, 'shifts');   }
+
+    private function indexWithTab(Request $r, string $tab): \Inertia\Response
     {
-        $request->validate([
+        $r->merge(['tab' => $tab]);
+        return $this->index($r);
+    }
+
+    public function index(Request $request): \Inertia\Response
+    {        $request->validate([
             'period' => ['nullable', 'in:today,week,month,year,custom'],
-            'from'   => ['nullable', 'date'],
-            'to'     => ['nullable', 'date'],
+            'from'   => ['nullable', 'date_format:Y-m-d'],
+            'to'     => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
 
         $period = $request->query('period', 'month');
@@ -30,19 +42,18 @@ class ReportsController extends Controller
 
         return Inertia::render('Admin/Reports/Index', array_merge($data, [
             'filters' => [
-                'period' => $period,
-                'from'   => $from->toDateString(),
-                'to'     => $to->toDateString(),
+                'period'    => $period,
+                'from'      => $from->toDateString(),
+                'to'        => $to->toDateString(),
+                'activeTab' => $request->query('tab', 'tickets'),
             ],
         ]));
-    }
-
-    public function exportPdf(Request $request): \Illuminate\Http\Response
+    }    public function exportPdf(Request $request): \Illuminate\Http\Response
     {
         $request->validate([
             'period' => ['nullable', 'in:today,week,month,year,custom'],
-            'from'   => ['nullable', 'date'],
-            'to'     => ['nullable', 'date'],
+            'from'   => ['nullable', 'date_format:Y-m-d'],
+            'to'     => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
 
         $period = $request->query('period', 'month');
@@ -58,14 +69,12 @@ class ReportsController extends Controller
         $filename = 'rapport_' . $from->format('Y-m-d') . '_' . $to->format('Y-m-d') . '.pdf';
 
         return $pdf->download($filename);
-    }
-
-    public function exportCsv(Request $request): \Illuminate\Http\Response
+    }    public function exportCsv(Request $request): \Illuminate\Http\Response
     {
         $request->validate([
             'period' => ['nullable', 'in:today,week,month,year,custom'],
-            'from'   => ['nullable', 'date'],
-            'to'     => ['nullable', 'date'],
+            'from'   => ['nullable', 'date_format:Y-m-d'],
+            'to'     => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
 
         $period = $request->query('period', 'month');
@@ -122,15 +131,44 @@ class ReportsController extends Controller
                 number_format($m->total / 100, 2, '.', ''),
             ]);
         }
-        $csv->insertOne([]);
-
-        $csv->insertOne(['--- TYPES DE VEHICULES ---']);
+        $csv->insertOne([]);        $csv->insertOne(['--- TYPES DE VEHICULES ---']);
         $csv->insertOne(['Type', 'Tickets', 'CA (MAD)']);
         foreach ($data['vehicleBreakdown'] as $v) {
             $csv->insertOne([
                 $v->name,
                 $v->count,
                 number_format($v->revenue / 100, 2, '.', ''),
+            ]);
+        }
+        $csv->insertOne([]);
+
+        $csv->insertOne(['--- DEPENSES ---']);
+        $csv->insertOne(['CA brut (MAD)', number_format($data['stats']['revenue'] / 100, 2, '.', '')]);
+        $csv->insertOne(['Total depenses (MAD)', number_format($data['expensesTotal'] / 100, 2, '.', '')]);
+        $csv->insertOne(['CA net (MAD)', number_format($data['netRevenue'] / 100, 2, '.', '')]);
+        $csv->insertOne([]);
+
+        $csv->insertOne(['--- DEPENSES PAR CATEGORIE ---']);
+        $csv->insertOne(['Categorie', 'Nb', 'Total (MAD)']);
+        foreach ($data['expensesByCategory'] as $c) {
+            $csv->insertOne([
+                $c['category'],
+                $c['count'],
+                number_format($c['total'] / 100, 2, '.', ''),
+            ]);
+        }
+        $csv->insertOne([]);
+
+        $csv->insertOne(['--- DETAIL DEPENSES ---']);
+        $csv->insertOne(['Date', 'Categorie', 'Libelle', 'Montant (MAD)', 'Mode', 'Operateur']);
+        foreach ($data['expensesList'] as $e) {
+            $csv->insertOne([
+                $e['date'],
+                $e['category'],
+                $e['label'],
+                number_format($e['amount_cents'] / 100, 2, '.', ''),
+                $e['paid_with'],
+                $e['user'] ?? '',
             ]);
         }
 
@@ -147,7 +185,9 @@ class ReportsController extends Controller
     private function gatherData(Carbon $from, Carbon $to): array
     {
         /* ── Tickets dans la période ── */
-        $base = Ticket::whereBetween('created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);        $stats = [
+        $base = Ticket::whereBetween('created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
+
+        $stats = [
             'total_tickets'     => (clone $base)->count(),
             'paid_tickets'      => (clone $base)->where('status', 'paid')->count(),
             'cancelled_tickets' => (clone $base)->where('status', 'cancelled')->count(),
@@ -165,8 +205,7 @@ class ReportsController extends Controller
                 DB::raw('SUM(total_cents) as revenue')
             )
             ->orderBy('day')
-            ->get()
-            ->map(fn ($r) => [
+            ->get()            ->map(fn ($r) => [
                 'date'    => $r->day,
                 'revenue' => (int) $r->revenue,
                 'tickets' => (int) $r->tickets,
@@ -209,28 +248,72 @@ class ReportsController extends Controller
             ->whereNotNull('closed_at')
             ->orderByDesc('opened_at')
             ->limit(20)
-            ->get()
-            ->map(fn ($s) => [
+            ->get()            ->map(fn (Shift $s) => [
                 'id'                 => $s->id,
-                'user'               => $s->user?->name,
+                'user'               => $s->user instanceof \App\Models\User ? $s->user->name : null,
                 'opened_at'          => $s->opened_at,
                 'closed_at'          => $s->closed_at,
                 'opening_cash_cents' => $s->opening_cash_cents,
                 'closing_cash_cents' => $s->closing_cash_cents,
                 'difference_cents'   => $s->difference_cents,
-            ]);
-
-        $vehicleBreakdown = Ticket::whereBetween('tickets.created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ]);        $vehicleBreakdown = Ticket::whereBetween('tickets.created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->where('tickets.status', 'paid')
             ->join('vehicle_types', 'vehicle_types.id', '=', 'tickets.vehicle_type_id')
             ->groupBy('vehicle_types.name')
             ->select('vehicle_types.name', DB::raw('COUNT(*) as count'), DB::raw('SUM(tickets.total_cents) as revenue'))
             ->get();
 
-        return compact('stats', 'revenueTrend', 'statusBreakdown', 'topServices', 'paymentMethods', 'shifts', 'vehicleBreakdown');
-    }
+        // ── Dépenses ──────────────────────────────────────────────────────
+        $expenseBase = Expense::whereBetween('date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
 
-    private function resolvePeriod(string $period, Request $request): array
+        $expensesTotal = (clone $expenseBase)->sum('amount_cents');
+
+        $expensesByCategory = (clone $expenseBase)
+            ->groupBy('category')
+            ->select('category', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount_cents) as total'))
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($r) => [
+                'category' => $r->category,
+                'count'    => (int) $r->count,
+                'total'    => (int) $r->total,
+            ]);
+
+        $expensesList = (clone $expenseBase)
+            ->with('user:id,name')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get()
+            ->map(fn (Expense $e) => [
+                'id'           => $e->id,
+                'date'         => $e->date?->toDateString(),
+                'label'        => $e->label,
+                'category'     => $e->category,
+                'amount_cents' => $e->amount_cents,
+                'paid_with'    => $e->paid_with,
+                'user'         => $e->user?->name,
+            ]);
+
+        $netRevenue = $stats['revenue'] - $expensesTotal;
+
+        // ── Dépenses par méthode de paiement ─────────────────────────────
+        $expensesByMethod = (clone $expenseBase)
+            ->groupBy('paid_with')
+            ->select('paid_with', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount_cents) as total'))
+            ->get()
+            ->map(fn ($r) => [
+                'method' => $r->paid_with,
+                'count'  => (int) $r->count,
+                'total'  => (int) $r->total,
+            ]);
+
+        return compact(
+            'stats', 'revenueTrend', 'statusBreakdown', 'topServices',
+            'paymentMethods', 'shifts', 'vehicleBreakdown',
+            'expensesTotal', 'expensesByCategory', 'expensesList', 'expensesByMethod', 'netRevenue'
+        );
+    }    private function resolvePeriod(string $period, Request $request): array
     {
         $now = Carbon::now('Africa/Casablanca');
 
@@ -239,8 +322,8 @@ class ReportsController extends Controller
             'week'   => [$now->copy()->startOfWeek(),  $now->copy()->endOfWeek()],
             'year'   => [$now->copy()->startOfYear(),  $now->copy()->endOfYear()],
             'custom' => [
-                Carbon::parse($request->query('from', $now->toDateString())),
-                Carbon::parse($request->query('to',   $now->toDateString())),
+                Carbon::createFromFormat('Y-m-d', $request->query('from', $now->toDateString()), 'Africa/Casablanca')->startOfDay(),
+                Carbon::createFromFormat('Y-m-d', $request->query('to',   $now->toDateString()), 'Africa/Casablanca')->endOfDay(),
             ],
             default  => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()], // month
         };

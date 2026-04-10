@@ -1,0 +1,1819 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$service\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Actions/ProcessPaymentAction.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/DTOs/CreateTicketDTO.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/DTOs/CreateTicketDTO.php
+
+		-
+			message: '#^Method App\\DTOs\\ServiceLineDTO\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/DTOs/ServiceLineDTO.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/DTOs/UpdateTicketDTO.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/DTOs/UpdateTicketDTO.php
+
+		-
+			message: '#^Method App\\Events\\TicketAssigned\:\:broadcastWith\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Events/TicketAssigned.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Events/TicketAssigned.php
+
+		-
+			message: '#^Method App\\Events\\TicketStatusUpdated\:\:broadcastWith\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Events/TicketStatusUpdated.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Events/TicketStatusUpdated.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\ActivityLogController\:\:applyFilters\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Admin/ActivityLogController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\ActivityLogController\:\:applyFilters\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/Admin/ActivityLogController.php
+
+		-
+			message: '#^Part \$action \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: app/Http/Controllers/Admin/ActivityLogController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/ActivityLogController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>role" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/ActivityLogController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\VehicleBrand\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\VehicleBrand\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$estimated_duration\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$scheduled_at\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$vehicle_plate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Parameter \#1 \$time of static method Carbon\\Carbon\:\:parse\(\) expects Carbon\\Month\|Carbon\\WeekDay\|DateTimeInterface\|float\|int\|string\|null, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Parameter \#2 \$operator of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Appointment\>\:\:whereDate\(\) expects DateTimeInterface\|string\|null, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Part \$search \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 3
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/AppointmentController.php
+
+		-
+			message: '#^Part \$search \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 4
+			path: app/Http/Controllers/Admin/ClientController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\EmployeeController\:\:resolvePeriod\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/Admin/EmployeeController.php
+
+		-
+			message: '#^Parameter \#1 \$period of method App\\Http\\Controllers\\Admin\\EmployeeController\:\:resolvePeriod\(\) expects string, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/EmployeeController.php
+
+		-
+			message: '#^Parameter \#1 \$time of static method Carbon\\Carbon\:\:parse\(\) expects Carbon\\Month\|Carbon\\WeekDay\|DateTimeInterface\|float\|int\|string\|null, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Admin/EmployeeController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$ice\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/InvoiceController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/InvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/InvoiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\InvoiceController\:\:downloadPdf\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Admin/InvoiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\LoyaltyController\:\:adjust\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Admin/LoyaltyController.php
+
+		-
+			message: '#^Parameter \#4 \$operatorId of static method App\\Services\\LoyaltyService\:\:adjustPoints\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/LoyaltyController.php
+
+		-
+			message: '#^Part \$search \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: app/Http/Controllers/Admin/LoyaltyController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\PaymentController\:\:applyFilters\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Admin/PaymentController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\PaymentController\:\:applyFilters\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/Admin/PaymentController.php
+
+		-
+			message: '#^Part \$search \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: app/Http/Controllers/Admin/PaymentController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Admin/PaymentController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>ticket_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ticket\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Admin/PromotionController.php
+
+		-
+			message: '#^Function y not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/PromotionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\PromotionController\:\:validate\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Admin/PromotionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\StockProduct\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StockProduct\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/PurchaseController.php
+
+		-
+			message: '#^Anonymous function has an unused use \$request\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Http/Controllers/Admin/PurchaseController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\StockProduct\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StockProduct\>\:\:increment\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/PurchaseController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$ice\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/QuoteController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Client\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/QuoteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/QuoteController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\QuoteController\:\:downloadPdf\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Admin/QuoteController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Expense\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Expense\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Ticket\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Ticket\:\:\$day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Ticket\:\:\$revenue\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Ticket\:\:\$tickets\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\ReportsController\:\:gatherData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\ReportsController\:\:resolvePeriod\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Parameter \#1 \$period of method App\\Http\\Controllers\\Admin\\ReportsController\:\:resolvePeriod\(\) expects string, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Parameter \#2 \$time of static method Carbon\\Carbon\:\:createFromFormat\(\) expects string, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Unable to resolve the template type TMapWithKeysValue in call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Ticket\>\:\:mapWithKeys\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/ReportsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\ServiceController\:\:syncPrices\(\) has parameter \$prices with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/Admin/ServiceController.php
+
+		-
+			message: '#^Cannot call method store\(\) on array\<int, Illuminate\\Http\\UploadedFile\>\|Illuminate\\Http\\UploadedFile\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Admin/SettingsController.php
+
+		-
+			message: '#^Parameter \#1 \$path of static method Illuminate\\Filesystem\\FilesystemAdapter\:\:url\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/SettingsController.php
+
+		-
+			message: '#^Parameter \#3 \$userId of method App\\Models\\StockProduct\:\:adjustStock\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/StockController.php
+
+		-
+			message: '#^Parameter \#4 \$userId of method App\\Models\\StockProduct\:\:addStock\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/StockController.php
+
+		-
+			message: '#^Parameter \#4 \$userId of method App\\Models\\StockProduct\:\:consumeStock\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/StockController.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Admin/StockController.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Admin/StockController.php
+
+		-
+			message: '#^Cannot call method getPathname\(\) on array\<int, Illuminate\\Http\\UploadedFile\>\|Illuminate\\Http\\UploadedFile\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Cannot call method store\(\) on array\<int, Illuminate\\Http\\UploadedFile\>\|Illuminate\\Http\\UploadedFile\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fgetcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fputcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function rewind expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function stream_get_contents expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/VehicleBrandController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Caissier/ClientController.php
+
+		-
+			message: '#^Part \$search \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 4
+			path: app/Http/Controllers/Caissier/ClientController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Caissier/ExpenseController.php
+
+		-
+			message: '#^Parameter \#3 \$operatorId of method App\\Actions\\ProcessPaymentAction\:\:execute\(\) expects int, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Caissier/PaymentController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Caissier/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Ticket\:\:\$brand_logo_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Caissier/TicketController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, array\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Caissier/TicketController.php
+
+		-
+			message: '#^Parameter \#3 \$value of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Ticket\>\:\:whereDate\(\) expects DateTimeInterface\|string\|null, array\|string given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Http/Controllers/Caissier/TicketController.php
+
+		-
+			message: '#^Part \$search \(non\-empty\-array\|non\-falsy\-string\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: app/Http/Controllers/Caissier/TicketController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Controllers/Caissier/TicketController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{''default\-src \\''self\\'''', ''script\-src \\''self\\'' …'', ''style\-src \\''self\\'' …'', ''font\-src \\''self\\''…'', ''img\-src \\''self\\'' data…'', ''connect\-src \\''self\\''…'', ''frame\-ancestors …'', ''base\-uri \\''self\\'''', \.\.\.\}\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
+			identifier: arrayFilter.same
+			count: 1
+			path: app/Http/Middleware/SecurityHeaders.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\ClientQuickStoreRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/ClientQuickStoreRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\StoreServiceRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/StoreServiceRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\StoreTicketRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/StoreTicketRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\UpdateTicketRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/UpdateTicketRequest.php
+
+		-
+			message: '#^Method App\\Http\\Resources\\ClientResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Resources/ClientResource.php
+
+		-
+			message: '#^Method App\\Http\\Resources\\ShiftResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Resources/ShiftResource.php
+
+		-
+			message: '#^Method App\\Http\\Resources\\TicketResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Resources/TicketResource.php
+
+		-
+			message: '#^Method App\\Http\\Resources\\UserResource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Method App\\Models\\ActivityLog\:\:log\(\) has parameter \$properties with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Method App\\Models\\ActivityLog\:\:scopeForAction\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Method App\\Models\\ActivityLog\:\:scopeForAction\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Method App\\Models\\ActivityLog\:\:scopeForSubject\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Method App\\Models\\ActivityLog\:\:scopeForSubject\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Method App\\Models\\ActivityLog\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Class App\\Models\\Appointment uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:assignedTo\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:findConflicts\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:scopeConflicting\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:scopeConflicting\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:transitionTo\(\) has parameter \$extra with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:vehicleBrand\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:vehicleModel\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Method App\\Models\\Appointment\:\:vehicleType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: '#^Class App\\Models\\Client uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:appointments\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:loyaltyTransactions\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:primaryVehicle\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasOne does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:scopeSearch\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:scopeSearch\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:tickets\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:upcomingAppointments\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\Client\:\:vehicles\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Method App\\Models\\ClientVehicle\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ClientVehicle.php
+
+		-
+			message: '#^Method App\\Models\\ClientVehicle\:\:vehicleType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ClientVehicle.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:categories\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:paymentMethods\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:scopeForDate\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:scopeForDate\(\) has parameter \$date with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:scopeForDate\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:scopeForShift\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:scopeForShift\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:shift\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Method App\\Models\\Expense\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Expense.php
+
+		-
+			message: '#^Class App\\Models\\Invoice uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:lines\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:quote\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:tickets\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Class App\\Models\\InvoiceLine uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/InvoiceLine.php
+
+		-
+			message: '#^Method App\\Models\\InvoiceLine\:\:invoice\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/InvoiceLine.php
+
+		-
+			message: '#^Method App\\Models\\InvoiceLine\:\:service\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/InvoiceLine.php
+
+		-
+			message: '#^Method App\\Models\\LoyaltyTransaction\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LoyaltyTransaction.php
+
+		-
+			message: '#^Method App\\Models\\LoyaltyTransaction\:\:createdBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LoyaltyTransaction.php
+
+		-
+			message: '#^Method App\\Models\\LoyaltyTransaction\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/LoyaltyTransaction.php
+
+		-
+			message: '#^Method App\\Models\\Payment\:\:processedBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Payment.php
+
+		-
+			message: '#^Method App\\Models\\Payment\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Payment.php
+
+		-
+			message: '#^Method App\\Models\\Promotion\:\:scopeActive\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Promotion.php
+
+		-
+			message: '#^Method App\\Models\\Promotion\:\:scopeActive\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Promotion.php
+
+		-
+			message: '#^Method App\\Models\\Promotion\:\:usages\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Promotion.php
+
+		-
+			message: '#^Method App\\Models\\PromotionUsage\:\:promotion\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PromotionUsage.php
+
+		-
+			message: '#^Method App\\Models\\PromotionUsage\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PromotionUsage.php
+
+		-
+			message: '#^Class App\\Models\\Purchase uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Purchase.php
+
+		-
+			message: '#^Method App\\Models\\Purchase\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Purchase.php
+
+		-
+			message: '#^Method App\\Models\\Purchase\:\:items\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Purchase.php
+
+		-
+			message: '#^Method App\\Models\\Purchase\:\:supplier\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Purchase.php
+
+		-
+			message: '#^Property App\\Models\\Purchase\:\:\$total_cents \(int\) does not accept float\|int\|string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/Purchase.php
+
+		-
+			message: '#^Class App\\Models\\PurchaseItem uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PurchaseItem.php
+
+		-
+			message: '#^Method App\\Models\\PurchaseItem\:\:purchase\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PurchaseItem.php
+
+		-
+			message: '#^Method App\\Models\\PurchaseItem\:\:stockProduct\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PurchaseItem.php
+
+		-
+			message: '#^Class App\\Models\\Quote uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:companyData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:invoices\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:lines\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\QuoteLine\:\:quote\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/QuoteLine.php
+
+		-
+			message: '#^Method App\\Models\\QuoteLine\:\:service\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/QuoteLine.php
+
+		-
+			message: '#^Class App\\Models\\Service uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:prices\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:stockProducts\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:ticketServices\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:vehicleTypes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\ServiceVehiclePrice\:\:service\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ServiceVehiclePrice.php
+
+		-
+			message: '#^Method App\\Models\\ServiceVehiclePrice\:\:vehicleType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ServiceVehiclePrice.php
+
+		-
+			message: '#^Method App\\Models\\Shift\:\:expenses\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Shift.php
+
+		-
+			message: '#^Method App\\Models\\Shift\:\:scopeOpen\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Shift.php
+
+		-
+			message: '#^Method App\\Models\\Shift\:\:scopeOpen\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Shift.php
+
+		-
+			message: '#^Method App\\Models\\Shift\:\:tickets\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Shift.php
+
+		-
+			message: '#^Method App\\Models\\Shift\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Shift.php
+
+		-
+			message: '#^Method App\\Models\\StockMovement\:\:product\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockMovement.php
+
+		-
+			message: '#^Method App\\Models\\StockMovement\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockMovement.php
+
+		-
+			message: '#^Method App\\Models\\StockMovement\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockMovement.php
+
+		-
+			message: '#^Class App\\Models\\StockProduct uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Method App\\Models\\StockProduct\:\:movements\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Method App\\Models\\StockProduct\:\:scopeActive\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Method App\\Models\\StockProduct\:\:scopeActive\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Method App\\Models\\StockProduct\:\:scopeLowStock\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Method App\\Models\\StockProduct\:\:scopeLowStock\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Method App\\Models\\StockProduct\:\:services\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/StockProduct.php
+
+		-
+			message: '#^Class App\\Models\\Supplier uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Supplier.php
+
+		-
+			message: '#^Method App\\Models\\Supplier\:\:purchases\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Supplier.php
+
+		-
+			message: '#^Method App\\Models\\Supplier\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Supplier.php
+
+		-
+			message: '#^Method App\\Models\\Supplier\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Supplier.php
+
+		-
+			message: '#^Class App\\Models\\Ticket uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:assignedTo\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:assistantWashers\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:creator\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:leadWasher\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:paidBy\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:payment\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasOne does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeByStatus\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeByStatus\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeForShift\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeForShift\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeToday\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:scopeToday\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:services\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:shift\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:ticketTemplate\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:transitionTo\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:vehicleBrand\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:vehicleModel\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:vehicleType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\Ticket\:\:washers\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^PHPDoc tag @property\-read for property App\\Models\\Ticket\:\:\$lines contains unknown class App\\Models\\TicketLine\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Type App\\Models\\TicketLine in generic type Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\TicketLine\> in PHPDoc tag @property\-read for property App\\Models\\Ticket\:\:\$lines is not subtype of template type TModel of Illuminate\\Database\\Eloquent\\Model of class Illuminate\\Database\\Eloquent\\Collection\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: app/Models/Ticket.php
+
+		-
+			message: '#^Method App\\Models\\TicketService\:\:priceVariant\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketService.php
+
+		-
+			message: '#^Method App\\Models\\TicketService\:\:service\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketService.php
+
+		-
+			message: '#^Method App\\Models\\TicketService\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Service\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Service\>\:\:\$base_price_cents\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Service\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Service\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Service\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Service\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Class App\\Models\\TicketTemplate uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:assignedToUser\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:client\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:scopeDue\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:scopeDue\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketTemplate\:\:vehicleType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketTemplate.php
+
+		-
+			message: '#^Method App\\Models\\TicketWasher\:\:ticket\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketWasher.php
+
+		-
+			message: '#^Method App\\Models\\TicketWasher\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/TicketWasher.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:activeShift\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:appointments\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:assignedTickets\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:createdTickets\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:hasRole\(\) has parameter \$role with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeByRole\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeByRole\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeLaveurs\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeLaveurs\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:shifts\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:ticketWashers\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:upcomingAppointments\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:washerTickets\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Class App\\Models\\VehicleBrand uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleBrand.php
+
+		-
+			message: '#^Method App\\Models\\VehicleBrand\:\:allModels\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleBrand.php
+
+		-
+			message: '#^Method App\\Models\\VehicleBrand\:\:models\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleBrand.php
+
+		-
+			message: '#^Method App\\Models\\VehicleBrand\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/VehicleBrand.php
+
+		-
+			message: '#^Method App\\Models\\VehicleBrand\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/VehicleBrand.php
+
+		-
+			message: '#^Method App\\Models\\VehicleBrand\:\:tickets\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleBrand.php
+
+		-
+			message: '#^Class App\\Models\\VehicleModel uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:brand\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:scopeForBrand\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:scopeForBrand\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:suggestedVehicleType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Method App\\Models\\VehicleModel\:\:tickets\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleModel.php
+
+		-
+			message: '#^Class App\\Models\\VehicleType uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleType.php
+
+		-
+			message: '#^Method App\\Models\\VehicleType\:\:scopeActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/VehicleType.php
+
+		-
+			message: '#^Method App\\Models\\VehicleType\:\:scopeActive\(\) has parameter \$query with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Models/VehicleType.php
+
+		-
+			message: '#^Method App\\Models\\VehicleType\:\:servicePrices\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleType.php
+
+		-
+			message: '#^Method App\\Models\\VehicleType\:\:ticketServices\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleType.php
+
+		-
+			message: '#^Method App\\Models\\VehicleType\:\:tickets\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/VehicleType.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/AppointmentReminder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/AppointmentReminder.php
+
+		-
+			message: '#^Method App\\Notifications\\AppointmentReminder\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/AppointmentReminder.php
+
+		-
+			message: '#^Method App\\Notifications\\AppointmentReminder\:\:via\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/AppointmentReminder.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/AppointmentReminder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/InvoiceOverdue.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Notifications/InvoiceOverdue.php
+
+		-
+			message: '#^Method App\\Notifications\\InvoiceOverdue\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/InvoiceOverdue.php
+
+		-
+			message: '#^Method App\\Notifications\\InvoiceOverdue\:\:via\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/InvoiceOverdue.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/NewAppointment.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/NewAppointment.php
+
+		-
+			message: '#^Method App\\Notifications\\NewAppointment\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/NewAppointment.php
+
+		-
+			message: '#^Method App\\Notifications\\NewAppointment\:\:via\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/NewAppointment.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/NewAppointment.php
+
+		-
+			message: '#^Method App\\Notifications\\StockLowAlert\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/StockLowAlert.php
+
+		-
+			message: '#^Method App\\Notifications\\StockLowAlert\:\:via\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/StockLowAlert.php
+
+		-
+			message: '#^Method App\\Notifications\\TicketReady\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/TicketReady.php
+
+		-
+			message: '#^Method App\\Notifications\\TicketReady\:\:via\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/TicketReady.php
+
+		-
+			message: '#^Method App\\Observers\\CatalogCacheObserver\:\:deleted\(\) has parameter \$model with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Observers/CatalogCacheObserver.php
+
+		-
+			message: '#^Method App\\Observers\\CatalogCacheObserver\:\:saved\(\) has parameter \$model with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Observers/CatalogCacheObserver.php
+
+		-
+			message: '#^Parameter \#4 \$userId of method App\\Models\\StockProduct\:\:consumeStock\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Observers/TicketObserver.php
+
+		-
+			message: '#^Method App\\Services\\PricingService\:\:buildPriceGrid\(\) has parameter \$services with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/PricingService.php
+
+		-
+			message: '#^Method App\\Services\\PricingService\:\:buildPriceGrid\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/PricingService.php
+
+		-
+			message: '#^Method App\\Services\\WasherScheduler\:\:feasibilityCheck\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/WasherScheduler.php
