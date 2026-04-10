@@ -40,12 +40,58 @@ ls ~/domains/
 
 #### Option A: Fresh Installation (First Time)
 
+**If repository is PUBLIC (no authentication needed):**
+
 ```bash
 # Clone the repository
 git clone https://github.com/badrlahmdi/ultraclean.git .
 
 # Verify clone was successful
 git status
+```
+
+**If repository is PRIVATE or authentication fails, use one of these methods:**
+
+**Method 1: Use SSH (Recommended for private repos):**
+
+First, generate SSH key on Hostinger:
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com"
+# Press Enter for all defaults
+cat ~/.ssh/id_ed25519.pub
+```
+
+Copy the output, then:
+1. Go to: https://github.com/settings/ssh/new
+2. Paste the SSH key
+3. Add title: "Hostinger Server"
+4. Click "Add SSH key"
+
+Then clone using SSH:
+```bash
+git clone git@github.com:badrlahmdi/ultraclean.git .
+```
+
+**Method 2: Use Personal Access Token (if SSH not available):**
+
+1. Go to: https://github.com/settings/tokens
+2. Click "Generate new token" → "Generate new token (classic)"
+3. Select scopes: `repo` (for private repos)
+4. Generate token and copy it
+
+Then clone using token:
+```bash
+git clone https://YOUR_TOKEN@github.com/badrlahmdi/ultraclean.git .
+```
+
+Replace `YOUR_TOKEN` with your actual personal access token.
+
+**Method 3: Configure Git credentials (not recommended):**
+
+```bash
+git config --global credential.helper store
+git clone https://github.com/badrlahmdi/ultraclean.git .
+# When prompted, use your Personal Access Token as password
 ```
 
 #### Option B: Update Existing Installation
