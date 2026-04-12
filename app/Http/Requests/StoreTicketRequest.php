@@ -38,7 +38,7 @@ class StoreTicketRequest extends FormRequest
                     ->where('is_active', true),
             ],
 
-            // ── Services ────────────────────────────────────────────────
+            // ── Services (at least one service OR product required, validated in withValidator) ──
             'services'                       => ['nullable', 'array'],
             'services.*.service_id'          => ['required', 'exists:services,id'],
             'services.*.quantity'            => ['required', 'integer', 'min:1', 'max:10'],

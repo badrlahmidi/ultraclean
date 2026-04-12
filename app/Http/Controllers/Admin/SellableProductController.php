@@ -140,12 +140,19 @@ class SellableProductController extends Controller
         $qty  = (float) $data['quantity'];
         $type = (string) $data['type'];
 
-        match ($type) {
-            'in'         => $sellableProduct->addStock($qty, $data['note'] ?? null, $data['reference'] ?? null, auth()->id()),
-            'out'        => $sellableProduct->consumeStock($qty, null, false, auth()->id()),
-            'adjustment' => $sellableProduct->adjustStock($qty, $data['note'] ?? null, auth()->id()),
-            default      => throw new \InvalidArgumentException("Unknown movement type: {$type}"),
-        };
+        switch ($type) {
+            case 'in':
+                $sellableProduct->addStock($qty, $data['note'] ?? null, $data['reference'] ?? null, auth()->id());
+                break;
+            case 'out':
+                $sellableProduct->consumeStock($qty, null, false, auth()->id());
+                break;
+            case 'adjustment':
+                $sellableProduct->adjustStock($qty, $data['note'] ?? null, auth()->id());
+                break;
+            default:
+                throw new \InvalidArgumentException("Unknown movement type: {$type}");
+        }
 
         return back()->with('success', 'Mouvement enregistré.');
     }
