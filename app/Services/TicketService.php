@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\CreateTicketDTO;
+use App\DTOs\ProductLineDTO;
 use App\DTOs\ServiceLineDTO;
 use App\DTOs\UpdateTicketDTO;
 use App\Events\TicketAssigned;
@@ -12,9 +13,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Models\ActivityLog;
 use App\Models\Client;
+use App\Models\SellableProduct;
 use App\Models\Service;
 use App\Models\Shift;
 use App\Models\Ticket;
+use App\Models\TicketProduct;
 use App\Models\TicketService as TicketServiceModel;
 use App\Models\TicketWasher;
 use App\Models\User;
@@ -30,8 +33,9 @@ use App\Models\VehicleType;
  * Controller → Service boundary.
  */
 class TicketService
-{    /**
-     * Create a new ticket with its service lines and washer assignments.
+{
+    /**
+     * Create a new ticket with its service lines, product lines, and washer assignments.
      *
      * Price validation is performed FIRST, before any DB writes, so a
      * rejected submission never leaves an orphaned ticket row.
@@ -42,9 +46,11 @@ class TicketService
     public function create(CreateTicketDTO $dto, User $creator): Ticket
     {
         // ── Validate service prices BEFORE any DB write ───────────────────
-        $mismatches = PricingService::validatePrices($dto->services, $dto->vehicleTypeId);
-        if ($mismatches->isNotEmpty()) {
-            throw ValidationException::withMessages(['services' => $mismatches->all()]);
+        if (!empty($dto->services)) {
+            $mismatches = PricingService::validatePrices($dto->services, $dto->vehicleTypeId);
+            if ($mismatches->isNotEmpty()) {
+                throw ValidationException::withMessages(['services' => $mismatches->all()]);
+            }
         }
 
         $shift = Shift::where('user_id', $creator->id)
@@ -57,7 +63,8 @@ class TicketService
         $brandSnapshot = $this->buildBrandSnapshot(
             $dto->vehicleBrandId,
             $dto->vehicleModelId,
-            $dto->vehicleBrandFreeText,        );
+            $dto->vehicleBrandFreeText,
+        );
 
         // ── Wrap all DB writes in a transaction for atomicity ───────────────
         $ticket = DB::transaction(function () use ($dto, $creator, $shift, $clientId, $brandSnapshot) {
@@ -74,6 +81,8 @@ class TicketService
                 'notes'              => $dto->notes,
                 'estimated_duration' => $dto->estimatedDuration,
                 'payment_mode'       => $dto->paymentMode,
+                'discount_type'      => $dto->discountType,
+                'discount_value'     => $dto->discountValue,
                 'due_at'             => $dto->assignedTo && $dto->estimatedDuration
                     ? WasherScheduler::computeDueAt(
                         (int) $dto->assignedTo,
@@ -84,7 +93,14 @@ class TicketService
             ]);
 
             // ── Attach service lines (ticket is new — no existing lines to remove) ──
-            $this->attachServiceLines($ticket, $dto->services, $dto->vehicleTypeId);
+            if (!empty($dto->services)) {
+                $this->attachServiceLines($ticket, $dto->services, $dto->vehicleTypeId);
+            }
+
+            // ── Attach product lines ────────────────────────────────────────────
+            if (!empty($dto->products)) {
+                $this->attachProductLines($ticket, $dto->products, $clientId);
+            }
 
             $ticket->refresh();
 
@@ -163,7 +179,9 @@ class TicketService
         ]);
 
         return $ticket->refresh();
-    }    // ─── Private helpers ────────────────────────────────────────────────────
+    }
+
+    // ─── Private helpers ────────────────────────────────────────────────────
 
     /**
      * Build the brand + model text snapshot stored on the ticket.
@@ -179,7 +197,9 @@ class TicketService
             $brandName = $brand !== null ? $brand->name : '';
             $modelName = $model !== null ? $model->name : '';
             return trim($brandName . ' ' . $modelName) ?: null;
-        }        return $freeText ?: null;
+        }
+
+        return $freeText ?: null;
     }
 
     /**
@@ -198,14 +218,18 @@ class TicketService
         $mismatches = PricingService::validatePrices($lines, $vehicleTypeId);
         if ($mismatches->isNotEmpty()) {
             throw ValidationException::withMessages(['services' => $mismatches->all()]);
-        }        $ticket->services()->delete();
+        }
+
+        $ticket->services()->delete();
         $this->attachServiceLines($ticket, $lines, $vehicleTypeId);
 
         // Explicit recalculation as a safety net: the TicketService observer already
         // fires recalculateTotals() on saved/deleted, but calling it here keeps the
         // in-memory ticket state correct for any code that runs after this call.
         $ticket->recalculateTotals();
-    }    /**
+    }
+
+    /**
      * Persist TicketService rows for each service line.
      *
      * ARCH-ITEM-2.1 (F-01) — Server-side price resolution:
@@ -235,6 +259,36 @@ class TicketService
                 'price_variant_label' => $line->priceVariantId
                     ? VehicleType::find($line->priceVariantId)?->name
                     : null,
+            ]);
+        }
+    }
+
+    /**
+     * Persist TicketProduct rows for each product line.
+     *
+     * For Atelier client, products can be marked as free (is_free = true),
+     * which sets line_total_cents to 0.
+     *
+     * @param  ProductLineDTO[]  $lines
+     */
+    private function attachProductLines(Ticket $ticket, array $lines, int $clientId): void
+    {
+        $isAtelier = Client::isAtelierId($clientId);
+
+        foreach ($lines as $line) {
+            $product = SellableProduct::findOrFail($line->sellableProductId);
+
+            // For Atelier, use the is_free flag from DTO; for others, always false
+            $isFree = $isAtelier && $line->isFree;
+
+            TicketProduct::create([
+                'ticket_id'           => $ticket->id,
+                'sellable_product_id' => $product->id,
+                'product_name'        => $product->name,
+                'unit_price_cents'    => $product->selling_price_cents,
+                'quantity'            => $line->quantity,
+                'discount_cents'      => $line->discountCents,
+                'is_free'             => $isFree,
             ]);
         }
     }

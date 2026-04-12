@@ -238,19 +238,33 @@ class TicketController extends Controller
 
         $vehicleTypes = Cache::remember('active_vehicle_types', 60, fn () =>
             VehicleType::active()->get(['id', 'name', 'slug', 'icon'])
-        );        // Washer availability is real-time — intentionally not cached.
+        );
+
+        // Sellable products for POS
+        $sellableProducts = Cache::remember('active_sellable_products', 60, fn () =>
+            \App\Models\SellableProduct::active()
+                ->orderBy('name')
+                ->get(['id', 'name', 'barcode', 'selling_price_cents', 'current_stock', 'unit'])
+        );
+
+        // Washer availability is real-time — intentionally not cached.
         $washers = User::where('role', User::ROLE_LAVEUR)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'avatar'])
             ->map(fn ($w) => array_merge($w->toArray(), WasherScheduler::getAvailability($w->id)));
 
+        // Atelier client for free products
+        $atelierClient = Client::atelier();
+
         return [
-            'services'     => $services->groupBy('category'),
-            'priceGrid'    => $priceGrid,
-            'vehicleTypes' => $vehicleTypes,
-            'brands'       => $brands,
-            'washers'      => $washers,
+            'services'         => $services->groupBy('category'),
+            'priceGrid'        => $priceGrid,
+            'vehicleTypes'     => $vehicleTypes,
+            'brands'           => $brands,
+            'washers'          => $washers,
+            'sellableProducts' => $sellableProducts,
+            'atelierClientId'  => $atelierClient->id,
         ];
     }    /** Endpoint JSON — disponibilité fraîche de tous les laveurs (appelé par le WasherDrawer). */
     public function washerQueue(Request $request): \Illuminate\Http\JsonResponse

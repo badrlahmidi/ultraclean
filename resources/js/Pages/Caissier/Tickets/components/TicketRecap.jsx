@@ -1,4 +1,4 @@
-import { Car, User, Trash2, Clock, Edit3, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Car, User, Trash2, Clock, Edit3, Check, AlertCircle, Loader2, Package, Percent, Gift } from 'lucide-react';
 import { useState } from 'react';
 import clsx from 'clsx';
 
@@ -13,32 +13,51 @@ const fmtM = (min) => min >= 60
  *   vehicle         — {brand, model, plate} ou null
  *   client          — objet client ou null
  *   lines           — [{service_id, name, unit_price_cents, quantity, price_variant_id}]
+ *   productLines    — [{sellable_product_id, name, unit_price_cents, quantity, is_free}]
+ *   isAtelierClient — bool
  *   washers         — [{id, name, avatar}]
  *   duration        — {auto: bool, minutes: number}
  *   washer          — id ou null
  *   notes           — string
  *   processing      — bool
  *   errors          — {}
+ *   discountType    — 'percent' | 'fixed' | null
+ *   discountValue   — number
+ *   discountCents   — number (calculated)
  *   onOpenVehicle   — fn()
  *   onOpenClient    — fn()
+ *   onOpenProducts  — fn()
  *   onRemoveLine    — fn(service_id)
+ *   onRemoveProduct — fn(product_id)
+ *   onToggleFree    — fn(product_id)
  *   onSetDuration   — fn(minutes | null)  null = retour auto
  *   onSetWasher     — fn(id)
  *   onSetNotes      — fn(string)
+ *   onSetDiscountType  — fn(type)
+ *   onSetDiscountValue — fn(value)
  *   onSubmit        — fn()
+ *   sellableProducts — [] (for opening products panel)
  */
 export default function TicketRecap({
-    vehicle, client, lines, washers, duration, washer,
+    vehicle, client, lines, productLines = [], isAtelierClient, washers, duration, washer,
     notes, processing, errors,
     submitLabel,
-    onOpenVehicle, onOpenClient, onRemoveLine,
-    onSetDuration, onSetWasher, onSetNotes, onSubmit,
+    discountType, discountValue, discountCents,
+    onOpenVehicle, onOpenClient, onOpenProducts, onRemoveLine, onRemoveProduct, onToggleFree,
+    onSetDuration, onSetWasher, onSetNotes,
+    onSetDiscountType, onSetDiscountValue,
+    onSubmit,
+    sellableProducts = [],
 }) {
     const [editDuration, setEditDuration] = useState(false);
     const [draftMin, setDraftMin] = useState('');
 
-    const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
-    const hasLines = lines.length > 0;
+    const servicesTotal = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
+    const productsTotal = productLines.reduce((s, l) => l.is_free ? s : s + l.unit_price_cents * l.quantity, 0);
+    const subtotal = servicesTotal + productsTotal;
+    const total = Math.max(0, subtotal - (discountCents || 0));
+
+    const hasItems = lines.length > 0 || productLines.length > 0;
 
     /* Heure de fin prévue */
     const dueTime = duration.minutes > 0
@@ -120,13 +139,18 @@ export default function TicketRecap({
                             : <span className="text-sm text-gray-400">Associer un client…</span>
                         }
                     </button>
+                    {isAtelierClient && (
+                        <p className="text-xs text-purple-600 mt-1 flex items-center gap-1">
+                            <Gift size={12} /> Client Atelier — option gratuit disponible
+                        </p>
+                    )}
                 </Section>
 
                 {/* ── Lignes services ── */}
-                <Section label={`Prestations${hasLines ? ` (${lines.length})` : ''}`}>
-                    {!hasLines && (
+                <Section label={`Services${lines.length > 0 ? ` (${lines.length})` : ''}`}>
+                    {lines.length === 0 && (
                         <p className="text-xs text-gray-300 py-2 text-center">
-                            Sélectionnez des prestations à gauche
+                            Sélectionnez des services à gauche
                         </p>
                     )}
                     <div className="space-y-1">
@@ -153,6 +177,101 @@ export default function TicketRecap({
                         ))}
                     </div>
                     {errors?.services && <Err>{errors.services}</Err>}
+                </Section>
+
+                {/* ── Lignes produits ── */}
+                {sellableProducts.length > 0 && (
+                    <Section label={`Produits${productLines.length > 0 ? ` (${productLines.length})` : ''}`}>
+                        <button onClick={onOpenProducts}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-300 hover:border-green-400 hover:bg-green-50 transition-all text-left mb-2">
+                            <Package size={16} className="text-gray-400" />
+                            <span className="text-sm text-gray-400">Ajouter des produits…</span>
+                        </button>
+                        <div className="space-y-1">
+                            {productLines.map((line) => (
+                                <div key={line.sellable_product_id}
+                                    className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-gray-50 group">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-700 truncate flex items-center gap-1">
+                                            {line.name}
+                                            {line.is_free && (
+                                                <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 rounded-full">Gratuit</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                                        <span className="text-xs text-gray-500">×{line.quantity}</span>
+                                        <span className={clsx(
+                                            'text-xs font-semibold',
+                                            line.is_free ? 'text-purple-600 line-through' : 'text-gray-800'
+                                        )}>
+                                            {fmt(line.unit_price_cents * line.quantity)}
+                                        </span>
+                                        {isAtelierClient && (
+                                            <button onClick={() => onToggleFree(line.sellable_product_id)}
+                                                className={clsx(
+                                                    'p-1 rounded transition-colors',
+                                                    line.is_free ? 'bg-purple-100 text-purple-600' : 'hover:bg-purple-50 text-gray-400'
+                                                )}
+                                                title={line.is_free ? 'Retirer gratuit' : 'Marquer gratuit'}>
+                                                <Gift size={11} />
+                                            </button>
+                                        )}
+                                        <button onClick={() => onRemoveProduct(line.sellable_product_id)}
+                                            className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-red-400 transition-opacity">
+                                            <Trash2 size={11} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Section>
+                )}
+
+                {/* ── Remise (Discount) ── */}
+                <Section label="Remise">
+                    <div className="flex gap-2 mb-2">
+                        <button
+                            onClick={() => onSetDiscountType(discountType === 'percent' ? null : 'percent')}
+                            className={clsx(
+                                'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all',
+                                discountType === 'percent'
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'border-gray-200 text-gray-600 hover:border-blue-300'
+                            )}
+                        >
+                            <Percent size={12} /> %
+                        </button>
+                        <button
+                            onClick={() => onSetDiscountType(discountType === 'fixed' ? null : 'fixed')}
+                            className={clsx(
+                                'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all',
+                                discountType === 'fixed'
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'border-gray-200 text-gray-600 hover:border-blue-300'
+                            )}
+                        >
+                            MAD
+                        </button>
+                    </div>
+                    {discountType && (
+                        <input
+                            type="number"
+                            min="0"
+                            step={discountType === 'percent' ? '1' : '0.01'}
+                            max={discountType === 'percent' ? '100' : undefined}
+                            value={discountValue || ''}
+                            onChange={e => onSetDiscountValue(parseFloat(e.target.value) || 0)}
+                            placeholder={discountType === 'percent' ? 'Ex: 10' : 'Ex: 50'}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    )}
+                    {discountCents > 0 && (
+                        <p className="text-xs text-green-600 mt-1">
+                            Remise appliquée: -{fmt(discountCents)}
+                        </p>
+                    )}
                 </Section>
 
                 {/* ── Durée ── */}
@@ -219,6 +338,18 @@ export default function TicketRecap({
 
             {/* ── Total + Submit ── */}
             <div className="px-4 py-4 border-t border-gray-100 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)] space-y-3 shrink-0">
+                {discountCents > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Sous-total</span>
+                        <span className="text-gray-600">{fmt(subtotal)}</span>
+                    </div>
+                )}
+                {discountCents > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-green-600">Remise</span>
+                        <span className="text-green-600">-{fmt(discountCents)}</span>
+                    </div>
+                )}
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">Total</span>
                     <span className="text-xl font-bold text-gray-900">{fmt(total)}</span>
@@ -233,19 +364,19 @@ export default function TicketRecap({
                     </div>
                 )}
 
-                <button onClick={onSubmit} disabled={processing || !hasLines}
+                <button onClick={onSubmit} disabled={processing || !hasItems}
                     className={clsx(
                         'w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2',
-                        hasLines && !processing
+                        hasItems && !processing
                             ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     )}>
                     {processing && <Loader2 size={15} className="animate-spin" />}
                     {processing ? 'Enregistrement…' : (submitLabel ?? 'Créer le ticket')}
                 </button>
-                {!hasLines && (
+                {!hasItems && (
                     <p className="text-center text-xs text-gray-400">
-                        Ajoutez une prestation pour continuer
+                        Ajoutez une prestation ou un produit pour continuer
                     </p>
                 )}
             </div>

@@ -38,7 +38,12 @@ class Client extends Model
     use HasFactory, SoftDeletes;
 
     /** Phone used to identify the walk-in (anonymous) client record. */
-    const WALK_IN_PHONE = '0000000000';    /**
+    const WALK_IN_PHONE = '0000000000';
+
+    /** Phone used to identify the workshop (atelier) internal client record. */
+    const ATELIER_PHONE = '0000000001';
+
+    /**
      * Return the "Client de passage" sentinel record, creating it if absent.
      * This client is used for anonymous walk-in tickets with no client selected.
      */
@@ -52,7 +57,26 @@ class Client extends Model
                 'notes'     => 'Client anonyme — généré automatiquement.',
             ]
         );
-    }    /**
+    }
+
+    /**
+     * Return the "Atelier" sentinel record, creating it if absent.
+     * This client is used for internal workshop consumption of products.
+     * Products sold to this client can be marked as free.
+     */
+    public static function atelier(): self
+    {
+        return static::withoutGlobalScopes()->firstOrCreate(
+            ['phone' => self::ATELIER_PHONE],
+            [
+                'name'      => 'Atelier',
+                'is_active' => true,
+                'notes'     => 'Client interne pour consommation atelier — généré automatiquement.',
+            ]
+        );
+    }
+
+    /**
      * ARCH-ITEM-2.3 (F-04) — Returns true for the anonymous walk-in sentinel.
      * Walk-in clients must NEVER accumulate loyalty points, tier upgrades, or visits.
      */
@@ -62,11 +86,28 @@ class Client extends Model
     }
 
     /**
+     * Returns true for the workshop (atelier) internal client.
+     * Atelier can receive free products for internal use.
+     */
+    public function isAtelier(): bool
+    {
+        return $this->phone === self::ATELIER_PHONE;
+    }
+
+    /**
      * Check by ID without loading the model (used in the hot payment path).
      */
     public static function isWalkInId(int $id): bool
     {
         return static::walkIn()->id === $id;
+    }
+
+    /**
+     * Check if ID is the Atelier client.
+     */
+    public static function isAtelierId(int $id): bool
+    {
+        return static::atelier()->id === $id;
     }
 
     protected $fillable = [

@@ -91,22 +91,29 @@ class Ticket extends Model
         'ulid', 'ticket_number', 'status',
         'vehicle_type_id', 'vehicle_plate', 'vehicle_brand',
         'vehicle_brand_id', 'vehicle_model_id',
-        'client_id', 'created_by', 'assigned_to', 'paid_by', 'shift_id',        'ticket_template_id',
+        'client_id', 'created_by', 'assigned_to', 'paid_by', 'shift_id',
+        'ticket_template_id',
         'subtotal_cents', 'discount_cents', 'total_cents', 'balance_due_cents',
-        'loyalty_points_earned', 'loyalty_points_used',        'notes', 'cancelled_reason',
+        // Discount fields for remise (% or fixed)
+        'discount_type', 'discount_value',
+        'loyalty_points_earned', 'loyalty_points_used',
+        'notes', 'cancelled_reason',
         'estimated_duration', 'due_at', 'payment_mode', 'is_prepaid',
         'started_at', 'completed_at', 'paid_at',
         // v2 — pause / blocage
         'paused_at', 'total_paused_seconds', 'pause_reason',
         // v2 — paiement asynchrone
-        'payment_initiated_at', 'payment_reference',        'payment_provider',
+        'payment_initiated_at', 'payment_reference', 'payment_provider',
         // AUDIT-FIX: stock warning flag
         'has_stock_warning',
-    ];    protected $casts = [
+    ];
+
+    protected $casts = [
         'subtotal_cents'         => 'integer',
         'discount_cents'         => 'integer',
         'total_cents'            => 'integer',
         'balance_due_cents'      => 'integer',
+        'discount_value'         => 'float',
         'loyalty_points_earned'  => 'integer',
         'loyalty_points_used'    => 'integer',
         'estimated_duration'     => 'integer',
@@ -115,7 +122,8 @@ class Ticket extends Model
         'completed_at'           => 'datetime',
         'paid_at'                => 'datetime',
         'due_at'                 => 'datetime',
-        'paused_at'              => 'datetime',        'payment_initiated_at'   => 'datetime',
+        'paused_at'              => 'datetime',
+        'payment_initiated_at'   => 'datetime',
         'is_prepaid'             => 'boolean',
         'has_stock_warning'      => 'boolean',
     ];// ---------- Route model binding ----------
@@ -193,6 +201,14 @@ class Ticket extends Model
     public function services(): HasMany
     {
         return $this->hasMany(TicketService::class);
+    }
+
+    /**
+     * Products sold on this ticket.
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(TicketProduct::class);
     }
 
     public function payment(): HasOne
@@ -292,12 +308,27 @@ class Ticket extends Model
 
     // ---------- Helpers ----------
 
+    /**
+     * Recalculate ticket totals (services + products - discount).
+     */
     public function recalculateTotals(): void
     {
-        $subtotal = $this->services()->sum('line_total_cents');
+        $servicesTotal = $this->services()->sum('line_total_cents');
+        $productsTotal = $this->products()->sum('line_total_cents');
+        $subtotal = $servicesTotal + $productsTotal;
+
+        // Calculate discount_cents based on discount_type and discount_value
+        $discountCents = 0;
+        if ($this->discount_type === 'percent' && $this->discount_value > 0) {
+            $discountCents = (int) round($subtotal * $this->discount_value / 100);
+        } elseif ($this->discount_type === 'fixed' && $this->discount_value > 0) {
+            $discountCents = (int) round($this->discount_value * 100); // Convert MAD to cents
+        }
+
         $this->update([
             'subtotal_cents' => $subtotal,
-            'total_cents'    => max(0, $subtotal - $this->discount_cents),
+            'discount_cents' => $discountCents,
+            'total_cents'    => max(0, $subtotal - $discountCents),
         ]);
     }
 
