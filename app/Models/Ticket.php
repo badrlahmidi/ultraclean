@@ -100,6 +100,8 @@ class Ticket extends Model
         'paused_at', 'total_paused_seconds', 'pause_reason',
         // v2 — paiement asynchrone
         'payment_initiated_at', 'payment_reference',        'payment_provider',
+        // AUDIT-FIX: stock warning flag
+        'has_stock_warning',
     ];    protected $casts = [
         'subtotal_cents'         => 'integer',
         'discount_cents'         => 'integer',
@@ -115,6 +117,7 @@ class Ticket extends Model
         'due_at'                 => 'datetime',
         'paused_at'              => 'datetime',        'payment_initiated_at'   => 'datetime',
         'is_prepaid'             => 'boolean',
+        'has_stock_warning'      => 'boolean',
     ];// ---------- Route model binding ----------
 
     /**

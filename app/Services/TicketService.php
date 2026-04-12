@@ -7,6 +7,7 @@ use App\DTOs\ServiceLineDTO;
 use App\DTOs\UpdateTicketDTO;
 use App\Events\TicketAssigned;
 use App\Services\PricingService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Models\ActivityLog;
@@ -34,6 +35,9 @@ class TicketService
      *
      * Price validation is performed FIRST, before any DB writes, so a
      * rejected submission never leaves an orphaned ticket row.
+     *
+     * AUDIT-FIX: All DB operations are now wrapped in a transaction to ensure
+     * atomicity — if syncWashers() fails, the entire ticket creation is rolled back.
      */
     public function create(CreateTicketDTO $dto, User $creator): Ticket
     {
@@ -55,52 +59,59 @@ class TicketService
             $dto->vehicleModelId,
             $dto->vehicleBrandFreeText,        );
 
-        // ── Create the ticket ───────────────────────────────────────────────
+        // ── Wrap all DB writes in a transaction for atomicity ───────────────
+        $ticket = DB::transaction(function () use ($dto, $creator, $shift, $clientId, $brandSnapshot) {
+            $ticket = Ticket::create([
+                'vehicle_brand'      => $brandSnapshot,
+                'vehicle_brand_id'   => $dto->vehicleBrandId,
+                'vehicle_model_id'   => $dto->vehicleModelId,
+                'vehicle_plate'      => $dto->vehiclePlate,
+                'vehicle_type_id'    => $dto->vehicleTypeId,
+                'client_id'          => $clientId,
+                'assigned_to'        => $dto->assignedTo,
+                'created_by'         => $creator->id,
+                'shift_id'           => $shift?->id,
+                'notes'              => $dto->notes,
+                'estimated_duration' => $dto->estimatedDuration,
+                'payment_mode'       => $dto->paymentMode,
+                'due_at'             => $dto->assignedTo && $dto->estimatedDuration
+                    ? WasherScheduler::computeDueAt(
+                        (int) $dto->assignedTo,
+                        (int) $dto->estimatedDuration,
+                    )
+                    : null,
+                'status' => Ticket::STATUS_PENDING,
+            ]);
 
-        $ticket = Ticket::create([
-            'vehicle_brand'      => $brandSnapshot,
-            'vehicle_brand_id'   => $dto->vehicleBrandId,
-            'vehicle_model_id'   => $dto->vehicleModelId,
-            'vehicle_plate'      => $dto->vehiclePlate,
-            'vehicle_type_id'    => $dto->vehicleTypeId,
-            'client_id'          => $clientId,
-            'assigned_to'        => $dto->assignedTo,
-            'created_by'         => $creator->id,
-            'shift_id'           => $shift?->id,
-            'notes'              => $dto->notes,
-            'estimated_duration' => $dto->estimatedDuration,
-            'payment_mode'       => $dto->paymentMode,
-            'due_at'             => $dto->assignedTo && $dto->estimatedDuration
-                ? WasherScheduler::computeDueAt(
-                    (int) $dto->assignedTo,
-                    (int) $dto->estimatedDuration,
-                )
-                : null,
-            'status' => Ticket::STATUS_PENDING,
-        ]);        // ── Attach service lines (ticket is new — no existing lines to remove) ──
-        $this->attachServiceLines($ticket, $dto->services, $dto->vehicleTypeId);
+            // ── Attach service lines (ticket is new — no existing lines to remove) ──
+            $this->attachServiceLines($ticket, $dto->services, $dto->vehicleTypeId);
 
-        $ticket->refresh();
+            $ticket->refresh();
 
-        // ── Assign washers (lead + assistants) ──────────────────────────────
-        $this->syncWashers($ticket, $dto->assignedTo, $dto->assistantIds);
+            // ── Assign washers (lead + assistants) ──────────────────────────────
+            $this->syncWashers($ticket, $dto->assignedTo, $dto->assistantIds);
 
-        // ── Activity log ────────────────────────────────────────────────────
-        ActivityLog::log('ticket.created', $ticket, [
-            'ticket_number' => $ticket->ticket_number,
-            'vehicle'       => $brandSnapshot,
-            'total_cents'   => $ticket->total_cents,
-            'assigned_to'   => $dto->assignedTo,
-        ]);
+            // ── Activity log ────────────────────────────────────────────────────
+            ActivityLog::log('ticket.created', $ticket, [
+                'ticket_number' => $ticket->ticket_number,
+                'vehicle'       => $brandSnapshot,
+                'total_cents'   => $ticket->total_cents,
+                'assigned_to'   => $dto->assignedTo,
+            ]);
 
-        // ── Broadcast (non-blocking) ────────────────────────────────────────
+            return $ticket;
+        });
+
+        // ── Broadcast AFTER the transaction commits (non-blocking) ──────────
         if ($ticket->assigned_to) {
             try {
                 TicketAssigned::dispatch($ticket);
             } catch (\Throwable $e) {
                 Log::warning('Broadcast TicketAssigned failed: ' . $e->getMessage());
             }
-        }        return $ticket;
+        }
+
+        return $ticket;
     }
 
     /**

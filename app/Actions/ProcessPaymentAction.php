@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\DTOs\ProcessPaymentDTO;
+use App\Exceptions\InsufficientStockException;
 use App\Models\ActivityLog;
 use App\Models\Client;
 use App\Models\Payment;
@@ -244,12 +245,19 @@ class ProcessPaymentAction
      * ARCH-ITEM-2.4 (F-05): The inner try/catch has been removed so that any
      * exception propagates to the outer DB::transaction() and rolls back the
      * entire payment — preventing a committed payment with un-decremented stock.
-     * Low-stock warnings are logged but do NOT abort the transaction.
+     *
+     * AUDIT-FIX: Stock validation now respects config('stock.strict_mode'):
+     *  - strict_mode=true:  Throws InsufficientStockException, rolls back payment
+     *  - strict_mode=false: Logs warning, sets has_stock_warning flag, continues
+     *
+     * @throws InsufficientStockException  When strict_mode is enabled and stock is insufficient
      */
     private function consumeStock(Ticket $ticket): void
     {
         $ticket->load('services.service.stockProducts');
+        $insufficientStock = [];
 
+        // First pass: collect all insufficient stock items
         foreach ($ticket->services as $ticketService) {
             $service = $ticketService->service;
             if (! $service) {
@@ -259,14 +267,39 @@ class ProcessPaymentAction
                 $qty = ($product->pivot->quantity_per_use ?? 1) * ($ticketService->quantity ?? 1);
 
                 if ($product->current_quantity < $qty) {
-                    Log::warning('Stock insufficient at payment — continuing (stock will go negative)', [
-                        'product'   => $product->id,
+                    $insufficientStock[] = [
+                        'product'   => $product->name,
                         'required'  => $qty,
                         'available' => $product->current_quantity,
-                        'ticket'    => $ticket->ulid,
-                    ]);
+                        'product_id' => $product->id,
+                    ];
                 }
+            }
+        }
 
+        // Handle insufficient stock based on strict_mode configuration
+        if (! empty($insufficientStock)) {
+            if (config('stock.strict_mode', false)) {
+                // Strict mode: throw exception and rollback
+                throw new InsufficientStockException($insufficientStock, $ticket->ulid);
+            }
+
+            // Non-strict mode: mark ticket with warning and log
+            $ticket->update(['has_stock_warning' => true]);
+            Log::warning('Stock insufficient at payment — continuing with warning flag', [
+                'ticket' => $ticket->ulid,
+                'items'  => $insufficientStock,
+            ]);
+        }
+
+        // Second pass: actually consume the stock
+        foreach ($ticket->services as $ticketService) {
+            $service = $ticketService->service;
+            if (! $service) {
+                continue;
+            }
+            foreach ($service->stockProducts as $product) {
+                $qty = ($product->pivot->quantity_per_use ?? 1) * ($ticketService->quantity ?? 1);
                 $product->consumeStock((float) $qty, $ticket->ticket_number, $ticket->id, auth()->id());
             }
         }
