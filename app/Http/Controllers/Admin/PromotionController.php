@@ -102,7 +102,9 @@ class PromotionController extends Controller
             });
         } catch (\DomainException $e) {
             return response()->json(['valid' => false, 'message' => $e->getMessage()], 422);
-        }        return response()->json([
+        }
+
+        return response()->json([
             'valid'        => true,
             'promotion_id' => $promo->id,
             'label'        => $promo->label ?? $promo->code,
