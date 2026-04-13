@@ -78,6 +78,7 @@ function UserModal({ user, roles, onClose }) {
                                 <option key={r.id} value={r.id}>{r.display_name}</option>
                             ))}
                         </select>
+                        {errors.role_id && <p className="text-red-500 text-xs mt-1">{errors.role_id}</p>}
                     </div>
 
                     <div>                        <label className="block text-sm font-medium text-gray-700 mb-1">

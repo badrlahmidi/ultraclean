@@ -107,7 +107,7 @@ class User extends Authenticatable
             return true;
         }
 
-        $role = $this->relationLoaded('userRole') ? $this->userRole : $this->userRole;
+        $role = $this->userRole;
 
         return $role?->hasPermission($permission) ?? false;
     }
