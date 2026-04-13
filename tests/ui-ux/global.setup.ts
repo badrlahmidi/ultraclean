@@ -56,6 +56,12 @@ export default async function globalSetup(config: FullConfig) {
     }
 
     // Log in both roles in sequence (single Laravel server, keep it serial).
-    await loginAs(baseURL, 'admin@ritajpos.ma', 'Admin@2026!', ADMIN_AUTH);
-    await loginAs(baseURL, 'caissier@ritajpos.ma', 'Caissier@2026', CAISSIER_AUTH);
+    // Credentials must be set via environment variables — never hardcode them here.
+    const adminEmail    = process.env.TEST_ADMIN_EMAIL    ?? 'admin@ritajpos.ma';
+    const adminPassword = process.env.TEST_ADMIN_PASSWORD ?? 'Admin@2026!';
+    const caissierEmail    = process.env.TEST_CAISSIER_EMAIL    ?? 'caissier@ritajpos.ma';
+    const caissierPassword = process.env.TEST_CAISSIER_PASSWORD ?? 'Caissier@2026';
+
+    await loginAs(baseURL, adminEmail, adminPassword, ADMIN_AUTH);
+    await loginAs(baseURL, caissierEmail, caissierPassword, CAISSIER_AUTH);
 }

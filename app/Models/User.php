@@ -41,7 +41,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
         'role_id',
         'pin',
         'phone',
@@ -68,6 +67,23 @@ class User extends Authenticatable
     }
 
     // ── Helpers de rôle ────────────────────────────────────────────────
+
+    /**
+     * Sync the denormalized `role` column whenever `role_id` changes.
+     * This ensures `role` stays consistent even though it is removed from
+     * `$fillable` to prevent mass-assignment privilege escalation.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->isDirty('role_id') && $user->role_id) {
+                $roleName = \App\Models\Role::find($user->role_id)?->name;
+                if ($roleName) {
+                    $user->role = $roleName;
+                }
+            }
+        });
+    }
 
     public function isAdmin(): bool
     {

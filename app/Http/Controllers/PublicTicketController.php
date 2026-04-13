@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Services\WasherScheduler;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -74,7 +75,11 @@ class PublicTicketController extends Controller
         }
         try {
             return WasherScheduler::feasibilityCheck($ticket->assigned_to, 0)['due_at'];
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::warning('[PublicTicketController] Scheduler failed', [
+                'ticket_id' => $ticket->id,
+                'error'     => $e->getMessage(),
+            ]);
             return null;
         }
     }

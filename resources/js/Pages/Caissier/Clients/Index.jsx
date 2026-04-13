@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { router, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { Users, Search, ChevronRight, Pencil, Trash2, X } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -212,7 +213,7 @@ export default function ClientsIndex({ clients, filters, tiers }) {
                                         className={clsx('px-2.5 py-1 rounded-lg text-xs font-semibold',
                                             link.active ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700',
                                             !link.url && 'opacity-30 cursor-not-allowed')}
-                                        dangerouslySetInnerHTML={{ __html: link.label }} />
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(link.label) }} />
                                 ))}
                             </div>
                         </div>

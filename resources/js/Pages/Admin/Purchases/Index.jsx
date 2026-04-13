@@ -2,6 +2,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { ShoppingCart, Plus, Trash2, Search, Eye } from 'lucide-react';
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import clsx from 'clsx';
 
 const STATUS_COLORS = {
@@ -165,7 +166,7 @@ export default function PurchasesIndex({ purchases, stats, filters, statuses }) 
                                         ? 'bg-blue-600 text-white border-blue-600'
                                         : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40'
                                 )}
-                                dangerouslySetInnerHTML={{ __html: link.label }} />
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(link.label) }} />
                         ))}
                     </div>
                 )}

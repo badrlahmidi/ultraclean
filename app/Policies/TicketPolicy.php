@@ -55,7 +55,9 @@ class TicketPolicy
     public function update(User $user, Ticket $ticket): bool
     {
         if ($user->isCaissier()) {
-            return true; // Caissiers can update any ticket (status changes, etc.)
+            // Caissiers may only update tickets belonging to their currently open shift.
+            $activeShift = $user->activeShift;
+            return $activeShift !== null && $ticket->shift_id === $activeShift->id;
         }
 
         return false;

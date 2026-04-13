@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { Truck, Plus, Pencil, Trash2, Search, CheckCircle, XCircle, Phone, Mail, Building2, X } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -252,7 +253,7 @@ export default function SuppliersIndex({ suppliers, stats, filters }) {
                                         ? 'bg-blue-600 text-white border-blue-600'
                                         : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-40'
                                 )}
-                                dangerouslySetInnerHTML={{ __html: link.label }} />
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(link.label) }} />
                         ))}
                     </div>
                 )}

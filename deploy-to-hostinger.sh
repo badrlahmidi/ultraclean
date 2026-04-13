@@ -11,16 +11,13 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Configuration
-DOMAIN="ultraclean.ritajpos.com"
-DOMAIN_DIR="ultraclean.ritajpos.com"
-GITHUB_REPO="https://github.com/badrlahmdi/ultraclean.git"
-DB_NAME="u897563629_ultraclean"
-DB_USER="u897563629_ultraclean"
-DB_PASS="Ultraclean@26"
-APP_URL="https://ultraclean.ritajpos.com"
-MAIL_USER="noreply@ultraclean.ritajpos.com"
-PAYMENT_WEBHOOK_SECRET="5dff05f9783d94419f3d338e8ecacdf8e4fa3099c5ff6319ca88f574b65542a6"
+# Configuration — load from environment variables or fail with a clear message.
+# Never hardcode production credentials in source-controlled scripts.
+DOMAIN="${DEPLOY_DOMAIN:?Set DEPLOY_DOMAIN env var (e.g. ultraclean.example.com)}"
+DOMAIN_DIR="$DOMAIN"
+GITHUB_REPO="https://github.com/badrlahmidi/ultraclean.git"
+# DB_NAME, DB_USER, DB_PASS, MAIL_USER, PAYMENT_WEBHOOK_SECRET are set interactively via .env
+APP_URL="https://$DOMAIN"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}UltraClean - Hostinger Deployment Script${NC}"
@@ -75,14 +72,13 @@ if [ ! -f ".env" ]; then
     cp .env.production.example .env
 fi
 
-# Update .env with actual values
+# Edit .env with your actual values — do NOT hardcode credentials here.
+# Required: APP_URL, DB_DATABASE, DB_USERNAME, DB_PASSWORD,
+#           MAIL_USERNAME, MAIL_FROM_ADDRESS, PAYMENT_WEBHOOK_SECRET
+# Generate a secure webhook secret: openssl rand -hex 32
 sed -i "s|APP_URL=.*|APP_URL=$APP_URL|g" .env
-sed -i "s|DB_DATABASE=.*|DB_DATABASE=$DB_NAME|g" .env
-sed -i "s|DB_USERNAME=.*|DB_USERNAME=$DB_USER|g" .env
-sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=$DB_PASS|g" .env
-sed -i "s|MAIL_USERNAME=.*|MAIL_USERNAME=$MAIL_USER|g" .env
-sed -i "s|MAIL_FROM_ADDRESS=.*|MAIL_FROM_ADDRESS=\"$MAIL_USER\"|g" .env
-sed -i "s|PAYMENT_WEBHOOK_SECRET=.*|PAYMENT_WEBHOOK_SECRET=$PAYMENT_WEBHOOK_SECRET|g" .env
+echo -e "${YELLOW}Please edit .env to set DB credentials and secrets:${NC}"
+nano .env
 
 echo -e "${GREEN}✓ .env file configured${NC}"
 echo ""
@@ -172,10 +168,10 @@ echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo -e "1. Configure document root to /public_html/public in hPanel"
 echo -e "2. Set up cron job in hPanel → Advanced → Scheduled Tasks"
-echo -e "3. Login at $APP_URL (admin@ritajpos.ma / Admin@2026!)"
+echo -e "3. Login at $APP_URL with your admin credentials — change password immediately"
 echo -e "4. IMMEDIATELY change your admin password"
 echo -e "5. Configure business settings"
 echo ""
 echo -e "${BLUE}Cron Job Command:${NC}"
-echo -e "${GREEN}* * * * * /usr/local/bin/php /home/u897563629/domains/$DOMAIN_DIR/public_html/artisan schedule:run >> /dev/null 2>&1${NC}"
+echo -e "${GREEN}* * * * * /usr/local/bin/php /home/<SSH_USER>/domains/$DOMAIN_DIR/public_html/artisan schedule:run >> /dev/null 2>&1${NC}"
 echo ""

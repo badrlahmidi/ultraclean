@@ -297,6 +297,13 @@ class TicketController extends Controller
 
         if (strlen($q) >= 2) {
             $tickets = Ticket::with(['vehicleType', 'creator', 'client', 'assignedTo'])
+                ->when(auth()->user()->isLaveur(), function ($query) {
+                    $userId = auth()->id();
+                    $query->where(function ($q) use ($userId) {
+                        $q->where('assigned_to', $userId)
+                          ->orWhereHas('washers', fn ($w) => $w->where('user_id', $userId));
+                    });
+                })
                 ->where(function ($query) use ($q) {
                     $query->where('ticket_number', 'like', "%{$q}%")
                           ->orWhere('vehicle_plate', 'like', "%{$q}%")

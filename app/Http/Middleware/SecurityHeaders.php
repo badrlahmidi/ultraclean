@@ -31,7 +31,8 @@ class SecurityHeaders
         // En développement, Vite HMR tourne sur http://localhost:5173.
         // IPv6 [::1] n'est pas un token CSP valide — on utilise uniquement
         // localhost / 127.0.0.1 et on force Vite à binder sur localhost (vite.config.js).
-        $isDev = app()->environment('local', 'development', 'testing');
+        $isProduction = app()->isProduction();
+        $isDev = ! $isProduction && app()->environment('local', 'development', 'testing');
 
         $viteOrigins = $isDev
             ? 'http://localhost:5173 http://127.0.0.1:5173'

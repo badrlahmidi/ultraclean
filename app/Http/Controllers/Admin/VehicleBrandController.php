@@ -163,7 +163,10 @@ class VehicleBrandController extends Controller
      ──────────────────────────────────────────────────────────── */
     public function exportCsv(): HttpResponse
     {
-        $brands = VehicleBrand::with('allModels')->orderBy('sort_order')->orderBy('name')->get();
+        $brands = VehicleBrand::with(['allModels.suggestedVehicleType'])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
         $rows   = [];
         $rows[] = ['brand_name', 'brand_country', 'brand_sort_order', 'brand_is_active',
@@ -172,16 +175,24 @@ class VehicleBrandController extends Controller
         foreach ($brands as $brand) {
             if ($brand->allModels->isEmpty()) {
                 $rows[] = [
-                    $brand->name, $brand->country ?? '', $brand->sort_order, $brand->is_active ? '1' : '0',
+                    $this->sanitizeCsvField($brand->name),
+                    $this->sanitizeCsvField($brand->country ?? ''),
+                    $brand->sort_order,
+                    $brand->is_active ? '1' : '0',
                     '', '', '', '',
                 ];            } else {                /** @var \App\Models\VehicleModel $model */
                 foreach ($brand->allModels as $model) {
                     /** @var \App\Models\VehicleType|null $vt */
                     $vt = $model->suggestedVehicleType;
                     $rows[] = [
-                        $brand->name, $brand->country ?? '', $brand->sort_order, $brand->is_active ? '1' : '0',
-                        $model->name, $model->sort_order, $model->is_active ? '1' : '0',
-                        $vt->name ?? '',
+                        $this->sanitizeCsvField($brand->name),
+                        $this->sanitizeCsvField($brand->country ?? ''),
+                        $brand->sort_order,
+                        $brand->is_active ? '1' : '0',
+                        $this->sanitizeCsvField($model->name),
+                        $model->sort_order,
+                        $model->is_active ? '1' : '0',
+                        $this->sanitizeCsvField($vt->name ?? ''),
                     ];
                 }
             }
@@ -199,6 +210,19 @@ class VehicleBrandController extends Controller
             'Content-Type'        => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="vehicle_brands_' . now()->format('Ymd_His') . '.csv"',
         ]);
+    }
+
+    /**
+     * Prevent CSV injection by prefixing cells that start with formula-trigger characters.
+     *
+     * @see https://owasp.org/www-community/attacks/CSV_Injection
+     */
+    private function sanitizeCsvField(string $value): string
+    {
+        if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value)) {
+            return "'" . $value;
+        }
+        return $value;
     }
 
     /* ────────────────────────────────────────────────────────────

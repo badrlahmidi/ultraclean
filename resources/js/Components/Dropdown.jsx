@@ -23,7 +23,14 @@ const Trigger = ({ children }) => {
 
     return (
         <>
-            <div role="button" tabIndex={0} onClick={toggleOpen} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleOpen(); } }}>{children}</div>
+            <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={open}
+                aria-haspopup="true"
+                onClick={toggleOpen}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleOpen(); } }}
+            >{children}</div>
 
             {open && (
                 <div

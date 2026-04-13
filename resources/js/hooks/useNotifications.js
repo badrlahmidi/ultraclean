@@ -224,7 +224,7 @@ export function useNotifications() {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() },
             credentials: 'same-origin',
-        }).catch(() => { });
+        }).catch((e) => { console.error('[useNotifications] markAllRead error:', e); });
     }, []);
 
     const dismiss = useCallback((id) => {
@@ -233,7 +233,7 @@ export function useNotifications() {
             method: 'DELETE',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() },
             credentials: 'same-origin',
-        }).catch(() => { });
+        }).catch((e) => { console.error('[useNotifications] dismiss error:', e); });
     }, []);
 
     const clearAll = useCallback(() => {
@@ -243,7 +243,7 @@ export function useNotifications() {
             method: 'DELETE',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken() },
             credentials: 'same-origin',
-        }).catch(() => { });
+        }).catch((e) => { console.error('[useNotifications] clearAll error:', e); });
     }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;
