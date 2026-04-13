@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\TicketTemplateController;
 use App\Http\Controllers\Admin\EmployeeController;
@@ -168,6 +169,12 @@ Route::middleware(['auth'])->group(function () {    // Profil utilisateur (tous 
         Route::delete('/vehicles/{brand}/models/{model}',          [VehicleBrandController::class, 'destroyModel'])->name('vehicles.models.destroy');        // Paramètres
         Route::get('/settings',  [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+
+        // Rôles & Permissions (RBAC)
+        Route::get('/roles',              [RoleController::class, 'index'])->name('roles.index');
+        Route::post('/roles',             [RoleController::class, 'store'])->name('roles.store');
+        Route::put('/roles/{role}',       [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}',    [RoleController::class, 'destroy'])->name('roles.destroy');
 
         // Rendez-vous / Calendrier
         Route::get('/appointments',                              [AppointmentController::class, 'index'])->name('appointments.index');

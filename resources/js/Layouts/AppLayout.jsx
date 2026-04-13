@@ -13,7 +13,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { ROLE_NAV, ROLE_LABELS, ROLE_COLORS, safeRoute, isRouteActive } from '@/Layouts/navConfig';
+import { ROLE_NAV, ROLE_LABELS, ROLE_COLORS, safeRoute, isRouteActive, getNavForUser } from '@/Layouts/navConfig';
 import CommandPalette from '@/Components/CommandPalette';
 import { AppProvider } from '@/Contexts/AppContext';
 
@@ -157,13 +157,13 @@ function UserDropdown({ user, onLogout }) {
             >
                 <div className={clsx(
                     'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0',
-                    ROLE_COLORS[user?.role] ?? 'bg-gray-600'
+                    ROLE_COLORS[user?.role] ? ROLE_COLORS[user?.role] : `bg-${user?.role_color ?? 'gray-600'}`
                 )}>
                     {initials}
                 </div>
                 <div className="hidden md:block text-left">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-200 leading-tight truncate max-w-[120px]">{user?.name}</p>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-tight">{ROLE_LABELS[user?.role]}</p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-tight">{user?.role_display ?? ROLE_LABELS[user?.role] ?? user?.role}</p>
                 </div>
                 <ChevronDown size={14} className="text-gray-400 hidden md:block" />
             </button>
@@ -172,7 +172,7 @@ function UserDropdown({ user, onLogout }) {
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 z-50 py-1 overflow-hidden">
                     <div className="px-3 py-2 border-b border-gray-100 dark:border-slate-700 md:hidden">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{user?.name}</p>
-                        <p className="text-xs text-gray-400">{ROLE_LABELS[user?.role]}</p>
+                        <p className="text-xs text-gray-400">{user?.role_display ?? ROLE_LABELS[user?.role] ?? user?.role}</p>
                     </div>
                     <Link
                         href={route('profile.edit')}
@@ -262,7 +262,7 @@ function AppLayout({ children, title }) {
     };
 
     const currentRoute = route().current() ?? '';
-    const navItems = ROLE_NAV[auth.user?.role] ?? [];
+    const navItems = getNavForUser(auth.user?.role, auth.permissions ?? []);
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -385,7 +385,7 @@ function AppLayout({ children, title }) {
                         {!col && (
                             <div className="flex-1 min-w-0">
                                 <p className="text-gray-700 text-[12px] font-semibold leading-tight truncate">{auth.user?.name}</p>
-                                <p className="text-gray-400 text-[10px] leading-tight truncate">{ROLE_LABELS[auth.user?.role]}</p>
+                                <p className="text-gray-400 text-[10px] leading-tight truncate">{auth.user?.role_display ?? ROLE_LABELS[auth.user?.role] ?? auth.user?.role}</p>
                             </div>
                         )}
                         {!col && (

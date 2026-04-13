@@ -9,20 +9,31 @@ import DataTable from '@/Components/DataTable';
 import ActionButton from '@/Components/ActionButton';
 
 const ROLE_CONFIG = {
-    admin: { label: 'Admin', color: 'bg-purple-100 text-purple-700' },
+    admin:    { label: 'Admin',    color: 'bg-purple-100 text-purple-700' },
     caissier: { label: 'Caissier', color: 'bg-blue-100 text-blue-700' },
-    laveur: { label: 'Laveur', color: 'bg-green-100 text-green-700' },
+    laveur:   { label: 'Laveur',   color: 'bg-green-100 text-green-700' },
 };
+
+/* Construit dynamiquement la config à partir des rôles passés par le contrôleur */
+function buildRoleConfig(roles) {
+    const config = { ...ROLE_CONFIG };
+    roles.forEach(r => {
+        if (!config[r.name]) {
+            config[r.name] = { label: r.display_name, color: 'bg-gray-100 text-gray-700' };
+        }
+    });
+    return config;
+}
 
 function UserModal({ user, roles, onClose }) {
     const isEdit = !!user;
     const [form, setForm] = useState({
-        name: user?.name ?? '',
-        email: user?.email ?? '',
-        role: user?.role ?? 'laveur',
-        phone: user?.phone ?? '',
-        pin: '',
-        password: '',
+        name:      user?.name ?? '',
+        email:     user?.email ?? '',
+        role_id:   user?.role_id ?? (roles[0]?.id ?? ''),
+        phone:     user?.phone ?? '',
+        pin:       '',
+        password:  '',
         is_active: user?.is_active ?? true,
     });
     const [showPwd, setShowPwd] = useState(false);
@@ -61,10 +72,10 @@ function UserModal({ user, roles, onClose }) {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
-                        <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
+                        <select value={form.role_id} onChange={e => setForm(f => ({ ...f, role_id: parseInt(e.target.value) }))}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             {roles.map(r => (
-                                <option key={r} value={r}>{ROLE_CONFIG[r]?.label ?? r}</option>
+                                <option key={r.id} value={r.id}>{r.display_name}</option>
                             ))}
                         </select>
                     </div>
@@ -120,6 +131,7 @@ function UserModal({ user, roles, onClose }) {
 
 export default function UsersIndex({ users, roles }) {
     const [modal, setModal] = useState(null);
+    const roleConfig = buildRoleConfig(roles);
 
     const deleteUser = (user) => {
         if (!confirm(`Supprimer « ${user.name} » ?`)) return;
@@ -173,8 +185,9 @@ export default function UsersIndex({ users, roles }) {
                         </td>
                         <td className="px-4 py-3 text-gray-600">{u.email}</td>
                         <td className="px-3 py-3 text-center">
-                            <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', ROLE_CONFIG[u.role]?.color)}>
-                                {ROLE_CONFIG[u.role]?.label}
+                            <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium',
+                                roleConfig[u.role]?.color ?? 'bg-gray-100 text-gray-600')}>
+                                {u.role_display ?? roleConfig[u.role]?.label ?? u.role}
                             </span>
                         </td>
                         <td className="px-3 py-3 text-center">

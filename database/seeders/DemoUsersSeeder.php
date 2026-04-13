@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -18,6 +19,8 @@ class DemoUsersSeeder extends Seeder
      */
     public function run(): void
     {
+        $roles = Role::pluck('id', 'name');
+
         $users = [
             // Admin
             ['name' => 'Youssef Admin',    'email' => 'admin@ultraclean.ma',    'role' => 'admin',    'pin' => '1234', 'phone' => '0600000001'],
@@ -39,6 +42,7 @@ class DemoUsersSeeder extends Seeder
                 [
                     'name'      => $u['name'],
                     'role'      => $u['role'],
+                    'role_id'   => $roles[$u['role']] ?? null,
                     'password'  => Hash::make('Demo@2026!'),
                     'pin'       => Hash::make($u['pin']),
                     'phone'     => $u['phone'],

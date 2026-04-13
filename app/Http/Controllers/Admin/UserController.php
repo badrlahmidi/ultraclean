@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,13 +18,29 @@ class UserController extends Controller
     public function index(): Response
     {
         $users = User::withTrashed()
+            ->with('userRole')
             ->orderBy('role')
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role', 'phone', 'is_active', 'last_login_at', 'created_at', 'deleted_at']);
+            ->get(['id', 'name', 'email', 'role', 'role_id', 'phone', 'is_active', 'last_login_at', 'created_at', 'deleted_at']);
+
+        $roles = Role::orderByRaw('is_system DESC')->orderBy('name')->get(['id', 'name', 'display_name', 'color']);
 
         return Inertia::render('Admin/Users/Index', [
-            'users' => $users,
-            'roles' => [User::ROLE_ADMIN, User::ROLE_CAISSIER, User::ROLE_LAVEUR],
+            'users' => $users->map(fn ($u) => [
+                'id'           => $u->id,
+                'name'         => $u->name,
+                'email'        => $u->email,
+                'role'         => $u->role,
+                'role_id'      => $u->role_id,
+                'role_display' => $u->userRole?->display_name ?? ucfirst($u->role ?? ''),
+                'role_color'   => $u->userRole?->color ?? 'gray-500',
+                'phone'        => $u->phone,
+                'is_active'    => $u->is_active,
+                'last_login_at'=> $u->last_login_at,
+                'created_at'   => $u->created_at,
+                'deleted_at'   => $u->deleted_at,
+            ]),
+            'roles' => $roles,
         ]);
     }
 
@@ -32,16 +49,19 @@ class UserController extends Controller
         $request->validate([
             'name'     => ['required', 'string', 'max:100'],
             'email'    => ['required', 'email', 'unique:users,email'],
-            'role'     => ['required', 'in:admin,caissier,laveur'],
+            'role_id'  => ['required', 'integer', 'exists:roles,id'],
             'phone'    => ['nullable', 'string', 'max:20'],
             'pin'      => ['required', 'string', 'digits:4'],
             'password' => ['required', Password::min(8)],
         ]);
 
+        $role = Role::findOrFail($request->role_id);
+
         $user = User::create([
             'name'      => $request->name,
             'email'     => $request->email,
-            'role'      => $request->role,
+            'role'      => $role->name,
+            'role_id'   => $role->id,
             'phone'     => $request->phone,
             'pin'       => Hash::make($request->pin),
             'password'  => Hash::make($request->password),
@@ -80,17 +100,20 @@ class UserController extends Controller
         $request->validate([
             'name'      => ['required', 'string', 'max:100'],
             'email'     => ['required', 'email', "unique:users,email,{$user->id}"],
-            'role'      => ['required', 'in:admin,caissier,laveur'],
+            'role_id'   => ['required', 'integer', 'exists:roles,id'],
             'phone'     => ['nullable', 'string', 'max:20'],
             'pin'       => ['nullable', 'string', 'digits:4'],
             'password'  => ['nullable', Password::min(8)],
             'is_active' => ['boolean'],
         ]);
 
+        $role = Role::findOrFail($request->role_id);
+
         $data = [
             'name'      => $request->name,
             'email'     => $request->email,
-            'role'      => $request->role,
+            'role'      => $role->name,
+            'role_id'   => $role->id,
             'phone'     => $request->phone,
             'is_active' => $request->boolean('is_active', $user->is_active),
         ];
