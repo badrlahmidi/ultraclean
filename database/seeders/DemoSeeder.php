@@ -21,6 +21,7 @@ class DemoSeeder extends Seeder
         $this->command->info('');
 
         $this->call([
+            RolesPermissionsSeeder::class,         // Rôles RBAC + permissions (DOIT précéder DemoUsersSeeder)
             DemoUsersSeeder::class,            // 9 utilisateurs (admin + 2 caissiers + 6 laveurs)
             DemoClientsSeeder::class,          // 12 clients avec historique fidélité
             DemoTicketsSeeder::class,          // ~60 tickets sur 30 jours

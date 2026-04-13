@@ -1,7 +1,7 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
-import { Car, User, X, UserCog, ChevronRight } from 'lucide-react';
+import { Car, User, X, UserCog, ChevronRight, Package, Percent, DollarSign } from 'lucide-react';
 import clsx from 'clsx';
 
 import VehicleOverlay from './components/VehicleOverlay';
@@ -14,34 +14,46 @@ import TicketRecap from './components/TicketRecap';
  * Page caissier — Création d'un nouveau ticket (POS)
  *
  * Props Inertia :
- *   services      — { [category]: [svc…] }
- *   priceGrid     — { [serviceId]: { [vehicleTypeId]: priceCents } }
- *   vehicleTypes  — [{id, name}]
- *   brands        — [{id, name, slug, logo_url, models:[{id,name,suggested_vehicle_type_id}]}]
- *   washers       — [{id, name, avatar}]
+ *   services          — { [category]: [svc…] }
+ *   priceGrid         — { [serviceId]: { [vehicleTypeId]: priceCents } }
+ *   vehicleTypes      — [{id, name}]
+ *   brands            — [{id, name, slug, logo_url, models:[{id,name,suggested_vehicle_type_id}]}]
+ *   washers           — [{id, name, avatar}]
+ *   sellableProducts  — [{id, name, barcode, selling_price_cents, current_stock, unit}]
+ *   atelierClientId   — int (ID of the Atelier client)
  */
-export default function Create({ services, priceGrid, vehicleTypes, brands, washers = [] }) {
+export default function Create({ services, priceGrid, vehicleTypes, brands, washers = [], sellableProducts = [], atelierClientId }) {
 
     /* ── État principal ── */
     const [vehicle, setVehicle] = useState({ brand: null, model: null, plate: '' });
     const [client, setClient] = useState(null);
-    // line shape: {service_id, name, unit_price_cents, quantity, price_variant_id, duration_minutes, variantLabel}
+    // service line shape: {service_id, name, unit_price_cents, quantity, price_variant_id, duration_minutes, variantLabel}
     const [lines, setLines] = useState([]);
+    // product line shape: {sellable_product_id, name, unit_price_cents, quantity, is_free}
+    const [productLines, setProductLines] = useState([]);
     const [washerId, setWasherId] = useState(null);
     const [notes, setNotes] = useState('');
     const [durationOverride, setDurationOverride] = useState(null); // null = calculé auto
 
-    /* ── Mobile : onglet actif ('services' | 'recap') ── */
+    /* ── Discount (Remise) ── */
+    const [discountType, setDiscountType] = useState(null); // 'percent' | 'fixed' | null
+    const [discountValue, setDiscountValue] = useState(0);
+
+    /* ── Mobile : onglet actif ('services' | 'products' | 'recap') ── */
     const [mobileView, setMobileView] = useState('services');
 
     /* ── Modales ── */
     const [showVehicle, setShowVehicle] = useState(false);
     const [showClient, setShowClient] = useState(false);
     const [showWasher, setShowWasher] = useState(false);
+    const [showProducts, setShowProducts] = useState(false);
 
     /* ── Soumission ── */
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState({});
+
+    /* ── Client est Atelier? ── */
+    const isAtelierClient = client?.id === atelierClientId;
 
     /* ── Durée auto (somme des lignes) ── */
     const autoDuration = useMemo(
@@ -49,12 +61,27 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
         [lines]
     );
 
-    /* ── Total mobile (pour l'onglet récap) ── */
-    const mobileTotal = useMemo(
+    /* ── Totaux ── */
+    const servicesSubtotal = useMemo(
         () => lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0),
         [lines]
     );
+    const productsSubtotal = useMemo(
+        () => productLines.reduce((s, l) => l.is_free ? s : s + l.unit_price_cents * l.quantity, 0),
+        [productLines]
+    );
+    const subtotal = servicesSubtotal + productsSubtotal;
+
+    // Calculate discount
+    const discountCents = useMemo(() => {
+        if (!discountType || discountValue <= 0) return 0;
+        if (discountType === 'percent') return Math.round(subtotal * discountValue / 100);
+        return Math.round(discountValue * 100); // fixed amount in MAD → cents
+    }, [subtotal, discountType, discountValue]);
+
+    const mobileTotal = subtotal - discountCents;
     const mobileTotalFmt = `${(mobileTotal / 100).toFixed(0)} MAD`;
+
     const duration = {
         auto: durationOverride === null,
         minutes: durationOverride ?? autoDuration,
@@ -90,6 +117,43 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
         });
     }
 
+    /* ───────────────────────────── Produits ─────────────────────────────── */
+
+    /** Ajout ou incrément d'un produit */
+    function handleAddProduct(product) {
+        setProductLines(prev => {
+            const idx = prev.findIndex(l => l.sellable_product_id === product.id);
+            if (idx !== -1) {
+                return prev.map((l, i) => i === idx ? { ...l, quantity: l.quantity + 1 } : l);
+            }
+            return [...prev, {
+                sellable_product_id: product.id,
+                name: product.name,
+                unit_price_cents: product.selling_price_cents,
+                quantity: 1,
+                is_free: false,
+            }];
+        });
+    }
+
+    /** Décrément ou suppression d'un produit */
+    function handleRemoveProduct(productId) {
+        setProductLines(prev => {
+            const idx = prev.findIndex(l => l.sellable_product_id === productId);
+            if (idx === -1) return prev;
+            if (prev[idx].quantity <= 1) return prev.filter((_, i) => i !== idx);
+            return prev.map((l, i) => i === idx ? { ...l, quantity: l.quantity - 1 } : l);
+        });
+    }
+
+    /** Toggle gratuit pour un produit (Atelier only) */
+    function handleToggleFree(productId) {
+        if (!isAtelierClient) return;
+        setProductLines(prev =>
+            prev.map(l => l.sellable_product_id === productId ? { ...l, is_free: !l.is_free } : l)
+        );
+    }
+
     /* ───────────────────────────── Véhicule ─────────────────────────────── */
 
     /**
@@ -121,12 +185,21 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
             assigned_to: washerId ?? null,
             estimated_duration: effectiveDur,
             notes: notes || null,
+            discount_type: discountType,
+            discount_value: discountValue > 0 ? discountValue : null,
             services: lines.map(l => ({
                 service_id: l.service_id,
                 unit_price_cents: l.unit_price_cents,
                 quantity: l.quantity,
                 discount_cents: 0,
                 price_variant_id: l.price_variant_id ?? null,
+            })),
+            products: productLines.map(l => ({
+                sellable_product_id: l.sellable_product_id,
+                unit_price_cents: l.unit_price_cents,
+                quantity: l.quantity,
+                discount_cents: 0,
+                is_free: l.is_free,
             })),
         }, {
             onError: errs => { setErrors(errs); setProcessing(false); },
@@ -171,6 +244,19 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                 />
             )}
 
+            {/* Products Overlay */}
+            {showProducts && (
+                <ProductsOverlay
+                    products={sellableProducts}
+                    productLines={productLines}
+                    isAtelierClient={isAtelierClient}
+                    onAdd={handleAddProduct}
+                    onRemove={handleRemoveProduct}
+                    onToggleFree={handleToggleFree}
+                    onClose={() => setShowProducts(false)}
+                />
+            )}
+
             {/* Layout POS deux colonnes (desktop) / onglets (mobile) */}
             <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden">
 
@@ -185,13 +271,30 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                         )}
                     >
-                        Prestations
+                        Services
                         {lines.length > 0 && (
                             <span className="text-[11px] bg-blue-100 text-blue-600 font-bold rounded-full px-1.5 py-0.5 leading-none">
                                 {lines.length}
                             </span>
                         )}
                     </button>
+                    {sellableProducts.length > 0 && (
+                        <button
+                            onClick={() => setShowProducts(true)}
+                            className={clsx(
+                                'flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
+                                'border-transparent text-gray-500 hover:text-gray-700'
+                            )}
+                        >
+                            <Package size={14} />
+                            Produits
+                            {productLines.length > 0 && (
+                                <span className="text-[11px] bg-green-100 text-green-600 font-bold rounded-full px-1.5 py-0.5 leading-none">
+                                    {productLines.length}
+                                </span>
+                            )}
+                        </button>
+                    )}
                     <button
                         onClick={() => setMobileView('recap')}
                         className={clsx(
@@ -351,10 +454,10 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                         <div className="flex-1" />
                         <button
                             onClick={() => setMobileView('recap')}
-                            disabled={lines.length === 0}
+                            disabled={lines.length === 0 && productLines.length === 0}
                             className={clsx(
                                 'flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all touch-manipulation',
-                                lines.length > 0
+                                (lines.length > 0 || productLines.length > 0)
                                     ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             )}>
@@ -379,16 +482,155 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                         notes={notes}
                         processing={processing}
                         errors={errors}
+                        discountType={discountType}
+                        discountValue={discountValue}
+                        discountCents={discountCents}
                         onOpenVehicle={handleOpenVehicle}
                         onOpenClient={() => setShowClient(true)}
+                        onOpenProducts={() => setShowProducts(true)}
                         onRemoveLine={handleRemoveLine}
+                        onRemoveProduct={handleRemoveProduct}
+                        onToggleFree={handleToggleFree}
                         onSetDuration={setDurationOverride}
                         onSetWasher={setWasherId}
                         onSetNotes={setNotes}
+                        onSetDiscountType={setDiscountType}
+                        onSetDiscountValue={setDiscountValue}
                         onSubmit={submit}
+                        productLines={productLines}
+                        isAtelierClient={isAtelierClient}
+                        sellableProducts={sellableProducts}
                     />
                 </div>
             </div>
         </AppLayout>
+    );
+}
+
+/* ─── ProductsOverlay ─────────────────────────────────────────────────────── */
+
+function ProductsOverlay({ products, productLines, isAtelierClient, onAdd, onRemove, onToggleFree, onClose }) {
+    const [search, setSearch] = useState('');
+
+    const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        (p.barcode && p.barcode.includes(search))
+    );
+
+    function getQtyInCart(productId) {
+        const line = productLines.find(l => l.sellable_product_id === productId);
+        return line?.quantity ?? 0;
+    }
+
+    function isFree(productId) {
+        const line = productLines.find(l => l.sellable_product_id === productId);
+        return line?.is_free ?? false;
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <Package size={20} className="text-green-600" />
+                    Produits à vendre
+                </h2>
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl">
+                    <X size={20} className="text-gray-500" />
+                </button>
+            </div>
+
+            {/* Search */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 shrink-0">
+                <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Rechercher par nom ou code-barres…"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                />
+            </div>
+
+            {/* Products Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {filtered.map(p => {
+                        const qty = getQtyInCart(p.id);
+                        const free = isFree(p.id);
+                        return (
+                            <div
+                                key={p.id}
+                                className={clsx(
+                                    'relative bg-white border-2 rounded-xl p-3 transition-all cursor-pointer',
+                                    qty > 0
+                                        ? 'border-green-500 shadow-sm'
+                                        : 'border-gray-200 hover:border-green-300'
+                                )}
+                                onClick={() => onAdd(p)}
+                            >
+                                <div className="text-sm font-semibold text-gray-900 truncate">{p.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                    {(p.selling_price_cents / 100).toFixed(2)} MAD
+                                </div>
+                                {p.barcode && (
+                                    <div className="text-[10px] text-gray-400 font-mono mt-0.5">{p.barcode}</div>
+                                )}
+                                <div className="text-xs text-gray-400 mt-1">
+                                    Stock: {p.current_stock} {p.unit}
+                                </div>
+
+                                {qty > 0 && (
+                                    <>
+                                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                                            {qty}
+                                        </div>
+                                        <div className="mt-2 flex gap-1">
+                                            <button
+                                                onClick={e => { e.stopPropagation(); onRemove(p.id); }}
+                                                className="flex-1 px-2 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
+                                            >
+                                                −
+                                            </button>
+                                            {isAtelierClient && (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); onToggleFree(p.id); }}
+                                                    className={clsx(
+                                                        'flex-1 px-2 py-1 text-xs rounded-lg',
+                                                        free
+                                                            ? 'bg-purple-100 text-purple-700'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-purple-50'
+                                                    )}
+                                                >
+                                                    {free ? 'Gratuit ✓' : 'Gratuit'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                {filtered.length === 0 && (
+                    <div className="text-center text-gray-400 py-12">
+                        <Package size={32} className="mx-auto mb-2" />
+                        Aucun produit trouvé
+                    </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                    {productLines.length} produit{productLines.length !== 1 ? 's' : ''} sélectionné{productLines.length !== 1 ? 's' : ''}
+                </div>
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700"
+                >
+                    Valider
+                </button>
+            </div>
+        </div>
     );
 }

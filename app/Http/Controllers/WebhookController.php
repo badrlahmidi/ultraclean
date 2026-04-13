@@ -51,8 +51,9 @@ class WebhookController extends Controller
         }        // ── 4. Transition d'état ────────────────────────────────────────────
         if ($data['status'] === 'paid') {
             try {
-                // Le ticket doit être completed pour passer à paid
-                if ($ticket->status === 'completed') {
+                // Le ticket doit être completed ou payment_pending pour passer à paid
+                // AUDIT-FIX: Added payment_pending as valid source state for webhook transitions
+                if (in_array($ticket->status, ['completed', 'payment_pending'], true)) {
                     $ticket->transitionTo('paid');
 
                     // Stocker la référence paiement si fournie
@@ -61,9 +62,10 @@ class WebhookController extends Controller
                     }
 
                     Log::info('[Webhook] Ticket payé via webhook', [
-                        'ticket_id' => $ticket->id,
-                        'ulid'      => $ulid,
-                        'reference' => $data['reference'] ?? null,
+                        'ticket_id'       => $ticket->id,
+                        'ulid'            => $ulid,
+                        'previous_status' => $ticket->getOriginal('status'),
+                        'reference'       => $data['reference'] ?? null,
                     ]);
 
                     return response()->json(['ok' => true, 'status' => 'paid']);

@@ -207,14 +207,16 @@ class TicketController extends Controller
     /**
      * Shared props for both the Create and Edit forms.
      *
-     * All heavy queries are cache-backed (5-minute TTL) so that opening the
+     * All heavy queries are cache-backed (60-second TTL) so that opening the
      * POS form never triggers a full catalog scan on every request.
+     *
+     * AUDIT-FIX: Reduced TTL from 300s to 60s to prevent stale price/service data.
      *
      * @return array<string, mixed>
      */
     private function getFormProps(): array
     {
-        $services = Cache::remember('active_services_with_prices', 300, fn () =>
+        $services = Cache::remember('active_services_with_prices', 60, fn () =>
             Service::active()
                 ->with('prices.vehicleType')
                 ->orderBy('category')
@@ -223,32 +225,46 @@ class TicketController extends Controller
                        'base_price_cents', 'duration_minutes', 'sort_order'])
         );
 
-        $priceGrid = Cache::remember('price_grid', 300, fn () =>
+        $priceGrid = Cache::remember('price_grid', 60, fn () =>
             PricingService::buildPriceGrid($services)
         );
 
-        $brands = Cache::remember('active_brands_with_models', 300, fn () =>
+        $brands = Cache::remember('active_brands_with_models', 60, fn () =>
             VehicleBrand::active()
                 ->with(['models' => fn ($q) => $q->active()->orderBy('sort_order')->orderBy('name')])
                 ->orderBy('sort_order')->orderBy('name')
                 ->get(['id', 'name', 'slug', 'logo_path'])
         );
 
-        $vehicleTypes = Cache::remember('active_vehicle_types', 300, fn () =>
+        $vehicleTypes = Cache::remember('active_vehicle_types', 60, fn () =>
             VehicleType::active()->get(['id', 'name', 'slug', 'icon'])
-        );        // Washer availability is real-time — intentionally not cached.
+        );
+
+        // Sellable products for POS
+        $sellableProducts = Cache::remember('active_sellable_products', 60, fn () =>
+            \App\Models\SellableProduct::active()
+                ->orderBy('name')
+                ->get(['id', 'name', 'barcode', 'selling_price_cents', 'current_stock', 'unit'])
+        );
+
+        // Washer availability is real-time — intentionally not cached.
         $washers = User::where('role', User::ROLE_LAVEUR)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'avatar'])
             ->map(fn ($w) => array_merge($w->toArray(), WasherScheduler::getAvailability($w->id)));
 
+        // Atelier client for free products
+        $atelierClient = Client::atelier();
+
         return [
-            'services'     => $services->groupBy('category'),
-            'priceGrid'    => $priceGrid,
-            'vehicleTypes' => $vehicleTypes,
-            'brands'       => $brands,
-            'washers'      => $washers,
+            'services'         => $services->groupBy('category'),
+            'priceGrid'        => $priceGrid,
+            'vehicleTypes'     => $vehicleTypes,
+            'brands'           => $brands,
+            'washers'          => $washers,
+            'sellableProducts' => $sellableProducts,
+            'atelierClientId'  => $atelierClient->id,
         ];
     }    /** Endpoint JSON — disponibilité fraîche de tous les laveurs (appelé par le WasherDrawer). */
     public function washerQueue(Request $request): \Illuminate\Http\JsonResponse

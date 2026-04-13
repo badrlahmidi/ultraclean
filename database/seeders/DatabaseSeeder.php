@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             // Marques & Modèles — DOIT venir après VehicleTypeSeeder
             VehicleBrandModelSeeder::class,
             ServiceSeeder::class,
+            // RBAC — DOIT venir avant AdminUserSeeder (pour que les rôles existent)
+            RolesPermissionsSeeder::class,
             AdminUserSeeder::class,
         ]);
     }

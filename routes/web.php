@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\TicketTemplateController;
 use App\Http\Controllers\Admin\EmployeeController;
@@ -58,6 +59,12 @@ Route::get('/client/checkin/{ulid}', [ClientController::class, 'checkin'])
 
 // Promo code validation (auth required, any role)
 Route::middleware('auth')->post('/api/promotions/validate', [PromotionController::class, 'validate'])->name('promotions.validate');
+
+// Sellable products API for POS (barcode scanning)
+Route::middleware('auth')->group(function () {
+    Route::get('/api/sellable-products', [\App\Http\Controllers\Admin\SellableProductController::class, 'listForPos'])->name('api.sellable-products.list');
+    Route::post('/api/sellable-products/barcode', [\App\Http\Controllers\Admin\SellableProductController::class, 'findByBarcode'])->name('api.sellable-products.barcode');
+});
 
 Route::post('login/pin', [PinLoginController::class, 'store'])
     ->middleware(['guest', 'throttle:10,1'])
@@ -124,14 +131,25 @@ Route::middleware(['auth'])->group(function () {    // Profil utilisateur (tous 
         Route::get('/promotions',                [PromotionController::class, 'index'])->name('promotions.index');
         Route::post('/promotions',               [PromotionController::class, 'store'])->name('promotions.store');
         Route::put('/promotions/{promotion}',    [PromotionController::class, 'update'])->name('promotions.update');
-        Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');        // Gestion du stock
+        Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
+
+        // Gestion du stock (consommables internes)
         Route::get('/stock',                              [StockController::class, 'index'])->name('stock.index');
         Route::get('/stock/create',                       [StockController::class, 'create'])->name('stock.create');
         Route::post('/stock',                             [StockController::class, 'store'])->name('stock.store');
         Route::put('/stock/{stock}',                      [StockController::class, 'update'])->name('stock.update');
         Route::delete('/stock/{stock}',                   [StockController::class, 'destroy'])->name('stock.destroy');
         Route::post('/stock/{stock}/movement',            [StockController::class, 'addMovement'])->name('stock.movement');
-        Route::get('/stock/{stock}/movements',            [StockController::class, 'movements'])->name('stock.movements');        Route::post('/services/{service}/stock-products', [StockController::class, 'syncServiceProducts'])->name('services.stock.sync');
+        Route::get('/stock/{stock}/movements',            [StockController::class, 'movements'])->name('stock.movements');
+        Route::post('/services/{service}/stock-products', [StockController::class, 'syncServiceProducts'])->name('services.stock.sync');
+
+        // Produits à vendre (sellable products)
+        Route::get('/sellable-products',                                 [\App\Http\Controllers\Admin\SellableProductController::class, 'index'])->name('sellable-products.index');
+        Route::post('/sellable-products',                                [\App\Http\Controllers\Admin\SellableProductController::class, 'store'])->name('sellable-products.store');
+        Route::put('/sellable-products/{sellableProduct}',               [\App\Http\Controllers\Admin\SellableProductController::class, 'update'])->name('sellable-products.update');
+        Route::delete('/sellable-products/{sellableProduct}',            [\App\Http\Controllers\Admin\SellableProductController::class, 'destroy'])->name('sellable-products.destroy');
+        Route::post('/sellable-products/{sellableProduct}/movement',     [\App\Http\Controllers\Admin\SellableProductController::class, 'addMovement'])->name('sellable-products.movement');
+        Route::get('/sellable-products/{sellableProduct}/movements',     [\App\Http\Controllers\Admin\SellableProductController::class, 'movements'])->name('sellable-products.movements');
 
         // Fidélité clients
         Route::get('/loyalty',                       [LoyaltyController::class, 'index'])->name('loyalty.index');
@@ -151,6 +169,12 @@ Route::middleware(['auth'])->group(function () {    // Profil utilisateur (tous 
         Route::delete('/vehicles/{brand}/models/{model}',          [VehicleBrandController::class, 'destroyModel'])->name('vehicles.models.destroy');        // Paramètres
         Route::get('/settings',  [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+
+        // Rôles & Permissions (RBAC)
+        Route::get('/roles',              [RoleController::class, 'index'])->name('roles.index');
+        Route::post('/roles',             [RoleController::class, 'store'])->name('roles.store');
+        Route::put('/roles/{role}',       [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}',    [RoleController::class, 'destroy'])->name('roles.destroy');
 
         // Rendez-vous / Calendrier
         Route::get('/appointments',                              [AppointmentController::class, 'index'])->name('appointments.index');

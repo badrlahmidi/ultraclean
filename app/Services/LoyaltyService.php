@@ -108,30 +108,43 @@ class LoyaltyService
     /**
      * Utilise des points fidélité comme réduction sur un ticket.
      * Retourne le montant de réduction en centimes.
+     *
+     * AUDIT-FIX: Wrapped in DB::transaction with lockForUpdate to prevent
+     * concurrent redemption races (consistent with awardPoints).
      */
     public static function redeemPoints(Client $client, Ticket $ticket, int $points, ?int $operatorId = null): int
     {
-        $points = min($points, $client->loyalty_points);
-        if ($points <= 0) return 0;
+        return DB::transaction(function () use ($client, $ticket, $points, $operatorId) {
+            // Re-fetch with a write lock to prevent concurrent redemption races
+            $locked = Client::lockForUpdate()->find($client->id);
+            if (! $locked) {
+                return 0;
+            }
 
-        $discountCents = self::pointsToDiscount($points);
-        $newBalance = $client->loyalty_points - $points;
+            $points = min($points, $locked->loyalty_points);
+            if ($points <= 0) {
+                return 0;
+            }
 
-        $client->decrement('loyalty_points', $points);
+            $discountCents = self::pointsToDiscount($points);
+            $newBalance = $locked->loyalty_points - $points;
 
-        LoyaltyTransaction::create([
-            'client_id'     => $client->id,
-            'ticket_id'     => $ticket->id,
-            'created_by'    => $operatorId,
-            'type'          => 'redeemed',
-            'points'        => -$points,
-            'balance_after' => $newBalance,
-            'note'          => "Remise sur ticket {$ticket->ticket_number}",
-        ]);
+            $locked->decrement('loyalty_points', $points);
 
-        $ticket->update(['loyalty_points_used' => $points]);
+            LoyaltyTransaction::create([
+                'client_id'     => $locked->id,
+                'ticket_id'     => $ticket->id,
+                'created_by'    => $operatorId,
+                'type'          => 'redeemed',
+                'points'        => -$points,
+                'balance_after' => $newBalance,
+                'note'          => "Remise sur ticket {$ticket->ticket_number}",
+            ]);
 
-        return $discountCents;
+            $ticket->update(['loyalty_points_used' => $points]);
+
+            return $discountCents;
+        });
     }
 
     /**

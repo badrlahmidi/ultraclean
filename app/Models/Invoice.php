@@ -165,6 +165,12 @@ class Invoice extends Model
 
     // ── PDF ───────────────────────────────────────────────────────────────
 
+    /**
+     * Generate the PDF for this invoice.
+     *
+     * AUDIT-FIX: Delete existing file before creating new one to prevent
+     * orphaned files and ensure clean regeneration.
+     */
     public function generatePdf(): string
     {
         $pdf = Pdf::loadView('pdf.invoice', [
@@ -173,6 +179,12 @@ class Invoice extends Model
         ])->setPaper('a4', 'portrait');
 
         $relative = "invoices/{$this->ulid}.pdf";
+
+        // Delete existing file if it exists (regeneration scenario)
+        if (Storage::disk('public')->exists($relative)) {
+            Storage::disk('public')->delete($relative);
+        }
+
         Storage::disk('public')->put($relative, $pdf->output());
         $this->update(['pdf_path' => $relative]);
 

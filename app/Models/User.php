@@ -12,7 +12,8 @@ use Illuminate\Notifications\Notifiable;
  * @property int                             $id
  * @property string                          $name
  * @property string                          $email
- * @property string                          $role
+ * @property string                          $role    Nom du rôle (cache dénormalisé de role_id→name)
+ * @property int|null                        $role_id FK vers la table roles
  * @property string|null                     $phone
  * @property string|null                     $avatar
  * @property bool                            $is_active
@@ -22,6 +23,7 @@ use Illuminate\Notifications\Notifiable;
  * @property \Illuminate\Support\Carbon      $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  *
+ * @property-read \App\Models\Role|null                                           $userRole
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Shift> $shifts
  * @property-read \App\Models\Shift|null $activeShift
  */
@@ -30,7 +32,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
-    // ── Rôles disponibles ───────────────────────────────────────────────
+    // ── Rôles système (conservés pour la compatibilité ascendante) ──────
     const ROLE_ADMIN    = 'admin';
     const ROLE_CAISSIER = 'caissier';
     const ROLE_LAVEUR   = 'laveur';
@@ -40,6 +42,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'role_id',
         'pin',
         'phone',
         'is_active',
@@ -87,7 +90,38 @@ class User extends Authenticatable
         return in_array($this->role, (array) $role, true);
     }
 
+    // ── RBAC — Vérification de permissions ─────────────────────────────
+
+    /**
+     * Vérifie si l'utilisateur possède une permission donnée.
+     * Passe par le rôle lié ; utilise le cache eager-loaded si disponible.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        if (!$this->role_id) {
+            return false;
+        }
+
+        // Admin has all permissions
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $role = $this->userRole;
+
+        return $role?->hasPermission($permission) ?? false;
+    }
+
     // ── Relations ──────────────────────────────────────────────────────
+
+    /**
+     * Relation RBAC : rôle de l'utilisateur (avec ses permissions).
+     * Nommée `userRole` pour éviter le conflit avec la propriété `role`.
+     */
+    public function userRole(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
 
     public function shifts()
     {

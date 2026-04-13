@@ -27,6 +27,11 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        // Eager-load userRole + permissions pour éviter N+1
+        if ($user && ! $user->relationLoaded('userRole')) {
+            $user->load('userRole.permissions');
+        }
+
         // Single batched DB round-trip for all shared settings.
         $settings = \App\Models\Setting::getMany([
             'center_logo',
@@ -46,12 +51,20 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $user ? [
-                    'id'     => $user->id,
-                    'name'   => $user->name,
-                    'email'  => $user->email,
-                    'role'   => $user->role,
-                    'avatar' => $user->avatar,
+                    'id'           => $user->id,
+                    'name'         => $user->name,
+                    'email'        => $user->email,
+                    'role'         => $user->role,
+                    'role_display' => $user->userRole?->display_name ?? ucfirst($user->role ?? ''),
+                    'role_color'   => $user->userRole?->color ?? 'gray-500',
+                    'avatar'       => $user->avatar,
                 ] : null,
+                'permissions' => $user
+                    ? ($user->isAdmin()
+                        // Admin : liste complète des permissions en base
+                        ? \App\Models\Permission::pluck('name')->all()
+                        : ($user->userRole?->permissionNames() ?? []))
+                    : [],
                 'activeShift' => $user && in_array($user->role, ['admin', 'caissier'])
                     ? Shift::where('user_id', $user->id)->whereNull('closed_at')->first()
                     : null,
