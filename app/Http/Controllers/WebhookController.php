@@ -24,7 +24,7 @@ class WebhookController extends Controller
 
         if (! $secret) {
             Log::critical('[Webhook] PAYMENT_WEBHOOK_SECRET not configured — rejecting request');
-            return response()->json(['error' => 'Webhook not configured'], 503);
+            return response()->json(['error' => 'Webhook not configured'], 403);
         }
 
         $signature = $request->header('X-Webhook-Signature') ?? '';
@@ -77,8 +77,7 @@ class WebhookController extends Controller
                 }
 
                 return response()->json([
-                    'error'  => 'Transition impossible',
-                    'status' => $ticket->status,
+                    'error' => 'Transition impossible',
                 ], 422);
 
             } catch (\Exception $e) {

@@ -72,11 +72,28 @@ class PolicyTest extends TestCase
 
     public function test_caissier_can_update_and_pay_tickets(): void
     {
-        $ticket = Ticket::factory()->create(['assigned_to' => $this->laveur->id]);
+        // Caissier must have an open shift and the ticket must belong to that shift.
+        $shift = Shift::create([
+            'user_id'   => $this->caissier->id,
+            'opened_at' => now(),
+            'closed_at' => null,
+        ]);
+        $ticket = Ticket::factory()->create([
+            'assigned_to' => $this->laveur->id,
+            'shift_id'    => $shift->id,
+        ]);
 
         $this->assertTrue($this->caissier->can('update', $ticket));
         $this->assertTrue($this->caissier->can('updateStatus', $ticket));
         $this->assertTrue($this->caissier->can('pay', $ticket));
+    }
+
+    public function test_caissier_cannot_update_ticket_from_other_shift(): void
+    {
+        // Caissier has no open shift → cannot update any ticket.
+        $ticket = Ticket::factory()->create(['assigned_to' => $this->laveur->id]);
+
+        $this->assertFalse($this->caissier->can('update', $ticket));
     }
 
     public function test_caissier_cannot_delete_tickets(): void

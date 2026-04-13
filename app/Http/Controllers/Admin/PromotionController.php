@@ -24,7 +24,7 @@ class PromotionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'code'              => 'required|string|max:50|unique:promotions,code',
+            'code'              => ['required', 'string', 'max:50', 'unique:promotions,code', 'regex:/^[A-Z0-9_\-]+$/i'],
             'label'             => 'nullable|string|max:100',
             'type'              => 'required|in:percent,fixed',
             'value'             => 'required|integer|min:1',
@@ -47,7 +47,7 @@ class PromotionController extends Controller
     public function update(Request $request, Promotion $promotion): RedirectResponse
     {
         $data = $request->validate([
-            'code'              => "required|string|max:50|unique:promotions,code,{$promotion->id}",
+            'code'              => ['required', 'string', 'max:50', "unique:promotions,code,{$promotion->id}", 'regex:/^[A-Z0-9_\-]+$/i'],
             'label'             => 'nullable|string|max:100',
             'type'              => 'required|in:percent,fixed',
             'value'             => 'required|integer|min:1',
@@ -88,7 +88,21 @@ class PromotionController extends Controller
             return response()->json(['valid' => false, 'message' => 'Code invalide ou expiré.'], 422);
         }
 
-        $discount = $promo->computeDiscount((int) $request->amount);        return response()->json([
+        // Re-validate inside a transaction with a row lock to prevent
+        // concurrent over-use when max_uses is nearly exhausted.
+        try {
+            $discount = \Illuminate\Support\Facades\DB::transaction(function () use ($promo, $request) {
+                $locked = Promotion::lockForUpdate()->findOrFail($promo->id);
+
+                if (!$locked->isCurrentlyValid()) {
+                    throw new \DomainException('Code invalide ou expiré.');
+                }
+
+                return $locked->computeDiscount((int) $request->amount);
+            });
+        } catch (\DomainException $e) {
+            return response()->json(['valid' => false, 'message' => $e->getMessage()], 422);
+        }        return response()->json([
             'valid'        => true,
             'promotion_id' => $promo->id,
             'label'        => $promo->label ?? $promo->code,

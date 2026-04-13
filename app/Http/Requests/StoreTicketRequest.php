@@ -65,7 +65,10 @@ class StoreTicketRequest extends FormRequest
 
             // ── Discount (Remise) ───────────────────────────────────────
             'discount_type'  => ['nullable', 'in:percent,fixed'],
-            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'discount_value' => array_filter([
+                'nullable', 'numeric', 'min:0',
+                $this->input('discount_type') === 'percent' ? 'max:100' : null,
+            ]),
 
             // ── Divers ──────────────────────────────────────────────────
             'notes'               => ['nullable', 'string', 'max:1000'],

@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Log;
 class ProcessPaymentAction
 {
     /**
-     * @return array{payment: Payment, change_cents: int, points_earned: int, is_prepaid: bool, target_status: string, message: string}
+     * @return array{payment: Payment, change_cents: int, points_earned: int, is_prepaid: bool, target_status: string, has_stock_warning: bool, message: string}
      *
      * @throws \Illuminate\Validation\ValidationException
      */    public function execute(Ticket $ticket, ProcessPaymentDTO $dto, int $operatorId): array
@@ -116,12 +116,13 @@ class ProcessPaymentAction
         }
 
         return [
-            'payment'       => $payment,
-            'change_cents'  => $changeCents,
-            'points_earned' => $pointsEarned,
-            'is_prepaid'    => $isPrepaid,
-            'target_status' => $targetStatus,
-            'message'       => $this->buildSuccessMessage(
+            'payment'           => $payment,
+            'change_cents'      => $changeCents,
+            'points_earned'     => $pointsEarned,
+            'is_prepaid'        => $isPrepaid,
+            'target_status'     => $targetStatus,
+            'has_stock_warning' => (bool) $ticket->has_stock_warning,
+            'message'           => $this->buildSuccessMessage(
                 $dto->method, $totalPaid, $changeCents, $pointsEarned, $ticket->total_cents, $balanceDueCents
             ),
         ];    }

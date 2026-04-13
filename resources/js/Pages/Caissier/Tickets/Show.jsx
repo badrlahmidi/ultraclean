@@ -703,7 +703,7 @@ function PrintReceipt({ ticket, settings = {} }) {
 
     return (
         <>
-            <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
+            <style>{pageStyle}</style>
             {template === 'detailed'
                 ? <PrintReceiptDetailed ticket={ticket} settings={settings} />
                 : <PrintReceiptMinimal ticket={ticket} settings={settings} />

@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { formatMAD, formatDateTime } from '@/utils/format';
 import { Link } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import { ArrowLeft, Clock, Ticket, AlertTriangle, CheckCircle2, History, Printer } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -173,7 +174,7 @@ export default function ShiftHistory({ shifts, totals }) {
                                                 : l.url ? 'border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
                                                     : 'opacity-30 pointer-events-none border dark:border-gray-700 text-gray-400'
                                         )}
-                                        dangerouslySetInnerHTML={{ __html: l.label }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(l.label) }}
                                     />
                                 ))}
                             </div>

@@ -151,9 +151,9 @@ class WebhookTest extends TestCase
 
         $ticket = $this->makeCompletedTicket();
 
-        // Secret vide → webhook non configuré → 503 Service Unavailable
+        // Secret vide → webhook non configuré → 403 Forbidden
         $this->postJson($this->url($ticket->ulid), ['status' => 'paid'])
-            ->assertServiceUnavailable();
+            ->assertForbidden();
     }
 
     public function test_valid_hmac_signature_is_accepted(): void

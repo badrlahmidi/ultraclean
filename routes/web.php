@@ -45,7 +45,7 @@ Route::get('/', fn () => redirect()->route('login'));
 // Public ticket tracking (signed URL — prevents enumeration even if ULID leaks)
 Route::get('/ticket/{ulid}', [\App\Http\Controllers\PublicTicketController::class, 'show'])
     ->name('ticket.public')
-    ->middleware('signed');
+    ->middleware(['signed', 'throttle:100,15']);
 
 // Webhook paiement async (HMAC-sécurisé, pas d'auth session)
 Route::post('/webhooks/payment/{ulid}', [\App\Http\Controllers\WebhookController::class, 'paymentConfirmed'])

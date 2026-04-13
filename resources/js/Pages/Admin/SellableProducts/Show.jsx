@@ -1,5 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import { ArrowLeft, Package, TrendingUp, TrendingDown, RefreshCw, User } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -145,7 +146,7 @@ export default function Show({ product, movements }) {
                                             ? 'bg-blue-600 text-white'
                                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700'
                                     )}
-                                    dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(link.label) }} />
                             ))}
                         </div>
                     )}

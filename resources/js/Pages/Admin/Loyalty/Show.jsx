@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { router, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { ArrowLeft, Gift, Star, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { formatMAD } from '@/utils/format';
@@ -212,7 +213,7 @@ export default function LoyaltyShow({ client, transactions, tiers }) {
                                             link.active ? 'bg-violet-600 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700',
                                             !link.url && 'opacity-30 cursor-not-allowed'
                                         )}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(link.label) }}
                                     />
                                 ))}
                             </div>

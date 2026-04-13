@@ -98,6 +98,7 @@ function AppointmentFormModal({ appointment = null, washers = [], onClose }) {
     const [quickSaving, setQuickSaving] = useState(false);
     const [quickErrors, setQuickErrors] = useState({});
     const clientTimerRef = useRef(null);
+    const clientAbortRef = useRef(null);
 
     // ── Vehicle brand autocomplete ──
     const [brandSearch, setBrandSearch] = useState(appointment?.vehicle_brand ?? '');
@@ -106,6 +107,7 @@ function AppointmentFormModal({ appointment = null, washers = [], onClose }) {
     const [selectedBrand, setSelectedBrand] = useState(null);
     const [showModels, setShowModels] = useState(false);
     const brandTimerRef = useRef(null);
+    const brandAbortRef = useRef(null);
 
     // ── Conflict detection ──
     const [conflicts, setConflicts] = useState([]);
@@ -117,15 +119,21 @@ function AppointmentFormModal({ appointment = null, washers = [], onClose }) {
         setClientSearch(q);
         setShowQuickAdd(false);
         clearTimeout(clientTimerRef.current);
+        clientAbortRef.current?.abort();
         if (q.length < 2) { setClientResults([]); return; }
         setClientLoading(true);
+        const controller = new AbortController();
+        clientAbortRef.current = controller;
         clientTimerRef.current = setTimeout(async () => {
             try {
-                const r = await fetch(route('caissier.clients.search') + '?q=' + encodeURIComponent(q));
+                const r = await fetch(route('caissier.clients.search') + '?q=' + encodeURIComponent(q), {
+                    signal: controller.signal,
+                });
                 const data = await r.json();
                 setClientResults(data);
-            } catch { /* ignore */ }
-            finally { setClientLoading(false); }
+            } catch (e) {
+                if (e.name !== 'AbortError') console.error('[ClientSearch]', e);
+            } finally { setClientLoading(false); }
         }, 300);
     }
 
@@ -182,15 +190,21 @@ function AppointmentFormModal({ appointment = null, washers = [], onClose }) {
         setSelectedBrand(null);
         setShowModels(false);
         clearTimeout(brandTimerRef.current);
+        brandAbortRef.current?.abort();
         if (q.length < 1) { setBrandResults([]); return; }
         setBrandLoading(true);
+        const controller = new AbortController();
+        brandAbortRef.current = controller;
         brandTimerRef.current = setTimeout(async () => {
             try {
-                const r = await fetch(route('admin.appointments.vehicle-brands') + '?q=' + encodeURIComponent(q));
+                const r = await fetch(route('admin.appointments.vehicle-brands') + '?q=' + encodeURIComponent(q), {
+                    signal: controller.signal,
+                });
                 const data = await r.json();
                 setBrandResults(data);
-            } catch { /* ignore */ }
-            finally { setBrandLoading(false); }
+            } catch (e) {
+                if (e.name !== 'AbortError') console.error('[BrandSearch]', e);
+            } finally { setBrandLoading(false); }
         }, 300);
     }
 
