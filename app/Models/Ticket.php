@@ -195,7 +195,9 @@ class Ticket extends Model
             $sequence = \Illuminate\Support\Facades\DB::table('ticket_daily_counters')
                 ->where('date', $today)
                 ->lockForUpdate()
-                ->value('next_value') - 1;  // value after increment; we want (value - 1)
+                ->value('next_value') - 1;
+                // INSERT … ON DUPLICATE KEY UPDATE set next_value to the incremented value,
+                // so we subtract 1 to get the value that was assigned to this ticket.
         }
 
         return sprintf('TK-%s-%04d', $date, max(1, (int) $sequence));

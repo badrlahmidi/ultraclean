@@ -66,7 +66,7 @@ export default async function globalSetup(config: FullConfig) {
         throw new Error(
             'E2E setup requires TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, ' +
             'TEST_CAISSIER_EMAIL, and TEST_CAISSIER_PASSWORD environment variables. ' +
-            'Set them in your CI secrets or in a local .env.testing file.'
+            'Set them in your CI secrets or export them in your shell before running Playwright.'
         );
     }
 

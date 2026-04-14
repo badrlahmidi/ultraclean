@@ -131,6 +131,9 @@ return [
         //
         // Usage: set LOG_CHANNEL=json (or add "json" to LOG_STACK) in .env.
         // On Hostinger you can ship this file with a sidecar log-shipper.
+        //
+        // ⚠️  Configure external log rotation (e.g. logrotate) for this file in
+        //     production to prevent laravel-json.log from growing indefinitely.
         'json' => [
             'driver'  => 'monolog',
             'level'   => env('LOG_LEVEL', 'debug'),

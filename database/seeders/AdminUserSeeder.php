@@ -101,7 +101,14 @@ class AdminUserSeeder extends Seeder
 
             // Only reveal credentials when running outside production or when
             // they were auto-generated (no SEED_* env var was provided).
-            if (! app()->isProduction() || ! config('seeding.' . strtolower($label) . '_password')) {
+            // Use explicit config keys to avoid coupling to the _label field value.
+            $configKey = match ($label) {
+                'Admin'    => 'seeding.admin_password',
+                'Caissier' => 'seeding.caissier_password',
+                'Laveur'   => 'seeding.laveur_password',
+                default    => null,
+            };
+            if (! app()->isProduction() || ($configKey && ! config($configKey))) {
                 $this->command->warn("[$label] email={$dbRow['email']} password={$password} pin={$pin}");
             }
         }

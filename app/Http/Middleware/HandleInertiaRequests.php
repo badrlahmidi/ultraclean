@@ -12,6 +12,13 @@ class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
 
+    /**
+     * TTL (seconds) for the per-user active-shift cache entry.
+     * Short enough to reflect open/close operations promptly; long enough to
+     * avoid a DB hit on every page navigation.
+     */
+    private const ACTIVE_SHIFT_CACHE_TTL = 30;
+
     public function version(Request $request): ?string
     {
         return parent::version($request);
@@ -68,7 +75,7 @@ class HandleInertiaRequests extends Middleware
                 'activeShift' => $user && in_array($user->role, ['admin', 'caissier'])
                     ? Cache::remember(
                         "active_shift:{$user->id}",
-                        30,  // 30-second TTL — short enough to reflect open/close promptly
+                        self::ACTIVE_SHIFT_CACHE_TTL,
                         fn () => Shift::where('user_id', $user->id)->whereNull('closed_at')->first()
                     )
                     : null,
