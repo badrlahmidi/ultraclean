@@ -9,6 +9,7 @@ import ClientDrawer from './components/ClientDrawer';
 import WasherOverlay from './components/WasherOverlay';
 import ServiceGrid from './components/ServiceGrid';
 import TicketRecap from './components/TicketRecap';
+import ErrorBoundary from '@/Components/ErrorBoundary';
 
 /**
  * Page caissier — Création d'un nouveau ticket (POS)
@@ -428,6 +429,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
 
                     {/* Grille des prestations */}
                     <div className="flex-1 overflow-hidden flex flex-col">
+                        <ErrorBoundary inline>
                         <ServiceGrid
                             services={services}
                             priceGrid={priceGrid}
@@ -437,6 +439,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                             onAdd={handleAddLine}
                             onRemove={handleRemoveLine}
                         />
+                        </ErrorBoundary>
                     </div>
 
                     {/* ── Barre total mobile (pinned bottom, < lg uniquement) ── */}
@@ -472,6 +475,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                     'w-full lg:w-80 xl:w-96 shrink-0 flex flex-col overflow-hidden',
                     mobileView !== 'recap' ? 'hidden lg:flex' : 'flex'
                 )}>
+                    <ErrorBoundary inline>
                     <TicketRecap
                         vehicle={vehicle}
                         client={client}
@@ -501,6 +505,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                         isAtelierClient={isAtelierClient}
                         sellableProducts={sellableProducts}
                     />
+                    </ErrorBoundary>
                 </div>
             </div>
         </AppLayout>

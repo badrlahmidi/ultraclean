@@ -7,6 +7,7 @@ import {
     Phone, Mail, Building2, Info,
 } from 'lucide-react';
 import { formatMAD, formatDate, formatDateTime } from '@/utils/format';
+import { TICKET_STATUS, APPT_STATUS } from '@/utils/constants';
 import clsx from 'clsx';
 
 /* ── Config ─────────────────────────────────────────────────────────────── */
@@ -15,24 +16,6 @@ const TIER_CONFIG = {
     silver: { label: 'Silver', color: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400', bar: 'bg-slate-400', ring: 'ring-slate-200' },
     gold: { label: 'Gold', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400', bar: 'bg-amber-400', ring: 'ring-amber-200' },
     platinum: { label: 'Platinum', color: 'bg-violet-100 text-violet-700', dot: 'bg-violet-500', bar: 'bg-violet-500', ring: 'ring-violet-200' },
-};
-const STATUS_COLORS = {
-    pending: 'bg-yellow-100 text-yellow-700', in_progress: 'bg-blue-100 text-blue-700',
-    completed: 'bg-emerald-100 text-emerald-700', paid: 'bg-green-100 text-green-700',
-    partial: 'bg-orange-100 text-orange-700', cancelled: 'bg-red-100 text-red-700',
-};
-const STATUS_LABELS = {
-    pending: 'En attente', in_progress: 'En cours', completed: 'Terminé',
-    paid: 'Payé', partial: 'Partiel', cancelled: 'Annulé',
-};
-const APPT_COLORS = {
-    pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700',
-    in_progress: 'bg-purple-100 text-purple-700', completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700', no_show: 'bg-gray-100 text-gray-500',
-};
-const APPT_LABELS = {
-    pending: 'En attente', confirmed: 'Confirmé', in_progress: 'En cours',
-    completed: 'Terminé', cancelled: 'Annulé', no_show: 'Absent',
 };
 
 /* ── Small helpers ──────────────────────────────────────────────────────── */
@@ -370,7 +353,7 @@ export default function AdminClientShow({ client, recentTickets, transactions, a
                                                 <td className="py-3 pr-4 text-xs text-gray-500 whitespace-nowrap">{formatDate(t.created_at, 'short')}</td>
                                                 <td className="py-3 pr-4 font-mono text-xs text-gray-600">{t.vehicle_plate ?? '—'}</td>
                                                 <td className="py-3 pr-4 text-xs text-gray-500 max-w-[160px] truncate">{t.services?.map(s => s.service_name).join(', ') || '—'}</td>
-                                                <td className="py-3 pr-4"><Badge className={STATUS_COLORS[t.status] ?? 'bg-gray-100 text-gray-600'}>{STATUS_LABELS[t.status] ?? t.status}</Badge></td>
+                                                <td className="py-3 pr-4"><Badge className={TICKET_STATUS[t.status]?.cls ?? 'bg-gray-100 text-gray-600'}>{TICKET_STATUS[t.status]?.label ?? t.status}</Badge></td>
                                                 <td className="py-3 text-right font-semibold text-gray-800">{formatMAD(t.total_cents)}</td>
                                             </tr>
                                         ))}
@@ -509,7 +492,7 @@ export default function AdminClientShow({ client, recentTickets, transactions, a
                                             <p className="text-sm font-medium text-gray-700">{formatDateTime(a.scheduled_at)}</p>
                                             {a.notes && <p className="text-xs text-gray-400 truncate">{a.notes}</p>}
                                         </div>
-                                        <Badge className={APPT_COLORS[a.status] ?? 'bg-gray-100 text-gray-500'}>{APPT_LABELS[a.status] ?? a.status}</Badge>
+                                        <Badge className={APPT_STATUS[a.status]?.cls ?? 'bg-gray-100 text-gray-500'}>{APPT_STATUS[a.status]?.label ?? a.status}</Badge>
                                     </div>
                                 ))}
                             </div>

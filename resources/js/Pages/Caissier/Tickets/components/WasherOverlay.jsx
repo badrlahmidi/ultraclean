@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, Search, UserCheck } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -13,6 +13,13 @@ import clsx from 'clsx';
 export default function WasherOverlay({ washers, selected, onSelect, onClose }) {
     const [search, setSearch] = useState('');
 
+    /* Close on Escape */
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [onClose]);
+
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
         if (!q) return washers;
@@ -25,7 +32,12 @@ export default function WasherOverlay({ washers, selected, onSelect, onClose }) 
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-gray-950/80 flex items-stretch justify-center">
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="washer-overlay-title"
+            className="fixed inset-0 z-50 bg-gray-950/80 flex items-stretch justify-center"
+        >
             <div className="w-full max-w-xl bg-white flex flex-col">
 
                 {/* Header */}
@@ -37,11 +49,12 @@ export default function WasherOverlay({ washers, selected, onSelect, onClose }) 
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Rechercher un laveur…"
+                            aria-label="Rechercher un laveur"
                             className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl
                                        focus:outline-none focus:ring-2 focus:ring-orange-400"
                         />
                     </div>
-                    <button onClick={onClose}
+                    <button onClick={onClose} aria-label="Fermer"
                         className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500 shrink-0">
                         <X size={20} />
                     </button>
@@ -49,7 +62,7 @@ export default function WasherOverlay({ washers, selected, onSelect, onClose }) 
 
                 {/* Sub-header */}
                 <div className="px-5 pt-4 pb-2 shrink-0">
-                    <h2 className="text-base font-semibold text-gray-800">Choisir un laveur</h2>
+                    <h2 id="washer-overlay-title" className="text-base font-semibold text-gray-800">Choisir un laveur</h2>
                     <p className="text-xs text-gray-400 mt-0.5">
                         {selected
                             ? `Laveur actuel : ${washers.find(w => w.id === selected)?.name}`

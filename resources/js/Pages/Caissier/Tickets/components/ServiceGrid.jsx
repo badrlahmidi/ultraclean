@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Plus, Minus, Tag } from 'lucide-react';
 import clsx from 'clsx';
 import PricePicker from './PricePicker';
@@ -23,7 +23,7 @@ const fmt = (cents) => `${(cents / 100).toFixed(0)} MAD`;
  *   onAdd         — fn(line) — ajoute ou incrémente
  *   onRemove      — fn(service_id) — décrémente ou retire
  */
-export default function ServiceGrid({ services, priceGrid, vehicleTypes, suggestedTypeId, lines, onAdd, onRemove }) {
+const ServiceGrid = memo(function ServiceGrid({ services, priceGrid, vehicleTypes, suggestedTypeId, lines, onAdd, onRemove }) {
     const categories = Object.keys(services);
     const [activeCategory, setActiveCategory] = useState(categories[0] ?? null);
     const [pickerService, setPickerService] = useState(null);
@@ -201,4 +201,6 @@ export default function ServiceGrid({ services, priceGrid, vehicleTypes, suggest
             )}
         </>
     );
-}
+});
+
+export default ServiceGrid;

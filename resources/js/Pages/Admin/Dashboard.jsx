@@ -5,27 +5,9 @@ import {
     CalendarDays, FileText, Activity, Package, Users
 } from 'lucide-react';
 import { formatMAD, formatDateTime } from '@/utils/format';
+import { TICKET_STATUS, APPT_STATUS } from '@/utils/constants';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import clsx from 'clsx';
-
-const STATUS_COLORS = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    in_progress: 'bg-blue-100 text-blue-700',
-    completed: 'bg-emerald-100 text-emerald-700',
-    paid: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700',
-};
-const STATUS_LABELS = {
-    pending: 'En attente', in_progress: 'En cours',
-    completed: 'Terminé', paid: 'Payé', cancelled: 'Annulé',
-};
-const APPT_COLORS = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    confirmed: 'bg-blue-100 text-blue-700',
-    arrived: 'bg-cyan-100 text-cyan-700',
-    in_progress: 'bg-purple-100 text-purple-700',
-    completed: 'bg-green-100 text-green-700',
-};
 
 function StatCard({ label, value, icon: Icon, color, sub }) {
     return (
@@ -140,8 +122,8 @@ export default function AdminDashboard({
                                             <p className="text-sm font-medium text-gray-800 truncate">{a.client?.name ?? 'Client anonyme'}</p>
                                             {a.vehicle_plate && <p className="text-xs text-gray-400 font-mono">{a.vehicle_plate}</p>}
                                         </div>
-                                        <span className={clsx('text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0', APPT_COLORS[a.status] ?? 'bg-gray-100 text-gray-500')}>
-                                            {a.status}
+                                        <span className={clsx('text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0', APPT_STATUS[a.status]?.cls ?? 'bg-gray-100 text-gray-500')}>
+                                            {APPT_STATUS[a.status]?.label ?? a.status}
                                         </span>
                                     </div>
                                 ))}
@@ -209,8 +191,8 @@ export default function AdminDashboard({
                         <h2 className="text-sm font-semibold text-gray-700 mb-3">Répartition tickets aujourd'hui</h2>
                         <div className="flex flex-wrap gap-3">
                             {Object.entries(statusBreakdown).map(([status, count]) => (
-                                <div key={status} className={clsx('flex items-center gap-2 rounded-lg px-3 py-2', STATUS_COLORS[status] ?? 'bg-gray-50 text-gray-700')}>
-                                    <span className="text-sm font-medium capitalize">{STATUS_LABELS[status] ?? status.replace('_', ' ')}</span>
+                                <div key={status} className={clsx('flex items-center gap-2 rounded-lg px-3 py-2', TICKET_STATUS[status]?.cls ?? 'bg-gray-50 text-gray-700')}>
+                                    <span className="text-sm font-medium capitalize">{TICKET_STATUS[status]?.label ?? status.replace('_', ' ')}</span>
                                     <span className="text-sm font-bold">{count}</span>
                                 </div>
                             ))}
