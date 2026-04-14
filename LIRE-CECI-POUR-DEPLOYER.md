@@ -1,50 +1,41 @@
-# 🚀 Instructions pour le Déploiement Automatique
+# 🚀 Instructions pour le Déploiement - UltraClean
 
-## Important : Ce script va faire TOUT automatiquement !
+> ⚠️ **AVERTISSEMENT DE SÉCURITÉ :** Ne jamais stocker des mots de passe, clés secrètes
+> ou adresses IP de production dans des fichiers suivis par Git.
+> Toutes les valeurs sensibles doivent être définies directement sur le serveur.
 
-✅ Se connecter à Hostinger  
+## Ce que le déploiement va faire
+
 ✅ Cloner le dépôt GitHub  
-✅ Configurer le fichier .env  
+✅ Configurer le fichier .env (vous devrez remplir les valeurs manuellement)  
 ✅ Installer les dépendances  
-✅ Exécuter les migrations (52)  
+✅ Exécuter les migrations  
 ✅ Remplir la base de données  
 ✅ Créer les liens  
 ✅ Configurer les permissions  
 
 ---
 
-## Étape 1 : Installer PuTTY (Nécessaire)
-
-1. **Téléchargez** PuTTY depuis : https://www.putty.org/
-2. **Installez** PuTTY sur votre Windows
-3. **Vérifiez** que `plink.exe` est disponible
-
----
-
-## Étape 2 : Exécuter le Script de Déploiement
+## Étape 1 : Script de Déploiement (Windows)
 
 Ouvrez **PowerShell** sur votre Windows et exécutez :
 
 ```powershell
-cd C:\DEVPROJECTS\ultraclean
 .\deploy.ps1
 ```
 
-Le script va automatiquement :
-- Se connecter à Hostinger avec vos identifiants
-- Exécuter toutes les étapes de déploiement
-- Afficher la progression en temps réel
-- Vérifier que tout fonctionne
+Le script va vous demander interactivement votre utilisateur SSH, l'hôte et le domaine.
+**Ne passez jamais de mots de passe en paramètre de ligne de commande.**
 
 ---
 
-## Étape 3 : Configuration hPanel (Après le script)
+## Étape 2 : Configuration hPanel (Après le script)
 
 Une fois le script terminé, configurez dans hPanel :
 
 ### 1. Document Root (CRUCIAL !)
 
-**hPanel → Domains → ultraclean.ritajpos.com**
+**hPanel → Domains → votre-domaine**
 
 **Changez le dossier vers :** `/public_html/public`
 
@@ -62,28 +53,27 @@ Une fois le script terminé, configurez dans hPanel :
 
 **hPanel → Advanced → Scheduled Tasks (Cron Jobs)**
 
-**Ajoutez :**
+**Ajoutez** (remplacez `uXXXX` et `votre-domaine` par vos valeurs) :
 - Fréquence : `* * * * *` (chaque minute)
 - Commande :
 ```bash
-/usr/local/bin/php /home/u897563629/domains/ultraclean.ritajpos.com/public_html/artisan schedule:run >> /dev/null 2>&1
+/usr/local/bin/php /home/uXXXX/domains/votre-domaine/public_html/artisan schedule:run >> /dev/null 2>&1
 ```
 
 ---
 
-## Étape 4 : Sécurité Après Déploiement
+## Étape 3 : Sécurité Après Déploiement
 
 ### 1. Connectez-vous
 
-**URL :** https://ultraclean.ritajpos.com
+**URL :** `https://<VOTRE_DOMAINE>`
 
-**Identifiants par défaut :**
-- Email : `admin@ritajpos.ma`
-- Mot de passe : `Admin@2026!`
-- PIN : `1234`
+Un compte administrateur par défaut est créé par le seeder.
+Consultez `database/seeders/AdminUserSeeder.php` pour l'e-mail par défaut.
 
 ### 2. IMMÉDIATEMENT :
 - Changez votre mot de passe admin
+- Changez le PIN admin
 - Configurez les paramètres de votre entreprise
 - Vérifiez les services et les tarifs
 
@@ -91,43 +81,33 @@ Une fois le script terminé, configurez dans hPanel :
 
 ## Vérification
 
-Après l'exécution du script, vérifiez :
+Après le déploiement, vérifiez :
 
-1. ✅ Ouvrez : https://ultraclean.ritajpos.com
-2. ✅ Connectez-vous avec les identifiants par défaut
-3. ✅ Changez votre mot de passe
+1. ✅ Ouvrez votre URL de production
+2. ✅ Connectez-vous avec le compte admin par défaut
+3. ✅ Changez votre mot de passe **immédiatement**
 4. ✅ Testez toutes les fonctionnalités
 
 ---
 
 ## Problèmes ?
 
-### Le script ne trouve pas plink.exe ?
+### Erreur de connexion SSH ?
 
-1. Assurez-vous que PuTTY est installé
-2. Ajoutez `C:\Program Files\PuTTY\` à votre PATH Windows
-3. Ou copiez `plink.exe` dans `C:\DEVPROJECTS\ultraclean\`
-
-### Erreur de connexion ?
-
-- Vérifiez votre mot de passe Hostinger : `Ultraclean@26`
-- Vérifiez que SSH est activé sur Hostinger
+- Vérifiez que SSH est activé dans hPanel
+- Consultez `setup-ssh-key.md` pour configurer les clés SSH
 
 ### Erreur de base de données ?
 
 - Vérifiez que la base de données existe dans hPanel → MySQL Databases
-- Nom : `u897563629_ultraclean`
-- Utilisateur : `u897563629_ultraclean`
-- Mot de passe : `Ultraclean@26`
+- Vérifiez les identifiants dans votre fichier `.env` sur le serveur
 
 ---
 
 ## Résumé
 
-1. **Ouvrez PowerShell**
-2. **Exécutez :** `cd C:\DEVPROJECTS\ultraclean && .\deploy.ps1`
-3. **Attendez** que tout se termine (quelques minutes)
+1. **Exécutez** `.\deploy.ps1` depuis PowerShell
+2. **Saisissez** vos informations SSH quand demandé
+3. **Éditez** le fichier `.env` sur le serveur avec vos vraies valeurs
 4. **Configurez** le document root dans hPanel vers `/public_html/public`
 5. **Connectez-vous** et changez votre mot de passe
-
-**Votre application sera live sur :** https://ultraclean.ritajpos.com 🚀

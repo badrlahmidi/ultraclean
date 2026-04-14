@@ -8,6 +8,10 @@
  *  - Permission helpers
  *
  * Avoids prop-drilling and repeated `usePage()` calls in deep components.
+ *
+ * AUDIT-FIX: The `can()` helper now uses the server-authoritative
+ * `auth.permissions` list (shared via HandleInertiaRequests::share()) instead
+ * of a client-side ROLE_PERMISSIONS map that could drift from backend policies.
  */
 import { createContext, useContext, useMemo } from 'react';
 import { usePage } from '@inertiajs/react';
@@ -35,33 +39,18 @@ export function useApp() {
     return ctx;
 }
 
-const ROLE_PERMISSIONS = {
-    admin: [
-        'tickets.create', 'tickets.view', 'tickets.update', 'tickets.delete', 'tickets.pay',
-        'clients.create', 'clients.view', 'clients.update', 'clients.delete',
-        'shifts.view', 'shifts.create', 'shifts.close',
-        'invoices.manage', 'quotes.manage', 'appointments.manage',
-        'reports.view', 'settings.manage', 'users.manage', 'stock.manage',
-    ],
-    caissier: [
-        'tickets.create', 'tickets.view', 'tickets.update', 'tickets.pay',
-        'clients.create', 'clients.view', 'clients.update',
-        'shifts.view', 'shifts.create', 'shifts.close',
-        'appointments.view',
-    ],
-    laveur: [
-        'tickets.view', 'tickets.update',
-        'clients.view',
-    ],
-};
-
 export function AppProvider({ children }) {
     const { auth, appName, activeShift, settings } = usePage().props;
     const user = auth?.user;
     const role = user?.role ?? 'guest';
 
+    // Use the server-provided permissions list as the single source of truth.
+    // This list is built from the RBAC database (Policies + Gates) in
+    // HandleInertiaRequests::share() and is always in sync with backend rules.
+    const serverPermissions = auth?.permissions ?? [];
+
     const value = useMemo(() => {
-        const rolePerms = new Set(ROLE_PERMISSIONS[role] ?? []);
+        const permSet = new Set(serverPermissions);
 
         return {
             user,
@@ -72,9 +61,9 @@ export function AppProvider({ children }) {
             activeShift: activeShift ?? null,
             appName: appName ?? 'UltraClean',
             settings: settings ?? {},
-            can: (permission) => rolePerms.has(permission),
+            can: (permission) => permSet.has(permission),
         };
-    }, [user, role, activeShift, appName, settings]);
+    }, [user, role, serverPermissions, activeShift, appName, settings]);
 
     return (
         <AppContext.Provider value={value}>

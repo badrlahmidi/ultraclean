@@ -2,7 +2,7 @@
 
 **Your SSH Connection:**
 ```bash
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 ```
 
 **Last Updated:** 10 avril 2026
@@ -14,7 +14,7 @@ ssh -p 65002 u897563629@91.108.101.158
 ### Step 1: Connect to Hostinger via SSH
 
 ```bash
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 ```
 
 **Password:** Enter your Hostinger password when prompted
@@ -123,8 +123,8 @@ nano .env
 APP_URL=https://your-domain.ma
 
 # Database Configuration (from Hostinger hPanel → MySQL Databases)
-DB_DATABASE=u897563629_ultraclean      # Replace with actual DB name from hPanel
-DB_USERNAME=u897563629_ultraclean      # Replace with actual DB user from hPanel
+DB_DATABASE=<YOUR_DB_NAME>         # From hPanel → MySQL Databases
+DB_USERNAME=<YOUR_DB_USER>         # From hPanel → MySQL Databases
 DB_PASSWORD=YOUR_DB_PASSWORD_HERE      # Replace with actual DB password from hPanel
 
 # Mail Configuration (from Hostinger hPanel → Email Accounts)
@@ -133,7 +133,7 @@ MAIL_PASSWORD=YOUR_MAIL_PASSWORD_HERE
 MAIL_FROM_ADDRESS="noreply@your-domain.ma"
 
 # Payment Webhook Secret (already generated)
-PAYMENT_WEBHOOK_SECRET=5dff05f9783d94419f3d338e8ecacdf8e4fa3099c5ff6319ca88f574b65542a6
+PAYMENT_WEBHOOK_SECRET=<run: openssl rand -hex 32>
 ```
 
 **Save and exit nano:** Press `Ctrl+X`, then `Y`, then `Enter`
@@ -267,8 +267,8 @@ HTTP/1.1 200 OK
 
 **Go to:** hPanel → MySQL Databases
 
-1. Create database: `u897563629_ultraclean`
-2. Create user: `u897563629_ultraclean`
+1. Create database: `<YOUR_DB_NAME>`
+2. Create user: `<YOUR_DB_NAME>`
 3. Generate a strong password
 4. **IMPORTANT:** Grant user full privileges to the database
 
@@ -321,7 +321,7 @@ nano .htaccess
 2. **Frequency:** Every minute (`* * * * *`)
 3. **Command:**
    ```bash
-   /usr/local/bin/php /home/u897563629/domains/your-domain.ma/public_html/artisan schedule:run >> /dev/null 2>&1
+   /usr/local/bin/php /home/<YOUR_SSH_USER>/domains/your-domain.ma/public_html/artisan schedule:run >> /dev/null 2>&1
    ```
 4. Click "Save"
 
@@ -336,8 +336,8 @@ nano .htaccess
 **URL:** `https://your-domain.ma`
 
 **Default Credentials:**
-- Email: `admin@ritajpos.ma`
-- Password: `Admin@2026!`
+- Email: see `database/seeders/AdminUserSeeder.php` for the default seeded account
+- Password: **change immediately after first login**
 - PIN: `1234`
 
 **Immediate Actions:**
@@ -504,7 +504,7 @@ After completing all steps, verify:
 
 ```bash
 # SSH into Hostinger
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 
 # Navigate to project
 cd ~/domains/your-domain.ma/public_html
@@ -542,7 +542,7 @@ chmod -R 775 storage bootstrap/cache public/build
 
 ```bash
 # Connect to SSH
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 
 # Navigate to project
 cd ~/domains/your-domain.ma/public_html
@@ -577,8 +577,8 @@ php artisan migrate:status
 ---
 
 **Deployment Date:** 10 avril 2026  
-**SSH User:** u897563629  
-**SSH Host:** 91.108.101.158  
+**SSH User:** <YOUR_SSH_USER>  
+**SSH Host:** <YOUR_SERVER_IP>  
 **SSH Port:** 65002  
 
 **Good luck with your deployment! 🚀**

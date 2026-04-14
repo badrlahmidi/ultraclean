@@ -1,30 +1,43 @@
 # 🚀 Instructions de Déploiement - UltraClean
 
+> ⚠️ **SECURITY NOTICE:** Never commit real credentials, passwords, IP addresses, or secrets
+> to any file tracked by Git. All values below use placeholder tokens. Replace them with
+> your actual values **only** on the server itself, or via a secrets manager.
+
 ## 📋 Instructions Rapides
 
 ### Étape 1 : Connexion SSH
 Ouvrez PowerShell ou Command Prompt et exécutez :
 
 ```bash
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 ```
 
-**Mot de passe :** `Ultraclean@26`
+Récupérez vos identifiants SSH dans **hPanel → Accès SSH**.
 
 ### Étape 2 : Commandes de Déploiement Rapides
 
 Une fois connecté, copiez et collez ce bloc de commandes complet :
 
 ```bash
-cd ~/domains/ultraclean.ritajpos.com/public_html && \
-git clone https://github.com/badrlahmdi/ultraclean.git . && \
+cd ~/domains/<YOUR_DOMAIN>/public_html && \
+git clone https://github.com/badrlahmidi/ultraclean.git . && \
 cp .env.production.example .env && \
-sed -i "s|APP_URL=.*|APP_URL=https://ultraclean.ritajpos.com|g" .env && \
-sed -i "s|DB_DATABASE=.*|DB_DATABASE=u897563629_ultraclean|g" .env && \
-sed -i "s|DB_USERNAME=.*|DB_USERNAME=u897563629_ultraclean|g" .env && \
-sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=Ultraclean@26|g" .env && \
-sed -i "s|MAIL_USERNAME=.*|MAIL_USERNAME=noreply@ultraclean.ritajpos.com|g" .env && \
-sed -i "s|PAYMENT_WEBHOOK_SECRET=.*|PAYMENT_WEBHOOK_SECRET=5dff05f9783d94419f3d338e8ecacdf8e4fa3099c5ff6319ca88f574b65542a6|g" .env && \
+nano .env   # Edit ALL placeholder values before proceeding
+```
+
+Remplissez ensuite manuellement dans le fichier `.env` :
+
+| Variable | Valeur |
+|---|---|
+| `APP_URL` | `https://<YOUR_DOMAIN>` |
+| `DB_DATABASE` | Votre nom de BDD (hPanel → MySQL) |
+| `DB_USERNAME` | Votre utilisateur BDD |
+| `DB_PASSWORD` | Votre mot de passe BDD |
+| `MAIL_USERNAME` | Votre adresse e-mail SMTP |
+| `PAYMENT_WEBHOOK_SECRET` | Généré avec `openssl rand -hex 32` |
+
+```bash
 php artisan key:generate && \
 composer install --no-dev --optimize-autoloader --no-interaction && \
 php artisan migrate --force && \
@@ -46,7 +59,7 @@ chmod -R 775 storage/logs
 
 ### Étape 1 : Navigation
 ```bash
-cd ~/domains/ultraclean.ritajpos.com/public_html
+cd ~/domains/<YOUR_DOMAIN>/public_html
 ```
 
 ### Étape 2 : Clone du Repository
@@ -56,23 +69,20 @@ git clone https://github.com/badrlahmdi/ultraclean.git .
 
 Si le répertoire existe déjà :
 ```bash
-git pull origin master
+git pull origin main
 ```
 
 ### Étape 3 : Configuration .env
 ```bash
 cp .env.production.example .env
+nano .env   # Replace ALL placeholder values with your actual production values
 ```
 
-Mettre à jour les valeurs :
-```bash
-sed -i "s|APP_URL=.*|APP_URL=https://ultraclean.ritajpos.com|g" .env
-sed -i "s|DB_DATABASE=.*|DB_DATABASE=u897563629_ultraclean|g" .env
-sed -i "s|DB_USERNAME=.*|DB_USERNAME=u897563629_ultraclean|g" .env
-sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=Ultraclean@26|g" .env
-sed -i "s|MAIL_USERNAME=.*|MAIL_USERNAME=noreply@ultraclean.ritajpos.com|g" .env
-sed -i "s|PAYMENT_WEBHOOK_SECRET=.*|PAYMENT_WEBHOOK_SECRET=5dff05f9783d94419f3d338e8ecacdf8e4fa3099c5ff6319ca88f574b65542a6|g" .env
-```
+Valeurs à définir (ne jamais utiliser `sed` avec des mots de passe en clair) :
+- `APP_URL` — URL complète de votre domaine
+- `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` — depuis hPanel → MySQL
+- `MAIL_USERNAME`, `MAIL_PASSWORD` — depuis hPanel → Email Accounts
+- `PAYMENT_WEBHOOK_SECRET` — générez avec `openssl rand -hex 32`
 
 ### Étape 4 : Génération de la Clé
 ```bash
@@ -134,18 +144,17 @@ Si vous ne le faites pas, l'application ne fonctionnera pas !
 
 Dans **hPanel** → **Advanced** → **Scheduled Tasks** :
 
-**Commande :**
+**Commande** (remplacez `uXXXX` et `your-domain` par vos valeurs réelles) :
 ```bash
-* * * * * /usr/local/bin/php /home/u897563629/domains/ultraclean.ritajpos.com/public_html/artisan schedule:run >> /dev/null 2>&1
+* * * * * /usr/local/bin/php /home/uXXXX/domains/your-domain/public_html/artisan schedule:run >> /dev/null 2>&1
 ```
 
 ### 3️⃣ Connexion Admin
 
-🌐 **URL :** https://ultraclean.ritajpos.com
+🌐 **URL :** `https://<YOUR_DOMAIN>`
 
-📧 **Email :** admin@ritajpos.ma  
-🔑 **Mot de passe :** Admin@2026!  
-🔢 **PIN :** 1234
+Le compte administrateur par défaut est créé par le seeder (`AdminUserSeeder`).
+**Changez le mot de passe immédiatement après la première connexion.**
 
 ### 4️⃣ Sécurité
 

@@ -1,6 +1,10 @@
-# 🔑 Setup SSH Key for Hostinger Authentication
+# 🔑 Setup SSH Key Authentication for Hostinger
 
-This guide helps you set up SSH key authentication so you don't need to enter your password every time.
+This guide helps you set up SSH key authentication so you don't need to enter a
+password every time you deploy.
+
+> ⚠️ **SECURITY:** Never commit SSH usernames, IP addresses, or server passwords
+> to Git. All examples below use placeholder values — replace them with your own.
 
 ---
 
@@ -13,97 +17,84 @@ This guide helps you set up SSH key authentication so you don't need to enter yo
 
 ---
 
-## Step 1: Generate SSH Key on Hostinger
+## Step 1: Connect to Your Server
 
-Connect to Hostinger via SSH:
 ```bash
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 ```
 
-Then generate the key:
+Retrieve your SSH port, username, and server IP from **hPanel → SSH Access**.
+
+---
+
+## Step 2: Generate SSH Key on the Server
+
 ```bash
-ssh-keygen -t ed25519 -C "u897563629@91.108.101.158"
+ssh-keygen -t ed25519 -C "<YOUR_EMAIL>"
 ```
 
-Press Enter for all defaults (3 times):
+Press Enter for all defaults (or set a passphrase for extra security):
 1. Enter file in which to save the key: **Press Enter**
 2. Enter passphrase (empty for no passphrase): **Press Enter**
 3. Enter same passphrase again: **Press Enter**
 
 ---
 
-## Step 2: Copy the Public Key
+## Step 3: Copy the Public Key
 
-Display your public key:
+Display your public key on the server:
 ```bash
 cat ~/.ssh/id_ed25519.pub
 ```
 
-Copy the entire output (starts with `ssh-ed25519` and ends with your email)
+Copy the entire output (starts with `ssh-ed25519`).
 
 ---
 
-## Step 3: Add SSH Key to Your Local Machine
+## Step 4: Add the Public Key to Your Local Machine's authorized_keys
 
 ### On Windows (Git Bash / PowerShell):
 
-1. Create SSH directory:
 ```bash
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
-```
-
-2. Create or edit authorized_keys:
-```bash
 nano ~/.ssh/authorized_keys
-```
-
-3. Paste the public key from Hostinger
-4. Save: `Ctrl+X`, `Y`, `Enter`
-
-5. Set permissions:
-```bash
+# Paste the public key, then save: Ctrl+X, Y, Enter
 chmod 600 ~/.ssh/authorized_keys
 ```
 
 ### On Mac/Linux:
 
-Same commands as Windows above.
+Same commands as above.
 
 ---
 
-## Step 4: Test SSH Connection
+## Step 5: Test SSH Connection
 
 From your local machine:
 ```bash
-ssh -p 65002 u897563629@91.108.101.158
+ssh -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 ```
 
-You should connect WITHOUT being asked for a password!
+You should connect **without** being asked for a password.
 
 ---
 
-## Step 5: Configure SSH Config (Optional)
+## Step 6: Configure SSH Config (Optional)
 
-Create/Edit `~/.ssh/config`:
-```bash
-nano ~/.ssh/config
-```
+Create or edit `~/.ssh/config` on your **local machine**:
 
-Add:
 ```
-Host hostinger
-    HostName 91.108.101.158
-    Port 65002
-    User u897563629
+Host hostinger-ultraclean
+    HostName <YOUR_SERVER_IP>
+    Port <YOUR_SSH_PORT>
+    User <YOUR_SSH_USER>
     IdentityFile ~/.ssh/id_ed25519
 ```
 
-Save: `Ctrl+X`, `Y`, `Enter`
-
-Now you can connect with:
+Then connect simply with:
 ```bash
-ssh hostinger
+ssh hostinger-ultraclean
 ```
 
 ---
@@ -112,7 +103,7 @@ ssh hostinger
 
 ### Still asks for password?
 
-1. Check permissions on Hostinger:
+Check permissions on the server:
 ```bash
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/id_ed25519
@@ -120,46 +111,23 @@ chmod 644 ~/.ssh/id_ed25519.pub
 chmod 600 ~/.ssh/authorized_keys
 ```
 
-2. Check permissions on local machine:
+Test with verbose output:
 ```bash
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/authorized_keys
-```
-
-3. Test SSH with verbose output:
-```bash
-ssh -v -p 65002 u897563629@91.108.101.158
+ssh -v -p <YOUR_SSH_PORT> <YOUR_SSH_USER>@<YOUR_SERVER_IP>
 ```
 
 ### Connection refused?
 
-- Check that SSH is enabled on Hostinger
-- Verify port 65002 is correct
-- Check firewall settings
+- Verify SSH is enabled in hPanel
+- Confirm the port number is correct
+- Check Hostinger firewall settings
 
 ---
 
-## After Setup
+## Security Notes
 
-Once SSH keys are working, you can:
-
-1. **Run deployment script without password:**
-```bash
-ssh -p 65002 u897563629@91.108.101.158 "cd ~/domains/ultraclean.ritajpos.com/public_html && ./deploy-to-hostinger.sh"
-```
-
-2. **Execute single commands:**
-```bash
-ssh -p 65002 u897563629@91.108.101.158 "ls -la"
-```
-
-3. **Automate deployments with scripts**
-
----
-
-## Security Note
-
-- Never share your private key (`id_ed25519`)
-- Only share the public key (`id_ed25519.pub`)
+- **Never share your private key** (`id_ed25519`)
+- Share only the public key (`id_ed25519.pub`)
 - Set a passphrase on your key for extra security
 - Rotate keys periodically
+- Do not embed server IPs or usernames in documentation or scripts

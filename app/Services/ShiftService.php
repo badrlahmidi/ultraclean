@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\Shift;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -39,12 +40,16 @@ final class ShiftService
                 ]);
             }
 
-            return Shift::create([
+            return tap(Shift::create([
                 'user_id'            => $user->id,
                 'opened_at'          => now(),
                 'opening_cash_cents' => $openingCashCents,
                 'is_open'            => true,
-            ]);
+            ]), function () use ($user) {
+                // Bust the cached active-shift so HandleInertiaRequests reflects
+                // the new shift on the very next request.
+                Cache::forget("active_shift:{$user->id}");
+            });
         });
     }    /**
      * Close a shift and compute the cash reconciliation.
@@ -89,6 +94,10 @@ final class ShiftService
                 'notes'               => $notes,
                 'is_open'             => false,
             ]);
+
+            // Bust the cached active-shift so HandleInertiaRequests stops returning
+            // the now-closed shift on subsequent requests.
+            Cache::forget("active_shift:{$shift->user_id}");
 
             return [
                 'shift'               => $shift->fresh(),

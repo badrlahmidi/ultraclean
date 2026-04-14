@@ -66,7 +66,11 @@ class HandleInertiaRequests extends Middleware
                         : ($user->userRole?->permissionNames() ?? []))
                     : [],
                 'activeShift' => $user && in_array($user->role, ['admin', 'caissier'])
-                    ? Shift::where('user_id', $user->id)->whereNull('closed_at')->first()
+                    ? Cache::remember(
+                        "active_shift:{$user->id}",
+                        30,  // 30-second TTL — short enough to reflect open/close promptly
+                        fn () => Shift::where('user_id', $user->id)->whereNull('closed_at')->first()
+                    )
                     : null,
             ],
             'flash' => [

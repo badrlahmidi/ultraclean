@@ -1,0 +1,119 @@
+name: Deploy
+
+# Triggered when a release tag (v*.*.*) is pushed, or manually via workflow_dispatch.
+# Requires the following GitHub Actions secrets to be set in the repository:
+#   DEPLOY_SSH_USER       — SSH username on the production server
+#   DEPLOY_SSH_HOST       — Production server IP or hostname
+#   DEPLOY_SSH_PORT       — SSH port (typically 65002 for Hostinger)
+#   DEPLOY_SSH_KEY        — Private SSH key (contents of id_ed25519)
+#   DEPLOY_PATH           — Absolute path to the app root on the server
+#                           e.g. /home/uXXXX/domains/example.com/public_html
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false  # Never cancel an in-flight deployment
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════
+  #  Gate: CI must pass before any deployment proceeds
+  # ═══════════════════════════════════════════════════════════════════════
+  ci-gate:
+    name: Verify CI passes
+    uses: ./.github/workflows/ci.yml
+
+  # ═══════════════════════════════════════════════════════════════════════
+  #  Deploy to Production
+  # ═══════════════════════════════════════════════════════════════════════
+  deploy:
+    name: Deploy to Production
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment: production   # Requires manual approval if branch protection rules apply
+
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+
+      # ── Build frontend assets locally so the server only needs PHP ─────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # ── Install PHP Composer dependencies locally (no-dev) ─────────────
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies (production)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      # ── Deploy via SSH ─────────────────────────────────────────────────
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          port: ${{ secrets.DEPLOY_SSH_PORT }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_PATH }}"
+
+            # Maintenance mode — hide errors from users during deployment
+            php artisan down --retry=5 --secret="$DEPLOY_BYPASS_TOKEN" 2>/dev/null || true
+
+            # Pull the exact tag being deployed
+            git fetch --tags origin
+            git checkout "${{ github.ref_name }}"
+            git pull origin "${{ github.ref_name }}"
+
+            # Refresh dependencies and assets
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Run pending migrations (exit non-zero = abort + up)
+            php artisan migrate --force || { php artisan up; exit 1; }
+
+            # Rebuild caches
+            php artisan optimize
+
+            # Restore service
+            php artisan up
+
+            echo "✅ Deployment of ${{ github.ref_name }} complete."

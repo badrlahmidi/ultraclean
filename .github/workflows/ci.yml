@@ -30,7 +30,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, gd, intl
-          coverage: none
+          coverage: ${{ matrix.php == '8.3' && 'pcov' || 'none' }}
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -55,7 +55,7 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
       - name: Run PHP tests
-        run: php artisan test --parallel
+        run: php artisan test --parallel ${{ matrix.php == '8.3' && '--coverage --min=60' || '' }}
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
