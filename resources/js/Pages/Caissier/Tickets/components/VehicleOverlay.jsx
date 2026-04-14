@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Car, Check, Search } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -29,6 +29,13 @@ export default function VehicleOverlay({ brands, onSelect, onClose }) {
     const [activeBrand, setActiveBrand] = useState(null);
     const [activeModel, setActiveModel] = useState(null);
     const [search, setSearch] = useState('');
+
+    /* Close on Escape */
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [onClose]);
 
     /* ── Recherche marques ── */
     const filteredBrands = useMemo(() => {
@@ -65,7 +72,12 @@ export default function VehicleOverlay({ brands, onSelect, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-gray-950/80 flex items-stretch justify-center">
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vehicle-overlay-title"
+            className="fixed inset-0 z-50 bg-gray-950/80 flex items-stretch justify-center"
+        >
             <div className="w-full max-w-3xl bg-white flex flex-col">
 
                 {/* ── Header ── */}
@@ -84,11 +96,12 @@ export default function VehicleOverlay({ brands, onSelect, onClose }) {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder={step === 'brands' ? 'Rechercher une marque…' : `Modèles ${activeBrand?.name}…`}
+                            aria-label={step === 'brands' ? 'Rechercher une marque' : `Rechercher un modèle ${activeBrand?.name}`}
                             className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl
                                        focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    <button onClick={onClose}
+                    <button onClick={onClose} aria-label="Fermer"
                         className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 shrink-0">
                         <X size={18} />
                     </button>
@@ -96,6 +109,9 @@ export default function VehicleOverlay({ brands, onSelect, onClose }) {
 
                 {/* ── Indicateur d'étapes ── */}
                 <div className="px-5 py-2.5 border-b border-gray-100 bg-white shrink-0 flex items-center gap-2">
+                    <h2 id="vehicle-overlay-title" className="sr-only">
+                        {step === 'brands' ? 'Sélectionner une marque' : `Sélectionner un modèle ${activeBrand?.name}`}
+                    </h2>
                     <span className={clsx(
                         'text-xs font-semibold px-2.5 py-1 rounded-full transition-all',
                         step === 'brands' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'

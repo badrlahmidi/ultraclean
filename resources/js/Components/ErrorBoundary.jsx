@@ -4,7 +4,17 @@
  * anywhere in the component tree and renders a readable fallback
  * instead of a blank white screen.
  *
- * Usage: wraps <App> in app.jsx.
+ * Props:
+ *   children  — wrapped subtree
+ *   inline    — if true, renders a compact card instead of full-page overlay
+ *   fallback  — optional custom fallback ReactNode (overrides default UI)
+ *
+ * Usage:
+ *   // Full-page (wraps <App> in app.jsx)
+ *   <ErrorBoundary><App /></ErrorBoundary>
+ *
+ *   // Inline / partial area
+ *   <ErrorBoundary inline><ServiceGrid ... /></ErrorBoundary>
  */
 import { Component } from 'react';
 
@@ -30,8 +40,67 @@ export default class ErrorBoundary extends Component {
     render() {
         if (!this.state.hasError) return this.props.children;
 
+        // Custom fallback provided by consumer
+        if (this.props.fallback) return this.props.fallback;
+
         const isDev = import.meta.env.DEV;
 
+        // ── Inline / partial-area variant ─────────────────────────────────
+        if (this.props.inline) {
+            return (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '2rem 1rem',
+                    borderRadius: 12,
+                    background: '#fef2f2',
+                    border: '1px solid #fca5a5',
+                    color: '#991b1b',
+                    fontFamily: 'system-ui, sans-serif',
+                    textAlign: 'center',
+                }}>
+                    <span style={{ fontSize: 28 }}>⚠️</span>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
+                        Une erreur s&apos;est produite dans cette section.
+                    </p>
+                    {isDev && this.state.error && (
+                        <pre style={{
+                            background: '#fff',
+                            border: '1px solid #fca5a5',
+                            borderRadius: 6,
+                            padding: '0.5rem',
+                            fontSize: '0.7rem',
+                            overflow: 'auto',
+                            maxHeight: 120,
+                            textAlign: 'left',
+                            maxWidth: '100%',
+                        }}>
+                            {this.state.error.stack ?? String(this.state.error)}
+                        </pre>
+                    )}
+                    <button
+                        onClick={() => this.setState({ hasError: false, error: null })}
+                        style={{
+                            background: '#ef4444',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 6,
+                            padding: '0.375rem 1rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Réessayer
+                    </button>
+                </div>
+            );
+        }
+
+        // ── Full-page variant ──────────────────────────────────────────────
         return (
             <div style={{
                 minHeight: '100vh',

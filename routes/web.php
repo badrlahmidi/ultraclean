@@ -58,10 +58,10 @@ Route::get('/client/checkin/{ulid}', [ClientController::class, 'checkin'])
     ->middleware('signed');
 
 // Promo code validation (auth required, any role)
-Route::middleware('auth')->post('/api/promotions/validate', [PromotionController::class, 'validate'])->name('promotions.validate');
+Route::middleware(['auth', 'throttle:60,1'])->post('/api/promotions/validate', [PromotionController::class, 'validate'])->name('promotions.validate');
 
 // Sellable products API for POS (barcode scanning)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::get('/api/sellable-products', [\App\Http\Controllers\Admin\SellableProductController::class, 'listForPos'])->name('api.sellable-products.list');
     Route::post('/api/sellable-products/barcode', [\App\Http\Controllers\Admin\SellableProductController::class, 'findByBarcode'])->name('api.sellable-products.barcode');
 });

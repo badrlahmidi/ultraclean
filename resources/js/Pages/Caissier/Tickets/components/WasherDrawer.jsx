@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import clsx from 'clsx';
 import axios from 'axios';
 
@@ -13,7 +13,7 @@ import axios from 'axios';
  *   onClose      - fn()
  *   newDuration  - duree (minutes) du nouveau ticket
  */
-export default function WasherDrawer({
+const WasherDrawer = memo(function WasherDrawer({
     washers: initialWashers,
     leadId,
     assistantIds = [],
@@ -146,7 +146,22 @@ export default function WasherDrawer({
 
                     {/* Liste operateurs */}
                     <div className="flex-1 overflow-y-auto py-1">
-                        {sortedWashers.length === 0 && (
+                        {/* Skeleton while loading for the first time (no data yet) */}
+                        {loading && sortedWashers.length === 0 && (
+                            <div className="space-y-0" aria-busy="true" aria-label="Chargement des opérateurs">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 animate-pulse">
+                                        <div className="w-5 h-5 rounded bg-gray-200 flex-shrink-0" />
+                                        <div className="flex-1 space-y-1.5">
+                                            <div className="h-3 bg-gray-200 rounded w-3/5" />
+                                            <div className="h-2.5 bg-gray-100 rounded w-2/5" />
+                                        </div>
+                                        <div className="w-14 h-7 bg-gray-100 rounded-lg" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {!loading && sortedWashers.length === 0 && (
                             <p className="text-center text-sm text-gray-400 mt-12">{`Aucun operateur actif`}</p>
                         )}
                         {sortedWashers.map(w => {
@@ -263,4 +278,6 @@ export default function WasherDrawer({
             </div>
         </Dialog>
     );
-}
+});
+
+export default WasherDrawer;

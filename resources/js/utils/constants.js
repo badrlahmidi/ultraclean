@@ -53,13 +53,13 @@ export const TICKET_STATUS_COLORS_HEX = {
  * `color` is the string accepted by the shared <Badge color="…"> component.
  */
 export const APPT_STATUS = {
-    pending: { label: 'En attente', color: 'yellow' },
-    confirmed: { label: 'Confirmé', color: 'blue' },
-    arrived: { label: 'Arrivé', color: 'indigo' },
-    in_progress: { label: 'En cours', color: 'purple' },
-    completed: { label: 'Terminé', color: 'green' },
-    cancelled: { label: 'Annulé', color: 'red' },
-    no_show: { label: 'Absent', color: 'gray' },
+    pending:     { label: 'En attente', color: 'yellow', cls: 'bg-yellow-100 text-yellow-700' },
+    confirmed:   { label: 'Confirmé',   color: 'blue',   cls: 'bg-blue-100 text-blue-700' },
+    arrived:     { label: 'Arrivé',     color: 'indigo', cls: 'bg-cyan-100 text-cyan-700' },
+    in_progress: { label: 'En cours',   color: 'purple', cls: 'bg-purple-100 text-purple-700' },
+    completed:   { label: 'Terminé',    color: 'green',  cls: 'bg-green-100 text-green-700' },
+    cancelled:   { label: 'Annulé',     color: 'red',    cls: 'bg-red-100 text-red-700' },
+    no_show:     { label: 'Absent',     color: 'gray',   cls: 'bg-gray-100 text-gray-500' },
 };
 
 export const APPT_STATUS_LABELS = Object.fromEntries(

@@ -1,5 +1,5 @@
 import { Car, User, Trash2, Clock, Edit3, Check, AlertCircle, Loader2, Package, Percent, Gift } from 'lucide-react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import clsx from 'clsx';
 
 const fmt = (cents) => `${(cents / 100).toFixed(2)} MAD`;
@@ -38,7 +38,7 @@ const fmtM = (min) => min >= 60
  *   onSubmit        — fn()
  *   sellableProducts — [] (for opening products panel)
  */
-export default function TicketRecap({
+const TicketRecap = memo(function TicketRecap({
     vehicle, client, lines, productLines = [], isAtelierClient, washers, duration, washer,
     notes, processing, errors,
     submitLabel,
@@ -382,7 +382,9 @@ export default function TicketRecap({
             </div>
         </div>
     );
-}
+});
+
+export default TicketRecap;
 
 function Section({ label, children }) {
     return (

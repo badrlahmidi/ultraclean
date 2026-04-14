@@ -44,12 +44,17 @@ export default function ClientDrawer({ selected, onSelect, onClose }) {
             <div className="fixed inset-0 z-40 bg-black/40" role="button" tabIndex={-1} aria-label="Fermer" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
 
             {/* Drawer */}
-            <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-white shadow-2xl flex flex-col">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="client-drawer-title"
+                className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-white shadow-2xl flex flex-col"
+            >
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                    <h2 className="font-semibold text-gray-800 text-sm">Client</h2>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+                    <h2 id="client-drawer-title" className="font-semibold text-gray-800 text-sm">Client</h2>
+                    <button onClick={onClose} aria-label="Fermer" className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
                         <X size={16} />
                     </button>
                 </div>
