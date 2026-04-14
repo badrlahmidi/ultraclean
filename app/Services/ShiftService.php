@@ -51,11 +51,13 @@ final class ShiftService
                 Cache::forget("active_shift:{$user->id}");
             });
         });
-    }    /**
+    }
+
+    /**
      * Close a shift and compute the cash reconciliation.
      *
      * Expected cash = opening float + net cash received during the shift
-     * (amount_cash_cents − change_given_cents) − cash expenses.
+     * (amount_cash_cents - change_given_cents) - cash expenses.
      * Uses a time-window filter on payments.created_at so payments on tickets
      * created in earlier shifts are correctly attributed to THIS shift.
      *

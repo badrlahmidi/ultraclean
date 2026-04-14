@@ -195,11 +195,13 @@ class Ticket extends Model
             $sequence = \Illuminate\Support\Facades\DB::table('ticket_daily_counters')
                 ->where('date', $today)
                 ->lockForUpdate()
-                ->value('next_value') - 1;  // value after increment; we used (value − 1)
+                ->value('next_value') - 1;  // value after increment; we want (value - 1)
         }
 
         return sprintf('TK-%s-%04d', $date, max(1, (int) $sequence));
-    }    // ---------- Relations ----------
+    }
+
+    // ---------- Relations ----------
 
     public function vehicleType(): BelongsTo
     {

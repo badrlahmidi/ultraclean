@@ -55,7 +55,12 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
       - name: Run PHP tests
-        run: php artisan test --parallel ${{ matrix.php == '8.3' && '--coverage --min=60' || '' }}
+        run: |
+          if [ "${{ matrix.php }}" = "8.3" ]; then
+            php artisan test --parallel --coverage --min=60
+          else
+            php artisan test --parallel
+          fi
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'

@@ -27,6 +27,9 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false  # Never cancel an in-flight deployment
 
+# Default: deny all permissions; each job grants only what it needs.
+permissions: {}
+
 jobs:
   # ═══════════════════════════════════════════════════════════════════════
   #  Gate: CI must pass before any deployment proceeds
@@ -34,6 +37,8 @@ jobs:
   ci-gate:
     name: Verify CI passes
     uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
 
   # ═══════════════════════════════════════════════════════════════════════
   #  Deploy to Production
@@ -43,6 +48,8 @@ jobs:
     needs: ci-gate
     runs-on: ubuntu-latest
     environment: production   # Requires manual approval if branch protection rules apply
+    permissions:
+      contents: read          # Checkout + git operations only
 
     steps:
       - name: Checkout tag

@@ -13,13 +13,17 @@ class AdminUserSeeder extends Seeder
     /**
      * Crée les comptes utilisateurs initiaux (admin, caissier, laveur).
      *
-     * Passwords and PINs are read from environment variables so that no
-     * credentials are ever hard-coded in version-controlled files.
+     * Passwords and PINs are read from config/seeding.php (which reads from
+     * environment variables) so that no credentials are ever hard-coded in
+     * version-controlled files.
      *
-     * Required environment variables (set in .env on the server):
-     *   SEED_ADMIN_EMAIL    — defaults to admin@example.com
-     *   SEED_ADMIN_PASSWORD — defaults to a random string (printed to console)
-     *   SEED_ADMIN_PIN      — defaults to a random 4-digit number (printed to console)
+     * Required .env variables (set BEFORE running db:seed, delete after):
+     *   SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_ADMIN_PIN
+     *   SEED_CAISSIER_EMAIL, SEED_CAISSIER_PASSWORD, SEED_CAISSIER_PIN
+     *   SEED_LAVEUR_EMAIL,   SEED_LAVEUR_PASSWORD,   SEED_LAVEUR_PIN
+     *
+     * When a password/PIN env var is absent a secure random value is generated
+     * and printed to the console so you can log in for the first time.
      *
      * ⚠️  CHANGE all passwords and PINs immediately after the first deployment.
      */
@@ -28,20 +32,20 @@ class AdminUserSeeder extends Seeder
         // Charger les rôles RBAC (créés par RolesPermissionsSeeder)
         $roles = Role::pluck('id', 'name');
 
-        // Generate random defaults when env vars are absent (first-install safety net).
-        $adminPassword = env('SEED_ADMIN_PASSWORD') ?: Str::password(16);
-        $adminPin      = env('SEED_ADMIN_PIN')      ?: (string) random_int(1000, 9999);
+        // Resolve seed values via config (safe with cached config).
+        $adminPassword = config('seeding.admin_password') ?: Str::password(16);
+        $adminPin      = config('seeding.admin_pin')      ?: (string) random_int(1000, 9999);
 
-        $caissierPassword = env('SEED_CAISSIER_PASSWORD') ?: Str::password(16);
-        $caissierPin      = env('SEED_CAISSIER_PIN')      ?: (string) random_int(1000, 9999);
+        $caissierPassword = config('seeding.caissier_password') ?: Str::password(16);
+        $caissierPin      = config('seeding.caissier_pin')      ?: (string) random_int(1000, 9999);
 
-        $laveurPassword = env('SEED_LAVEUR_PASSWORD') ?: Str::password(16);
-        $laveurPin      = env('SEED_LAVEUR_PIN')      ?: (string) random_int(1000, 9999);
+        $laveurPassword = config('seeding.laveur_password') ?: Str::password(16);
+        $laveurPin      = config('seeding.laveur_pin')      ?: (string) random_int(1000, 9999);
 
         $users = [
             [
                 'name'      => 'Administrateur',
-                'email'     => env('SEED_ADMIN_EMAIL', 'admin@example.com'),
+                'email'     => config('seeding.admin_email'),
                 'password'  => Hash::make($adminPassword),
                 'role'      => 'admin',
                 'role_id'   => $roles['admin'] ?? null,
@@ -54,7 +58,7 @@ class AdminUserSeeder extends Seeder
             ],
             [
                 'name'      => 'Caissier Démo',
-                'email'     => env('SEED_CAISSIER_EMAIL', 'caissier@example.com'),
+                'email'     => config('seeding.caissier_email'),
                 'password'  => Hash::make($caissierPassword),
                 'role'      => 'caissier',
                 'role_id'   => $roles['caissier'] ?? null,
@@ -67,7 +71,7 @@ class AdminUserSeeder extends Seeder
             ],
             [
                 'name'      => 'Laveur Démo',
-                'email'     => env('SEED_LAVEUR_EMAIL', 'laveur@example.com'),
+                'email'     => config('seeding.laveur_email'),
                 'password'  => Hash::make($laveurPassword),
                 'role'      => 'laveur',
                 'role_id'   => $roles['laveur'] ?? null,
@@ -95,9 +99,9 @@ class AdminUserSeeder extends Seeder
                 ])
             );
 
-            // Only output credentials when running in non-production environments
-            // or when the values were auto-generated (no env var set).
-            if (! app()->isProduction() || ! env('SEED_ADMIN_PASSWORD')) {
+            // Only reveal credentials when running outside production or when
+            // they were auto-generated (no SEED_* env var was provided).
+            if (! app()->isProduction() || ! config('seeding.' . strtolower($label) . '_password')) {
                 $this->command->warn("[$label] email={$dbRow['email']} password={$password} pin={$pin}");
             }
         }
