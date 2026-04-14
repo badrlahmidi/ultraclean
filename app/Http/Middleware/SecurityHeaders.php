@@ -24,6 +24,13 @@ class SecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // ── CSP nonce ───────────────────────────────────────────────────
+        // Generate a fresh per-request nonce BEFORE the view renders so that
+        // @vite / @viteReactRefresh Blade directives pick it up automatically.
+        // In production this nonce replaces 'unsafe-inline' in script-src,
+        // eliminating one of the most impactful XSS-enabling CSP relaxations.
+        $nonce = \Illuminate\Support\Facades\Vite::useCspNonce();
+
         /** @var Response $response */
         $response = $next($request);
 
@@ -36,13 +43,23 @@ class SecurityHeaders
 
         $viteOrigins = $isDev
             ? 'http://localhost:5173 http://127.0.0.1:5173'
-            : '';        // 'unsafe-eval' is only needed by Vite HMR in local dev.
+            : '';
+
+        // 'unsafe-eval' is only needed by Vite HMR in local dev.
         // It must NOT be present in production — it defeats XSS protection.
         $unsafeEval = $isDev ? " 'unsafe-eval'" : '';
 
+        // In production: use 'nonce-{value}' instead of 'unsafe-inline' so only
+        // scripts stamped with the nonce are executed (inline scripts cannot be
+        // injected by an attacker without knowing the per-request nonce value).
+        // In dev: keep 'unsafe-inline' for easier local debugging.
+        $scriptInlineDirective = $isProduction
+            ? "'nonce-{$nonce}'"
+            : "'unsafe-inline'";
+
         $csp = implode('; ', array_filter([
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline'{$unsafeEval} https://cdn.jsdelivr.net" . ($viteOrigins ? " $viteOrigins" : ''),
+            "script-src 'self' {$scriptInlineDirective}{$unsafeEval} https://cdn.jsdelivr.net" . ($viteOrigins ? " $viteOrigins" : ''),
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net" . ($viteOrigins ? " $viteOrigins" : ''),
             "font-src 'self' https://fonts.bunny.net data:",
             "img-src 'self' data: blob:",
