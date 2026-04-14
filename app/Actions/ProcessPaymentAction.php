@@ -30,11 +30,30 @@ use Illuminate\Support\Facades\Log;
 class ProcessPaymentAction
 {
     /**
-     * @return array{payment: Payment, change_cents: int, points_earned: int, is_prepaid: bool, target_status: string, has_stock_warning: bool, message: string}
+     * @return array{payment: Payment, change_cents: int, points_earned: int, points_redeemed: int, is_prepaid: bool, target_status: string, has_stock_warning: bool, message: string}
      *
      * @throws \Illuminate\Validation\ValidationException
      */    public function execute(Ticket $ticket, ProcessPaymentDTO $dto, int $operatorId): array
     {
+        // ── Loyalty redemption pre-computation ──────────────────────────────
+        // Redemption reduces the amount the customer owes before we validate
+        // sufficiency.  We resolve the discount first so the net required amount
+        // is correct for all subsequent calculations.
+        $loyaltyDiscountCents = 0;
+        if ($dto->loyaltyPointsToRedeem > 0
+            && $ticket->client_id
+            && ! Client::isWalkInId($ticket->client_id)
+            && $dto->method !== 'credit'
+        ) {
+            $client = Client::find($ticket->client_id);
+            if ($client) {
+                $pointsCapped  = min($dto->loyaltyPointsToRedeem, $client->loyalty_points);
+                $loyaltyDiscountCents = \App\Services\LoyaltyService::pointsToDiscount($pointsCapped);
+                // Cap discount to ticket total — cannot over-redeem
+                $loyaltyDiscountCents = min($loyaltyDiscountCents, $ticket->total_cents);
+            }
+        }
+
         // For partial tickets collecting the remaining balance, only the outstanding
         // balance_due is required — not the original total.
         // BUG-5 FIX: compute requiredCents BEFORE resolveAmounts so single-channel
@@ -42,6 +61,9 @@ class ProcessPaymentAction
         $requiredCents = ($ticket->status === Ticket::STATUS_PARTIAL && $ticket->balance_due_cents > 0)
             ? $ticket->balance_due_cents
             : $ticket->total_cents;
+
+        // Apply loyalty discount to net amount owed
+        $requiredCents = max(0, $requiredCents - $loyaltyDiscountCents);
 
         [$cash, $card, $mobile, $wire] = $this->resolveAmounts($dto, $requiredCents);
 
@@ -60,6 +82,7 @@ class ProcessPaymentAction
         // ── Execute in a transaction ────────────────────────────────────────
         $payment      = null;
         $pointsEarned = 0;
+        $pointsRedeemed = 0;
 
         DB::beginTransaction();
         try {
@@ -85,7 +108,20 @@ class ProcessPaymentAction
             // Only consume stock on final full payment
             if ($targetStatus === Ticket::STATUS_PAID) {
                 $this->consumeStock($ticket);
-            }            // ARCH-ITEM-2.3 (F-04): exclude the walk-in sentinel from loyalty awards.
+            }
+
+            // ── Apply loyalty redemption (deduct points) ────────────────────
+            if ($loyaltyDiscountCents > 0 && $ticket->client_id) {
+                $client = Client::find($ticket->client_id);
+                if ($client) {
+                    $pointsCapped   = min($dto->loyaltyPointsToRedeem, $client->loyalty_points);
+                    $pointsRedeemed = LoyaltyService::redeemPoints($client, $ticket, $pointsCapped, $operatorId);
+                    // pointsRedeemed returns the discount in cents; record points count
+                    $pointsRedeemed = $pointsCapped;
+                }
+            }
+
+            // ARCH-ITEM-2.3 (F-04): exclude the walk-in sentinel from loyalty awards.
             // Client::walkIn() is an anonymous placeholder — it must never accumulate
             // points, visit counts, or tier upgrades.
             $isRealClient = $ticket->client_id
@@ -98,14 +134,16 @@ class ProcessPaymentAction
             }
 
             ActivityLog::log('ticket.paid', $ticket, [
-                'ticket_number'      => $ticket->ticket_number,
-                'method'             => $dto->method,
-                'amount_cents'       => $payment->amount_cents,
-                'change_given_cents' => $changeCents,
-                'balance_due_cents'  => $balanceDueCents,
-                'target_status'      => $targetStatus,
-                'loyalty_points'     => $pointsEarned,
-                'is_prepaid'         => $isPrepaid,
+                'ticket_number'         => $ticket->ticket_number,
+                'method'                => $dto->method,
+                'amount_cents'          => $payment->amount_cents,
+                'change_given_cents'    => $changeCents,
+                'balance_due_cents'     => $balanceDueCents,
+                'target_status'         => $targetStatus,
+                'loyalty_points_earned' => $pointsEarned,
+                'loyalty_points_used'   => $pointsRedeemed,
+                'loyalty_discount_cents'=> $loyaltyDiscountCents,
+                'is_prepaid'            => $isPrepaid,
             ]);
 
             DB::commit();
@@ -119,11 +157,13 @@ class ProcessPaymentAction
             'payment'           => $payment,
             'change_cents'      => $changeCents,
             'points_earned'     => $pointsEarned,
+            'points_redeemed'   => $pointsRedeemed,
+            'loyalty_discount_cents' => $loyaltyDiscountCents,
             'is_prepaid'        => $isPrepaid,
             'target_status'     => $targetStatus,
             'has_stock_warning' => (bool) $ticket->has_stock_warning,
             'message'           => $this->buildSuccessMessage(
-                $dto->method, $totalPaid, $changeCents, $pointsEarned, $ticket->total_cents, $balanceDueCents
+                $dto->method, $totalPaid, $changeCents, $pointsEarned, $ticket->total_cents, $balanceDueCents, $loyaltyDiscountCents
             ),
         ];    }
 
@@ -326,7 +366,8 @@ class ProcessPaymentAction
         int $changeCents,
         int $pointsEarned,
         int $totalCents,
-        int $balanceDueCents
+        int $balanceDueCents,
+        int $loyaltyDiscountCents = 0
     ): string {
         $labels = [
             'cash'    => 'Espèces',
@@ -355,11 +396,15 @@ class ProcessPaymentAction
         }
 
         $msg = sprintf('Paiement %s enregistré', $label);
+        if ($loyaltyDiscountCents > 0) {
+            $msg .= sprintf(' · Réduction fidélité : -%.2f MAD', $loyaltyDiscountCents / 100);
+        }
         if ($changeCents > 0) {
             $msg .= sprintf(' — Rendu : %.2f MAD', $changeCents / 100);
         }
         if ($pointsEarned > 0) {
             $msg .= sprintf(' · +%d pts fidélité', $pointsEarned);
-        }        return $msg;
+        }
+        return $msg;
     }
 }

@@ -64,6 +64,8 @@ class SecurityHeaders
             "font-src 'self' https://fonts.bunny.net data:",
             "img-src 'self' data: blob:",
             "connect-src 'self' wss: ws: https://*.pusher.com https://*.pusherapp.com" . ($viteOrigins ? " $viteOrigins ws://localhost:5173 ws://127.0.0.1:5173" : ''),
+            "worker-src 'self'",
+            "manifest-src 'self'",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
