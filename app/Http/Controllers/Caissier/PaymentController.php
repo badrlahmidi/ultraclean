@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -43,6 +44,14 @@ class PaymentController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e; // Let Laravel handle validation errors (back with errors)
         } catch (\Throwable $e) {
+            Log::error('payment.failed', [
+                'ticket_id' => $ticket->id,
+                'ticket'    => $ticket->ticket_number,
+                'user_id'   => auth()->id(),
+                'method'    => $request->input('method'),
+                'error'     => $e->getMessage(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
             return back()->withErrors(['payment' => 'Erreur lors du paiement. Veuillez réessayer.']);
         }
 

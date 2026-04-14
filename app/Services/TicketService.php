@@ -141,6 +141,13 @@ class TicketService
      */
     public function update(UpdateTicketDTO $dto, Ticket $ticket): Ticket
     {
+        // Guard: a paid ticket must not be mutated through the edit form.
+        // Admins wanting to correct data should void and re-create instead.
+        abort_if(
+            $ticket->isPaid(),
+            403,
+            "Le ticket {$ticket->ticket_number} est déjà payé et ne peut plus être modifié."
+        );
         $brandSnapshot = $this->buildBrandSnapshot(
             $dto->vehicleBrandId,
             $dto->vehicleModelId,

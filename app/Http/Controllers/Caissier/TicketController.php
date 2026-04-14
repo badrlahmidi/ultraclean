@@ -248,11 +248,15 @@ class TicketController extends Controller
         );
 
         // Washer availability is real-time — intentionally not cached.
-        $washers = User::where('role', User::ROLE_LAVEUR)
+        // Use batch method to avoid N×3 queries (one batch regardless of washer count).
+        $washerModels = User::where('role', User::ROLE_LAVEUR)
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'avatar'])
-            ->map(fn ($w) => array_merge($w->toArray(), WasherScheduler::getAvailability($w->id)));
+            ->get(['id', 'name', 'avatar']);
+
+        $availability = WasherScheduler::getAvailabilityBatch($washerModels->pluck('id')->all());
+
+        $washers = $washerModels->map(fn ($w) => array_merge($w->toArray(), $availability[$w->id] ?? []));
 
         // Atelier client for free products
         $atelierClient = Client::atelier();
@@ -271,17 +275,19 @@ class TicketController extends Controller
     {
         $duration = $request->integer('duration', 0);
 
-        $washers = User::where('role', User::ROLE_LAVEUR)
+        $washerModels = User::where('role', User::ROLE_LAVEUR)
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'avatar'])
-            ->map(function ($w) use ($duration) {
-                // ARCH-ITEM-2.6 (F-09): use WasherScheduler::getAvailability() — moved from static controller method
-                $availability = WasherScheduler::getAvailability($w->id);
-                $feasibility  = WasherScheduler::feasibilityCheck($w->id, $duration);
+            ->get(['id', 'name', 'avatar']);
 
-                return array_merge($w->toArray(), $availability, $feasibility);
-            });
+        // Batch availability (queue_count, queue_minutes, available_at) — single set of queries
+        $availability = WasherScheduler::getAvailabilityBatch($washerModels->pluck('id')->all());
+
+        $washers = $washerModels->map(function ($w) use ($availability, $duration) {
+            $avail       = $availability[$w->id] ?? [];
+            $feasibility = WasherScheduler::feasibilityCheck($w->id, $duration);
+            return array_merge($w->toArray(), $avail, $feasibility);
+        });
 
         return response()->json([
             'washers' => $washers,
