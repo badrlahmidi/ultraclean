@@ -96,7 +96,7 @@ export default function DepensesIndex({ expenses, activeShift, totals, categorie
                                     <input
                                         type="number"
                                         min={1}
-                                        step={100}
+                                        step={1}
                                         placeholder="5000"
                                         value={data.amount_cents}
                                         onChange={e => setData('amount_cents', parseInt(e.target.value) || '')}
