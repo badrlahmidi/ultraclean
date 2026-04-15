@@ -31,6 +31,7 @@ class SellableProductController extends Controller
         if ($request->filled('q')) {
             $q = '%' . $request->q . '%';
             $query->where(fn ($s) => $s->where('name', 'like', $q)
+                ->orWhere('sku', 'like', $q)
                 ->orWhere('barcode', 'like', $q));
         }
 
@@ -41,6 +42,7 @@ class SellableProductController extends Controller
         $products = $query->get()->map(fn ($p) => [
             'id'                   => $p->id,
             'name'                 => $p->name,
+            'sku'                  => $p->sku,
             'barcode'              => $p->barcode,
             'description'          => $p->description,
             'purchase_price_cents' => $p->purchase_price_cents,
@@ -67,6 +69,7 @@ class SellableProductController extends Controller
     {
         $data = $request->validate([
             'name'                 => 'required|string|max:150',
+            'sku'                  => 'nullable|string|max:50|unique:sellable_products,sku',
             'barcode'              => 'nullable|string|max:50|unique:sellable_products,barcode',
             'description'          => 'nullable|string|max:500',
             'purchase_price_cents' => 'required|integer|min:0',
@@ -102,6 +105,7 @@ class SellableProductController extends Controller
     {
         $data = $request->validate([
             'name'                 => 'required|string|max:150',
+            'sku'                  => "nullable|string|max:50|unique:sellable_products,sku,{$sellableProduct->id}",
             'barcode'              => "nullable|string|max:50|unique:sellable_products,barcode,{$sellableProduct->id}",
             'description'          => 'nullable|string|max:500',
             'purchase_price_cents' => 'required|integer|min:0',
@@ -170,6 +174,7 @@ class SellableProductController extends Controller
             'product'   => [
                 'id'                   => $sellableProduct->id,
                 'name'                 => $sellableProduct->name,
+                'sku'                  => $sellableProduct->sku,
                 'barcode'              => $sellableProduct->barcode,
                 'description'          => $sellableProduct->description,
                 'purchase_price_cents' => $sellableProduct->purchase_price_cents,
@@ -202,6 +207,7 @@ class SellableProductController extends Controller
         return response()->json([
             'id'                  => $product->id,
             'name'                => $product->name,
+            'sku'                 => $product->sku,
             'barcode'             => $product->barcode,
             'selling_price_cents' => $product->selling_price_cents,
             'current_stock'       => $product->current_stock,
@@ -216,7 +222,7 @@ class SellableProductController extends Controller
     {
         $products = SellableProduct::active()
             ->orderBy('name')
-            ->get(['id', 'name', 'barcode', 'selling_price_cents', 'current_stock', 'unit']);
+            ->get(['id', 'name', 'sku', 'barcode', 'selling_price_cents', 'current_stock', 'unit']);
 
         return response()->json(['products' => $products]);
     }

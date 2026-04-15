@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int                             $id
  * @property string                          $name
+ * @property string|null                     $sku
  * @property string|null                     $barcode
  * @property string|null                     $description
  * @property int                             $purchase_price_cents
@@ -33,6 +34,7 @@ class SellableProduct extends Model
 
     protected $fillable = [
         'name',
+        'sku',
         'barcode',
         'description',
         'purchase_price_cents',

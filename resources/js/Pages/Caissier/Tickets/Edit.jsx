@@ -249,8 +249,7 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                             <span className="text-[11px] bg-blue-100 text-blue-600 font-bold rounded-full px-1.5 py-0.5 leading-none">{lines.length}</span>
                         )}
                     </button>
-                    {sellableProducts.length > 0 && (
-                        <button onClick={() => { setMobileView('services'); setLeftTab('produits'); }}
+                    <button onClick={() => { setMobileView('services'); setLeftTab('produits'); }}
                             className={clsx('flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
                                 mobileView === 'services' && leftTab === 'produits' ? 'border-green-600 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>
                             <Package size={14} />
@@ -259,7 +258,6 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                                 <span className="text-[11px] bg-green-100 text-green-600 font-bold rounded-full px-1.5 py-0.5 leading-none">{productLines.length}</span>
                             )}
                         </button>
-                    )}
                     <button onClick={() => setMobileView('recap')}
                         className={clsx('flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
                             mobileView === 'recap' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>
@@ -338,8 +336,7 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                     </div>
 
                     {/* Desktop tabs: Prestations | Produits */}
-                    {sellableProducts.length > 0 && (
-                        <div className="hidden lg:flex shrink-0 border-b border-gray-100 bg-white px-4 gap-2 pt-2">
+                    <div className="hidden lg:flex shrink-0 border-b border-gray-100 bg-white px-4 gap-2 pt-2">
                             <button
                                 onClick={() => setLeftTab('services')}
                                 className={clsx(
@@ -374,7 +371,6 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                                 )}
                             </button>
                         </div>
-                    )}
 
                     <div className="flex-1 overflow-hidden flex flex-col">
                         {leftTab === 'produits' ? (
