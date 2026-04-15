@@ -88,17 +88,18 @@ const ProductGrid = memo(function ProductGrid({
         ? products.filter(
               (p) =>
                   p.name.toLowerCase().includes(search.toLowerCase()) ||
+                  (p.sku && p.sku.toLowerCase().includes(search.toLowerCase())) ||
                   (p.barcode && p.barcode.toLowerCase().includes(search.toLowerCase())),
           )
         : products;
 
-    /* ── Search input: Enter = lookup by exact barcode or single result ─────── */
+    /* ── Search input: Enter = lookup by exact barcode/SKU or single result ─── */
     function handleSearchKeyDown(e) {
         if (e.key !== 'Enter' || !search.trim()) return;
         const term = search.trim();
 
         // Exact barcode match first
-        const exact = products.find((p) => p.barcode === term);
+        const exact = products.find((p) => p.barcode === term || p.sku === term);
         if (exact) {
             onAdd(exact);
             setSearch('');
@@ -131,7 +132,7 @@ const ProductGrid = memo(function ProductGrid({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={handleSearchKeyDown}
-                        placeholder="Rechercher par nom ou scanner code-barres\u2026"
+                        placeholder="Rechercher par SKU, nom ou code-barres\u2026"
                         className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-xl text-sm
                                    focus:outline-none focus:border-green-500 bg-white"
                     />
@@ -162,7 +163,7 @@ const ProductGrid = memo(function ProductGrid({
                         <p className="text-sm font-medium">Aucun produit configuré</p>
                         <p className="text-xs mt-1">
                             Ajoutez des produits dans{' '}
-                            <span className="font-semibold">Gestion → Stocks</span>
+                            <span className="font-semibold">Gestion du stock → Produits vendables</span>
                         </p>
                     </div>
                 ) : (
@@ -237,6 +238,13 @@ const ProductGrid = memo(function ProductGrid({
                                                 ? 'Rupture de stock'
                                                 : `Stock\u00a0: ${p.current_stock}\u00a0${p.unit}${lowStock ? ' ⚠' : ''}`}
                                         </div>
+
+                                        {/* SKU */}
+                                        {p.sku && (
+                                            <div className="text-[10px] text-gray-400 font-mono mt-0.5 truncate">
+                                                SKU: {p.sku}
+                                            </div>
+                                        )}
 
                                         {/* Barcode */}
                                         {p.barcode && (

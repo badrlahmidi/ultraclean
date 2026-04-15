@@ -252,7 +252,7 @@ class TicketController extends Controller
         $sellableProducts = Cache::remember('active_sellable_products', 60, fn () =>
             \App\Models\SellableProduct::active()
                 ->orderBy('name')
-                ->get(['id', 'name', 'barcode', 'selling_price_cents', 'current_stock', 'unit'])
+                ->get(['id', 'name', 'sku', 'barcode', 'selling_price_cents', 'current_stock', 'unit'])
         );
 
         // Washer availability is real-time — intentionally not cached.

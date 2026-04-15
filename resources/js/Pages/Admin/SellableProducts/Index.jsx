@@ -20,6 +20,7 @@ function ProductForm({ initial = {}, onCancel }) {
     const isEdit = !!initial.id;
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: initial.name ?? '',
+        sku: initial.sku ?? '',
         barcode: initial.barcode ?? '',
         description: initial.description ?? '',
         purchase_price_cents: initial.purchase_price_cents ?? 0,
@@ -49,6 +50,12 @@ function ProductForm({ initial = {}, onCancel }) {
                     <input className={clsx(inputCls, errors.name && 'border-red-500')} value={data.name}
                         onChange={e => setData('name', e.target.value)} placeholder="Ex: Désodorisant voiture" />
                     {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                    <label className={labelCls}>SKU (Référence interne)</label>
+                    <input className={clsx(inputCls, errors.sku && 'border-red-500')} value={data.sku}
+                        onChange={e => setData('sku', e.target.value)} placeholder="Ex: DESO-001" />
+                    {errors.sku && <p className="text-xs text-red-500 mt-1">{errors.sku}</p>}
                 </div>
                 <div>
                     <label className={labelCls}>Code-barres (EAN/UPC)</label>
@@ -266,6 +273,7 @@ export default function Index({ products, lowStockCount, filters }) {
                             <thead className="bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300">
                                 <tr>
                                     <th className="px-4 py-3 text-left font-semibold">Produit</th>
+                                    <th className="px-4 py-3 text-left font-semibold">SKU</th>
                                     <th className="px-4 py-3 text-left font-semibold">Code-barres</th>
                                     <th className="px-4 py-3 text-right font-semibold">Prix achat</th>
                                     <th className="px-4 py-3 text-right font-semibold">Prix vente</th>
@@ -291,6 +299,9 @@ export default function Index({ products, lowStockCount, filters }) {
                                             {p.description && (
                                                 <p className="text-xs text-gray-500 mt-0.5 truncate max-w-xs">{p.description}</p>
                                             )}
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400 font-mono text-xs">
+                                            {p.sku || '—'}
                                         </td>
                                         <td className="px-4 py-3 text-gray-600 dark:text-gray-400 font-mono text-xs">
                                             {p.barcode || '—'}

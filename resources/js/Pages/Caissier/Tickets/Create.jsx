@@ -280,8 +280,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                             </span>
                         )}
                     </button>
-                    {sellableProducts.length > 0 && (
-                        <button
+                    <button
                             onClick={() => { setMobileView('services'); setLeftTab('produits'); }}
                             className={clsx(
                                 'flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
@@ -298,7 +297,6 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                 </span>
                             )}
                         </button>
-                    )}
                     <button
                         onClick={() => setMobileView('recap')}
                         className={clsx(
@@ -431,8 +429,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                     </div>
 
                     {/* ── Onglets desktop Services / Produits ── */}
-                    {sellableProducts.length > 0 && (
-                        <div className="flex shrink-0 border-b border-gray-200 bg-white px-2">
+                    <div className="flex shrink-0 border-b border-gray-200 bg-white px-2">
                             <button
                                 onClick={() => setLeftTab('services')}
                                 className={clsx(
@@ -473,7 +470,6 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                 )}
                             </button>
                         </div>
-                    )}
 
                     {/* Grille des prestations / produits */}
                     <div className="flex-1 overflow-hidden flex flex-col">

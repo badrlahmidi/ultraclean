@@ -142,10 +142,11 @@ export const ROLE_NAV = {
         {
             type: 'group', icon: Package, key: 'stock',
             label: 'Gestion du stock',
-            activeRoutes: ['admin.stock', 'admin.suppliers', 'admin.purchases'],
+            activeRoutes: ['admin.stock', 'admin.suppliers', 'admin.purchases', 'admin.sellable-products'],
             children: [
                 { label: 'Liste produits', href: 'admin.stock.index', icon: Package, alertKey: 'stockAlerts' },
                 { label: 'Nouveau produit', href: 'admin.stock.create', icon: PlusSquare },
+                { label: 'Produits vendables', href: 'admin.sellable-products.index', icon: Tag },
                 { label: 'Fournisseurs', href: 'admin.suppliers.index', icon: Truck },
                 { label: 'Nouvel Achat', href: 'admin.purchases.create', icon: ShoppingCart },
             ],
@@ -334,12 +335,13 @@ export const PERMISSION_NAV = [
     {
         type: 'group', key: 'stock', icon: Package,
         label: 'Gestion du stock', permission: 'stock.manage',
-        activeRoutes: ['admin.stock', 'admin.suppliers', 'admin.purchases'],
+        activeRoutes: ['admin.stock', 'admin.suppliers', 'admin.purchases', 'admin.sellable-products'],
         children: [
-            { label: 'Liste produits', href: 'admin.stock.index',      icon: Package, alertKey: 'stockAlerts' },
-            { label: 'Nouveau produit',href: 'admin.stock.create',     icon: PlusSquare },
-            { label: 'Fournisseurs',   href: 'admin.suppliers.index',  icon: Truck },
-            { label: 'Nouvel Achat',   href: 'admin.purchases.create', icon: ShoppingCart },
+            { label: 'Liste produits',     href: 'admin.stock.index',              icon: Package, alertKey: 'stockAlerts' },
+            { label: 'Nouveau produit',    href: 'admin.stock.create',             icon: PlusSquare },
+            { label: 'Produits vendables', href: 'admin.sellable-products.index',  icon: Tag },
+            { label: 'Fournisseurs',       href: 'admin.suppliers.index',          icon: Truck },
+            { label: 'Nouvel Achat',       href: 'admin.purchases.create',         icon: ShoppingCart },
         ],
     },
     { type: 'divider' },
