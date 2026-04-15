@@ -1,7 +1,7 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState, useMemo, useEffect } from 'react';
-import { Car, User, X, UserCog, ChevronRight, Package } from 'lucide-react';
+import { Car, User, X, UserCog, ChevronRight, Package, Wrench } from 'lucide-react';
 import clsx from 'clsx';
 
 import VehicleOverlay from './components/VehicleOverlay';
@@ -43,7 +43,13 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
     const [discountValue, setDiscountValue] = useState(0);
 
     /* ── Onglet gauche ('services' | 'produits') — desktop et mobile ── */
-    const [leftTab, setLeftTab] = useState('services');
+    const [leftTab, setLeftTab] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'produits') return 'produits';
+        }
+        return 'services';
+    });
 
     /* ── Mobile : onglet actif ('services' | 'recap') ── */
     const [mobileView, setMobileView] = useState('services');
@@ -98,6 +104,9 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
         auto: durationOverride === null,
         minutes: durationOverride ?? autoDuration,
     };
+
+    /* ── Vente produits uniquement — aucun service sélectionné ── */
+    const isProductOnly = lines.length === 0 && productLines.length > 0;
 
     /* ── Type véhicule suggéré (pré-sélection tarif) ── */
     const suggestedTypeId = vehicle.model?.suggested_vehicle_type_id ?? null;
@@ -341,6 +350,9 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                         ? `${vehicle.brand.name} ${vehicle.model?.name ?? ''}`
                                         : 'Véhicule'}
                                 </span>
+                                {!vehicle.brand && leftTab === 'produits' && (
+                                    <span className="text-[10px] text-gray-400 font-normal">(opt.)</span>
+                                )}
                                 {vehicle.brand && (
                                     <span
                                         role="button"
@@ -398,7 +410,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                 )}
                             </button>
 
-                            {washers.length > 0 && (
+                            {washers.length > 0 && !isProductOnly && (
                                 <button
                                     onClick={() => setShowWasher(true)}
                                     className={clsx(
@@ -423,6 +435,14 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                             <X size={12} />
                                         </span>
                                     )}
+                                </button>
+                            )}
+                            {/* Accès rapide Atelier — visible uniquement en mode produits */}
+                            {leftTab === 'produits' && !isAtelierClient && atelierClient && (
+                                <button
+                                    onClick={() => setClient(atelierClient)}
+                                    className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl border-2 border-purple-200 bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition-all touch-manipulation whitespace-nowrap">
+                                    <Wrench size={12} /> Atelier
                                 </button>
                             )}
                         </div>
@@ -502,9 +522,12 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                     <div className="lg:hidden shrink-0 border-t border-gray-200 bg-white px-4 py-3 flex items-center gap-3">
                         <div className="flex items-center gap-1.5 min-w-0">
                             <span className="text-sm font-semibold text-gray-700">
-                                {lines.length > 0
-                                    ? `${lines.length} prestation${lines.length > 1 ? 's' : ''}`
-                                    : 'Aucune prestation'}
+                                {lines.length === 0 && productLines.length === 0
+                                    ? 'Panier vide'
+                                    : [
+                                        lines.length > 0 ? `${lines.length} prestation${lines.length > 1 ? 's' : ''}` : null,
+                                        productLines.length > 0 ? `${productLines.length} produit${productLines.length > 1 ? 's' : ''}` : null,
+                                      ].filter(Boolean).join(' · ')}
                             </span>
                             {mobileTotal > 0 && (
                                 <span className="text-sm text-gray-500 truncate">— {mobileTotalFmt}</span>
@@ -560,6 +583,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                         productLines={productLines}
                         isAtelierClient={isAtelierClient}
                         sellableProducts={sellableProducts}
+                        isProductOnly={isProductOnly}
                     />
                     </ErrorBoundary>
                 </div>

@@ -48,6 +48,7 @@ const TicketRecap = memo(function TicketRecap({
     onSetDiscountType, onSetDiscountValue,
     onSubmit,
     sellableProducts = [],
+    isProductOnly = false,
 }) {
     const [editDuration, setEditDuration] = useState(false);
     const [draftMin, setDraftMin] = useState('');
@@ -150,7 +151,7 @@ const TicketRecap = memo(function TicketRecap({
                 <Section label={`Services${lines.length > 0 ? ` (${lines.length})` : ''}`}>
                     {lines.length === 0 && (
                         <p className="text-xs text-gray-300 py-2 text-center">
-                            Sélectionnez des services à gauche
+                            Aucun service ajouté
                         </p>
                     )}
                     <div className="space-y-1">
@@ -230,6 +231,23 @@ const TicketRecap = memo(function TicketRecap({
 
                 {/* ── Remise (Discount) ── */}
                 <Section label="Remise">
+                    {/* Présets rapides % */}
+                    <div className="flex gap-1.5 mb-2">
+                        {[5, 10, 15, 20].map(pct => (
+                            <button
+                                key={pct}
+                                onClick={() => { onSetDiscountType('percent'); onSetDiscountValue(pct); }}
+                                className={clsx(
+                                    'flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all',
+                                    discountType === 'percent' && discountValue === pct
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-blue-300'
+                                )}
+                            >
+                                {pct}%
+                            </button>
+                        ))}
+                    </div>
                     <div className="flex gap-2 mb-2">
                         <button
                             onClick={() => onSetDiscountType(discountType === 'percent' ? null : 'percent')}
@@ -274,7 +292,8 @@ const TicketRecap = memo(function TicketRecap({
                     )}
                 </Section>
 
-                {/* ── Durée ── */}
+                {/* ── Durée ── (masquée en mode vente produits uniquement) */}
+                {!isProductOnly && (
                 <Section label="Durée estimée">
                     <div className="flex items-center gap-2">
                         <Clock size={14} className="text-gray-400 shrink-0" />
@@ -326,6 +345,7 @@ const TicketRecap = memo(function TicketRecap({
                         }
                     </div>
                 </Section>
+                )}
 
                 {/* ── Notes ── */}
                 <Section label="Notes">

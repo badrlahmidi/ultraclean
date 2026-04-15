@@ -1,7 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Banknote, CreditCard, Eye, Pencil, Trash2, Printer, Calendar, X } from 'lucide-react';
+import { Plus, Search, Banknote, CreditCard, Eye, Pencil, Trash2, Printer, Calendar, X, Package } from 'lucide-react';
 import { formatMAD, formatDateTime } from '@/utils/format';
 import StatusBadge from '@/Components/StatusBadge';
 import PageHeader from '@/Components/PageHeader';
@@ -119,6 +119,10 @@ export default function TicketsIndex({ tickets, filters }) {
                     { label: 'Tickets' },
                 ]}
             >
+                <Link href={route('caissier.tickets.create') + '?mode=produits'}
+                    className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold touch-manipulation">
+                    <Package size={15} /> Vente produits
+                </Link>
                 <Link href={route('caissier.tickets.create')}
                     className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold touch-manipulation">
                     <Plus size={15} /> Nouveau
