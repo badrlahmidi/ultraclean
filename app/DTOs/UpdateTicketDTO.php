@@ -10,7 +10,7 @@ use App\DTOs\ProductLineDTO;
 /**
  * Data Transfer Object for ticket updates.
  *
- * Mirrors CreateTicketDTO with two intentional differences:
+ * Mirrors CreateTicketDTO with three intentional differences:
  *  1. services is nullable — null means "don't touch existing lines";
  *     a ServiceLineDTO[] means "replace all lines atomically".
  *  2. products is nullable — null means "don't touch existing product lines";
