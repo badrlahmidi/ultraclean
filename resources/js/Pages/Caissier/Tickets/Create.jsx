@@ -12,6 +12,9 @@ import ProductGrid from './components/ProductGrid';
 import TicketRecap from './components/TicketRecap';
 import ErrorBoundary from '@/Components/ErrorBoundary';
 
+/** Retourne "N mot(s)" avec pluriel automatique en -s. */
+const pluralize = (n, word) => `${n} ${word}${n > 1 ? 's' : ''}`;
+
 /**
  * Page caissier — Création d'un nouveau ticket (POS)
  *
@@ -44,11 +47,8 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
 
     /* ── Onglet gauche ('services' | 'produits') — desktop et mobile ── */
     const [leftTab, setLeftTab] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('mode') === 'produits') return 'produits';
-        }
-        return 'services';
+        const params = new URLSearchParams(window.location.search);
+        return params.get('mode') === 'produits' ? 'produits' : 'services';
     });
 
     /* ── Mobile : onglet actif ('services' | 'recap') ── */
@@ -525,8 +525,8 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                                 {lines.length === 0 && productLines.length === 0
                                     ? 'Panier vide'
                                     : [
-                                        lines.length > 0 ? `${lines.length} prestation${lines.length > 1 ? 's' : ''}` : null,
-                                        productLines.length > 0 ? `${productLines.length} produit${productLines.length > 1 ? 's' : ''}` : null,
+                                        lines.length > 0 ? pluralize(lines.length, 'prestation') : null,
+                                        productLines.length > 0 ? pluralize(productLines.length, 'produit') : null,
                                       ].filter(Boolean).join(' · ')}
                             </span>
                             {mobileTotal > 0 && (
