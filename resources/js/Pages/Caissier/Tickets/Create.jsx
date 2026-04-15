@@ -1,6 +1,6 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Car, User, X, UserCog, ChevronRight, Package } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -23,8 +23,9 @@ import ErrorBoundary from '@/Components/ErrorBoundary';
  *   washers           — [{id, name, avatar}]
  *   sellableProducts  — [{id, name, barcode, selling_price_cents, current_stock, unit}]
  *   atelierClientId   — int (ID of the Atelier client)
+ *   atelierClient     — {id, name, phone, is_company} (Atelier client object for quick-select)
  */
-export default function Create({ services, priceGrid, vehicleTypes, brands, washers = [], sellableProducts = [], atelierClientId }) {
+export default function Create({ services, priceGrid, vehicleTypes, brands, washers = [], sellableProducts = [], atelierClientId, atelierClient }) {
 
     /* ── État principal ── */
     const [vehicle, setVehicle] = useState({ brand: null, model: null, plate: '' });
@@ -58,6 +59,13 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
 
     /* ── Client est Atelier? ── */
     const isAtelierClient = client?.id === atelierClientId;
+
+    /* ── Auto-free: when Atelier is selected, mark all product lines as free ── */
+    useEffect(() => {
+        if (isAtelierClient) {
+            setProductLines(prev => prev.map(l => ({ ...l, is_free: true })));
+        }
+    }, [isAtelierClient]);
 
     /* ── Durée auto (somme des lignes) ── */
     const autoDuration = useMemo(
@@ -135,7 +143,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                 name: product.name,
                 unit_price_cents: product.selling_price_cents,
                 quantity: 1,
-                is_free: false,
+                is_free: isAtelierClient, // auto-free for Atelier (100% discount)
             }];
         });
     }
@@ -233,6 +241,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
             {showClient && (
                 <ClientDrawer
                     selected={client}
+                    atelierClient={atelierClient}
                     onSelect={c => { setClient(c); setShowClient(false); }}
                     onClose={() => setShowClient(false)}
                 />

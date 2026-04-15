@@ -281,7 +281,9 @@ class ProcessPaymentAction
             ]);
         }
     }    /**
-     * Decrement stock for every product linked to the ticket's services.
+     * Decrement stock for:
+     *  1. StockProducts linked to ticket services (internal consumables)
+     *  2. SellableProducts added as product lines on the ticket (sold items)
      *
      * ARCH-ITEM-2.4 (F-05): The inner try/catch has been removed so that any
      * exception propagates to the outer DB::transaction() and rolls back the
@@ -295,10 +297,10 @@ class ProcessPaymentAction
      */
     private function consumeStock(Ticket $ticket): void
     {
-        $ticket->load('services.service.stockProducts');
+        $ticket->load('services.service.stockProducts', 'products.sellableProduct');
         $insufficientStock = [];
 
-        // First pass: collect all insufficient stock items
+        // First pass: collect all insufficient stock items (StockProducts only)
         foreach ($ticket->services as $ticketService) {
             $service = $ticketService->service;
             if (! $service) {
@@ -333,7 +335,7 @@ class ProcessPaymentAction
             ]);
         }
 
-        // Second pass: actually consume the stock
+        // Second pass: actually consume StockProduct stock (service consumables)
         foreach ($ticket->services as $ticketService) {
             $service = $ticketService->service;
             if (! $service) {
@@ -343,6 +345,21 @@ class ProcessPaymentAction
                 $qty = ($product->pivot->quantity_per_use ?? 1) * ($ticketService->quantity ?? 1);
                 $product->consumeStock((float) $qty, $ticket->ticket_number, $ticket->id, auth()->id());
             }
+        }
+
+        // Third pass: consume SellableProduct stock for every product line on the ticket.
+        // Free products (Atelier usage) still leave stock — only revenue is 0.
+        foreach ($ticket->products as $ticketProduct) {
+            $product = $ticketProduct->sellableProduct;
+            if (! $product) {
+                continue;
+            }
+            $product->consumeStock(
+                (float) $ticketProduct->quantity,
+                $ticket->id,
+                $ticketProduct->is_free,
+                auth()->id(),
+            );
         }
     }
 

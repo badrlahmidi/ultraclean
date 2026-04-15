@@ -277,6 +277,12 @@ class TicketController extends Controller
             'washers'          => $washers,
             'sellableProducts' => $sellableProducts,
             'atelierClientId'  => $atelierClient->id,
+            'atelierClient'    => [
+                'id'         => $atelierClient->id,
+                'name'       => $atelierClient->name,
+                'phone'      => $atelierClient->phone,
+                'is_company' => false,
+            ],
         ];
     }    /** Endpoint JSON — disponibilité fraîche de tous les laveurs (appelé par le WasherDrawer). */
     public function washerQueue(Request $request): \Illuminate\Http\JsonResponse
