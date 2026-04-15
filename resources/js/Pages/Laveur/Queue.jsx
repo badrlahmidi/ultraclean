@@ -103,13 +103,9 @@ function TicketCard({ ticket, colKey, onStart, onComplete }) {
         return () => clearInterval(id);
     }, [ticket.started_at, ticket.created_at]);
 
-    /* Determine action for the card */
-    let canStart    = isPending || isPrepaid || isPartial;
-    let canComplete = isInProgress;
-    if (isOverdue) {
-        canStart    = ['pending', 'partial'].includes(ticket.status) || (ticket.status === 'paid' && ticket.is_prepaid);
-        canComplete = ticket.status === 'in_progress';
-    }
+    /* Determine action for the card — overdue tickets follow the same rules */
+    const canStart    = isPending || isPrepaid || isPartial;
+    const canComplete = isInProgress;
 
     function handleStart() {
         setLoading(true);
