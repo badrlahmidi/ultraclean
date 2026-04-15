@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Search, Plus, User, Building2, Phone, Check, Loader2 } from 'lucide-react';
+import { X, Search, Plus, User, Building2, Phone, Check, Loader2, Wrench } from 'lucide-react';
 import clsx from 'clsx';
 import axios from 'axios';
 
 /**
  * Drawer latéral — recherche client + quick-add
  * Props :
- *   selected  — client actif ({id, name, phone, is_company}) ou null
- *   onSelect  — fn(client)
- *   onClose   — fn()
+ *   selected     — client actif ({id, name, phone, is_company}) ou null
+ *   atelierClient — {id, name, phone, is_company} (client Atelier, accès rapide)
+ *   onSelect     — fn(client)
+ *   onClose      — fn()
  */
-export default function ClientDrawer({ selected, onSelect, onClose }) {
+export default function ClientDrawer({ selected, atelierClient, onSelect, onClose }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -80,6 +81,27 @@ export default function ClientDrawer({ selected, onSelect, onClose }) {
                         <div className="px-4 py-3 border-b border-blue-100 bg-blue-50">
                             <p className="text-xs font-medium text-blue-500 mb-1">Client sélectionné</p>
                             <ClientRow client={selected} isActive onSelect={onSelect} />
+                        </div>
+                    )}
+
+                    {/* Accès rapide Atelier */}
+                    {atelierClient && !query && selected?.id !== atelierClient.id && (
+                        <div className="px-4 py-3 border-b border-purple-100 bg-purple-50">
+                            <p className="text-xs font-medium text-purple-500 mb-1 flex items-center gap-1">
+                                <Wrench size={11} /> Accès rapide
+                            </p>
+                            <button
+                                onClick={() => { onSelect(atelierClient); onClose(); }}
+                                className="w-full flex items-center gap-3 py-2 px-2 rounded-xl hover:bg-purple-100 transition-colors"
+                            >
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-purple-100">
+                                    <Wrench size={16} className="text-purple-600" />
+                                </div>
+                                <div className="flex-1 text-left min-w-0">
+                                    <p className="text-sm font-semibold text-purple-800">{atelierClient.name}</p>
+                                    <p className="text-xs text-purple-500">Usage interne — produits gratuits</p>
+                                </div>
+                            </button>
                         </div>
                     )}
 

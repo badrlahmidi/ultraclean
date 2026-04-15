@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Car, User, X, UserCog, ChevronRight, ArrowLeft, Package } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -23,8 +23,9 @@ import TicketRecap from './components/TicketRecap';
  *   washers          — [{id, name, avatar}]
  *   sellableProducts — [{id, name, barcode, selling_price_cents, current_stock, unit}]
  *   atelierClientId  — int
+ *   atelierClient    — {id, name, phone, is_company}
  */
-export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands, washers = [], sellableProducts = [], atelierClientId }) {
+export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands, washers = [], sellableProducts = [], atelierClientId, atelierClient }) {
 
     /* ── Initialisation depuis le ticket existant ── */
     const initBrand = ticket.vehicle_brand_id
@@ -84,6 +85,13 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
     /* ── Client Atelier? ── */
     const isAtelierClient = client?.id === atelierClientId;
 
+    /* ── Auto-free: when Atelier is selected, mark all product lines as free ── */
+    useEffect(() => {
+        if (isAtelierClient) {
+            setProductLines(prev => prev.map(l => ({ ...l, is_free: true })));
+        }
+    }, [isAtelierClient]);
+
     const autoDuration = useMemo(
         () => lines.reduce((s, l) => s + (l.duration_minutes ?? 0) * l.quantity, 0),
         [lines]
@@ -132,7 +140,7 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                 name: product.name,
                 unit_price_cents: product.selling_price_cents,
                 quantity: 1,
-                is_free: false,
+                is_free: isAtelierClient, // auto-free for Atelier (100% discount)
             }];
         });
     }
@@ -206,6 +214,7 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
             )}
             {showClient && (
                 <ClientDrawer selected={client}
+                    atelierClient={atelierClient}
                     onSelect={c => { setClient(c); setShowClient(false); }}
                     onClose={() => setShowClient(false)}
                 />
