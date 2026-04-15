@@ -16,8 +16,11 @@ use Inertia\Response;
 class QueueController extends Controller
 {
     public function index(): Response
-    {        // Tickets actifs + tickets prépayés/partiels en attente de lavage
-        $tickets = Ticket::with(['vehicleType', 'services', 'client', 'assignedTo', 'washers'])
+    {
+        $with = ['vehicleBrand', 'vehicleModel', 'services', 'client', 'assignedTo', 'washers'];
+
+        // Tickets actifs + tickets prépayés/partiels en attente de lavage
+        $tickets = Ticket::with($with)
             ->where(function ($q) {
                 $q->whereIn('status', ['pending', 'in_progress'])
                   ->orWhere(function ($q2) {
@@ -36,10 +39,26 @@ class QueueController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        // Tickets en retard : due_at dépassé, statut pas encore terminé/annulé
+        $overdue = Ticket::with($with)
+            ->whereNotNull('due_at')
+            ->where('due_at', '<', now())
+            ->where(function ($q) {
+                $q->whereIn('status', ['pending', 'in_progress', 'partial'])
+                  ->orWhere(function ($q2) {
+                      $q2->where('status', 'paid')->where('is_prepaid', true)->whereNull('completed_at');
+                  });
+            })
+            ->oldest('due_at')
+            ->get();
+
         $laveurs = User::where('role', 'laveur')
             ->where('is_active', true)
-            ->get(['id', 'name']);        return Inertia::render('Laveur/Queue', [
+            ->get(['id', 'name']);
+
+        return Inertia::render('Laveur/Queue', [
             'tickets'   => $tickets,
+            'overdue'   => $overdue,
             'laveurs'   => $laveurs,
             'serverNow' => now()->toISOString(),
         ]);

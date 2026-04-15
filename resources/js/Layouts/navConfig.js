@@ -95,7 +95,7 @@ export const ROLE_NAV = {
         {
             type: 'group', icon: Ticket, key: 'caisse',
             label: 'Tickets / Caisse',
-            activeRoutes: ['caissier', 'admin.payments', 'laveur'],
+            activeRoutes: ['caissier', 'admin.payments', 'laveur', 'caissier.planning'],
             children: [
                 { label: 'Accès Caisse', href: 'caissier.dashboard', icon: ShieldCheck },
                 { label: 'Tickets en cours', href: 'caissier.tickets.index', icon: ListOrdered },
@@ -104,6 +104,7 @@ export const ROLE_NAV = {
                 { label: 'Shifts / Caisse', href: 'caissier.shift.index', icon: ShieldCheck },
                 { label: 'Dépenses', href: 'caissier.depenses.index', icon: Banknote },
                 { label: "File d'attente", href: 'laveur.queue', icon: Car },
+                { label: 'Planning du jour', href: 'caissier.planning', icon: CalendarRange },
             ],
         },
         { type: 'divider' },
