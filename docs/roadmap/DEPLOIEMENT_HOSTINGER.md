@@ -131,8 +131,8 @@ Dans hPanel → Tâches planifiées (Cron Jobs) :
 ## Étape 7 — Vérification post-déploiement
 
 1. ✅ Accéder à `https://votre-domaine.com` → doit afficher la page de login
-2. ✅ Se connecter avec `admin@ritajpos.ma` / `Admin@2026!`
-3. ✅ Créer un ticket test
+2. ✅ Se connecter avec le compte admin par défaut (voir `database/seeders/AdminUserSeeder.php`)
+3. ✅ **Changer immédiatement** le mot de passe et le PIN admin
 4. ✅ Vérifier l'impression (Ctrl+P sur la page ticket)
 5. ✅ Vérifier les rapports admin
 
@@ -163,10 +163,8 @@ php artisan optimize
 
 ## Identifiants démo
 
-| Rôle | Email | Mot de passe | PIN |
-|------|-------|--------------|-----|
-| Admin | admin@ritajpos.ma | Admin@2026! | 1234 |
-| Caissier | caissier@ritajpos.ma | Caissier@2026 | 2222 |
-| Laveur | laveur@ritajpos.ma | Laveur@2026 | 3333 |
+Les comptes de démonstration sont définis dans `database/seeders/`.
 
-> ⚠️ Changer ces mots de passe en production !
+> ⚠️ **Ne jamais publier des mots de passe en clair dans la documentation.**
+> Consultez directement les fichiers seeder pour les valeurs par défaut.
+> Changez tous les mots de passe et PINs immédiatement après le premier déploiement.

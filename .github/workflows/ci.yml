@@ -30,7 +30,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, gd, intl
-          coverage: none
+          coverage: ${{ matrix.php == '8.3' && 'pcov' || 'none' }}
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -55,7 +55,15 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
       - name: Run PHP tests
-        run: php artisan test --parallel
+        run: |
+          if [ "${{ matrix.php }}" = "8.3" ]; then
+            # --min=60: baseline coverage gate (60 %).
+            # Coverage is collected on PHP 8.3 only (PCOV extension) to keep CI fast.
+            # Target: raise threshold to 80 % over the next sprints as new tests are added.
+            php artisan test --parallel --coverage --min=60
+          else
+            php artisan test --parallel
+          fi
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'

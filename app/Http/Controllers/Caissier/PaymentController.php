@@ -29,12 +29,13 @@ class PaymentController extends Controller
         );
 
         $request->validate([
-            'method'              => ['required', 'in:cash,card,wire,mobile,mixed,advance,credit'],
-            'amount_cash_cents'   => ['nullable', 'integer', 'min:0'],
-            'amount_card_cents'   => ['nullable', 'integer', 'min:0'],
-            'amount_mobile_cents' => ['nullable', 'integer', 'min:0'],
-            'amount_wire_cents'   => ['nullable', 'integer', 'min:0'],
-            'note'                => ['nullable', 'string', 'max:255'],
+            'method'                   => ['required', 'in:cash,card,wire,mobile,mixed,advance,credit'],
+            'amount_cash_cents'        => ['nullable', 'integer', 'min:0'],
+            'amount_card_cents'        => ['nullable', 'integer', 'min:0'],
+            'amount_mobile_cents'      => ['nullable', 'integer', 'min:0'],
+            'amount_wire_cents'        => ['nullable', 'integer', 'min:0'],
+            'loyalty_points_to_redeem' => ['nullable', 'integer', 'min:0'],
+            'note'                     => ['nullable', 'string', 'max:255'],
         ]);
 
         $dto = ProcessPaymentDTO::fromRequest($request);

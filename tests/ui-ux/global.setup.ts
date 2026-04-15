@@ -56,11 +56,19 @@ export default async function globalSetup(config: FullConfig) {
     }
 
     // Log in both roles in sequence (single Laravel server, keep it serial).
-    // Credentials must be set via environment variables — never hardcode them here.
-    const adminEmail    = process.env.TEST_ADMIN_EMAIL    ?? 'admin@ritajpos.ma';
-    const adminPassword = process.env.TEST_ADMIN_PASSWORD ?? 'Admin@2026!';
-    const caissierEmail    = process.env.TEST_CAISSIER_EMAIL    ?? 'caissier@ritajpos.ma';
-    const caissierPassword = process.env.TEST_CAISSIER_PASSWORD ?? 'Caissier@2026';
+    // Credentials MUST be provided via environment variables — never hardcode them.
+    const adminEmail    = process.env.TEST_ADMIN_EMAIL;
+    const adminPassword = process.env.TEST_ADMIN_PASSWORD;
+    const caissierEmail    = process.env.TEST_CAISSIER_EMAIL;
+    const caissierPassword = process.env.TEST_CAISSIER_PASSWORD;
+
+    if (!adminEmail || !adminPassword || !caissierEmail || !caissierPassword) {
+        throw new Error(
+            'E2E setup requires TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, ' +
+            'TEST_CAISSIER_EMAIL, and TEST_CAISSIER_PASSWORD environment variables. ' +
+            'Set them in your CI secrets or export them in your shell before running Playwright.'
+        );
+    }
 
     await loginAs(baseURL, adminEmail, adminPassword, ADMIN_AUTH);
     await loginAs(baseURL, caissierEmail, caissierPassword, CAISSIER_AUTH);

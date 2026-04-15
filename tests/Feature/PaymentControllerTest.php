@@ -124,6 +124,107 @@ class PaymentControllerTest extends TestCase
         ]);
     }
 
+    public function test_mixed_payment_with_wire_channel_transitions_to_paid(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(10000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            [
+                'method'            => 'mixed',
+                'amount_cash_cents' => 5000,
+                'amount_wire_cents' => 5000,
+            ]
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+        $this->assertEquals('paid', $ticket->fresh()->status);
+        $this->assertDatabaseHas('payments', [
+            'ticket_id'         => $ticket->id,
+            'method'            => 'mixed',
+            'amount_cash_cents' => 5000,
+            'amount_wire_cents' => 5000,
+        ]);
+    }
+
+    // ─── Wire (bank-transfer) single-channel ─────────────────────────────
+
+    public function test_wire_payment_transitions_ticket_to_paid(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(50000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'wire']
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+        $this->assertEquals('paid', $ticket->fresh()->status);
+    }
+
+    public function test_wire_payment_records_correct_amounts(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(50000)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'wire']
+        );
+
+        $this->assertDatabaseHas('payments', [
+            'ticket_id'         => $ticket->id,
+            'method'            => 'wire',
+            'amount_cents'      => 50000,
+            'amount_wire_cents' => 50000,
+            'amount_cash_cents' => 0,
+            'amount_card_cents' => 0,
+        ]);
+    }
+
+    // ─── Mobile single-channel ───────────────────────────────────────────
+
+    public function test_mobile_payment_transitions_ticket_to_paid(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(7500)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $response = $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'mobile']
+        );
+
+        $response->assertRedirect(route('caissier.tickets.show', $ticket->ulid));
+        $this->assertEquals('paid', $ticket->fresh()->status);
+    }
+
+    public function test_mobile_payment_records_correct_amounts(): void
+    {
+        $ticket = Ticket::factory()->completed()->withTotal(7500)->create([
+            'created_by' => $this->caissier->id,
+        ]);
+
+        $this->actingAs($this->caissier)->post(
+            route('caissier.tickets.pay', $ticket),
+            ['method' => 'mobile']
+        );
+
+        $this->assertDatabaseHas('payments', [
+            'ticket_id'           => $ticket->id,
+            'method'              => 'mobile',
+            'amount_cents'        => 7500,
+            'amount_mobile_cents' => 7500,
+            'amount_cash_cents'   => 0,
+            'amount_wire_cents'   => 0,
+        ]);
+    }
+
     // ─── Insufficient amount ─────────────────────────────────────────────
 
     public function test_insufficient_mixed_amount_returns_validation_error(): void

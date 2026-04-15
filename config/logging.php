@@ -3,6 +3,7 @@
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Processor\PsrLogMessageProcessor;
 
 return [
@@ -121,6 +122,33 @@ return [
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
+        ],
+
+        // ── Structured JSON log ──────────────────────────────────────────
+        // Outputs one JSON object per log entry to a dedicated file.
+        // Useful for shipping logs to Papertrail, Logtail, or any other
+        // aggregator that understands NDJSON.
+        //
+        // Usage: set LOG_CHANNEL=json (or add "json" to LOG_STACK) in .env.
+        // On Hostinger you can ship this file with a sidecar log-shipper.
+        //
+        // ⚠️  Configure external log rotation (e.g. logrotate) for this file in
+        //     production to prevent laravel-json.log from growing indefinitely.
+        'json' => [
+            'driver'  => 'monolog',
+            'level'   => env('LOG_LEVEL', 'debug'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => storage_path('logs/laravel-json.log'),
+                'level'  => env('LOG_LEVEL', 'debug'),
+            ],
+            'formatter'      => JsonFormatter::class,
+            'formatter_with' => [
+                'batchMode'          => JsonFormatter::BATCH_MODE_NEWLINES,
+                'appendNewline'      => true,
+                'ignoreEmptyContextAndExtra' => false,
+            ],
+            'processors' => [PsrLogMessageProcessor::class],
         ],
 
         'emergency' => [

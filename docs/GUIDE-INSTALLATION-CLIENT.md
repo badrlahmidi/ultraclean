@@ -240,10 +240,8 @@ curl -I https://domaine-client.ma    # Doit retourner 200 OK
 
 ### 6.1 Changer le mot de passe admin
 
-1. Se connecter sur `https://domaine-client.ma` avec :
-   - Email : `admin@ritajpos.ma`
-   - Mot de passe : `Admin@2026!`
-   - PIN : `1234`
+1. Se connecter sur `https://<VOTRE_DOMAINE>` avec le compte admin par défaut
+   (voir `database/seeders/AdminUserSeeder.php` pour l'e-mail seeded)
 2. **Profil → Changer le mot de passe IMMÉDIATEMENT**
 3. **Admin → Utilisateurs** → Créer les vrais comptes (caissier, laveur)
 4. **Désactiver** les comptes de démo
@@ -417,8 +415,8 @@ php artisan tinker
 
 ## 🏷️ Accès par défaut (à changer immédiatement)
 
-| Rôle | Email | Mot de passe | PIN |
-|---|---|---|---|
-| Admin | `admin@ritajpos.ma` | `Admin@2026!` | `1234` |
-| Caissier | `caissier@ritajpos.ma` | `Caissier@2026` | `2222` |
-| Laveur | `laveur@ritajpos.ma` | `Laveur@2026` | `3333` |
+Les comptes de démonstration sont créés par les seeders dans `database/seeders/`.
+**Tous les mots de passe et PINs par défaut doivent être changés immédiatement après la première connexion.**
+
+> ⚠️ Ne jamais publier les identifiants par défaut dans de la documentation versionée.
+> Consultez directement les fichiers de seed pour les valeurs initiales.

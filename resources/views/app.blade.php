@@ -14,13 +14,27 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- PWA -->
+        <link rel="manifest" href="/manifest.json">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
         <!-- Scripts -->
-        @routes
+        @routes(['nonce' => \Illuminate\Support\Facades\Vite::cspNonce()])
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
         @inertia
+
+        <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                });
+            }
+        </script>
     </body>
 </html>

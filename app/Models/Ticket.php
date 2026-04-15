@@ -153,10 +153,57 @@ class Ticket extends Model
 
     protected static function generateTicketNumber(): string
     {
-        $date  = now()->format('Ymd');
-        $count = static::whereDate('created_at', today())->withTrashed()->count() + 1;
-        return sprintf('TK-%s-%04d', $date, $count);
-    }    // ---------- Relations ----------
+        $date = now()->format('Ymd');
+        $today = now()->toDateString();
+
+        // Atomically claim the next sequence value for today.
+        //
+        // On MySQL/MariaDB:
+        //   - INSERT … ON DUPLICATE KEY UPDATE atomically increments the counter.
+        //   - A subsequent SELECT … FOR UPDATE within the same transaction prevents
+        //     another concurrent transaction from reading the same value before we
+        //     finish. This serialises all ticket-number generation for the day.
+        //
+        // On SQLite (dev / in-memory tests):
+        //   - insertOrIgnore + increment achieves the same atomicity because SQLite
+        //     uses table-level locking, so concurrent writes are already serialised.
+        //
+        // The UNIQUE constraint on tickets.ticket_number remains the last line of
+        // defence against any edge-case collision.
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            \Illuminate\Support\Facades\DB::table('ticket_daily_counters')
+                ->insertOrIgnore(['date' => $today, 'next_value' => 1]);
+
+            $sequence = \Illuminate\Support\Facades\DB::table('ticket_daily_counters')
+                ->where('date', $today)
+                ->value('next_value');
+
+            \Illuminate\Support\Facades\DB::table('ticket_daily_counters')
+                ->where('date', $today)
+                ->increment('next_value');
+        } else {
+            // MySQL / MariaDB: INSERT … ON DUPLICATE KEY UPDATE (one atomic round-trip).
+            \Illuminate\Support\Facades\DB::statement(
+                'INSERT INTO ticket_daily_counters (`date`, next_value) VALUES (?, 2)
+                 ON DUPLICATE KEY UPDATE next_value = next_value + 1',
+                [$today]
+            );
+
+            // Lock the row to serialise concurrent readers until this transaction commits.
+            $sequence = \Illuminate\Support\Facades\DB::table('ticket_daily_counters')
+                ->where('date', $today)
+                ->lockForUpdate()
+                ->value('next_value') - 1;
+                // INSERT … ON DUPLICATE KEY UPDATE set next_value to the incremented value,
+                // so we subtract 1 to get the value that was assigned to this ticket.
+        }
+
+        return sprintf('TK-%s-%04d', $date, max(1, (int) $sequence));
+    }
+
+    // ---------- Relations ----------
 
     public function vehicleType(): BelongsTo
     {

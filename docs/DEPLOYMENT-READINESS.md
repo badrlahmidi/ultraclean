@@ -18,7 +18,7 @@
 
 ### 2. Configuration Files
 - [x] `.env.production` created with production defaults
-- [x] `PAYMENT_WEBHOOK_SECRET` generated: `5dff05f9783d94419f3d338e8ecacdf8e4fa3099c5ff6319ca88f574b65542a6`
+- [x] `PAYMENT_WEBHOOK_SECRET` generated (stored in `.env` on the server only — never committed)
 - [x] `deploy.sh` script ready for Hostinger
 - [x] `pre-deploy-check.ps1` script available
 
@@ -173,11 +173,9 @@ Add task:
 ## 🔐 Post-Deployment Security
 
 ### 1. Change Default Admin Credentials
-1. Login at: `https://your-domain.ma`
-   - Email: `admin@ritajpos.ma`
-   - Password: `Admin@2026!`
-   - PIN: `1234`
-2. **IMMEDIATELY** change password in Profile
+1. Login at `https://<YOUR_DOMAIN>` with the default admin account created by `AdminUserSeeder`
+   (see `database/seeders/AdminUserSeeder.php` for the seeded e-mail address)
+2. **IMMEDIATELY** change password and PIN in Profile
 3. Create real user accounts (cashier, washer)
 4. Disable demo accounts
 
