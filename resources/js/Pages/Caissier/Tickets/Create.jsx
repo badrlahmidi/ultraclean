@@ -1,13 +1,14 @@
 ﻿import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
-import { Car, User, X, UserCog, ChevronRight, Package, Percent, DollarSign } from 'lucide-react';
+import { Car, User, X, UserCog, ChevronRight, Package } from 'lucide-react';
 import clsx from 'clsx';
 
 import VehicleOverlay from './components/VehicleOverlay';
 import ClientDrawer from './components/ClientDrawer';
 import WasherOverlay from './components/WasherOverlay';
 import ServiceGrid from './components/ServiceGrid';
+import ProductGrid from './components/ProductGrid';
 import TicketRecap from './components/TicketRecap';
 import ErrorBoundary from '@/Components/ErrorBoundary';
 
@@ -40,14 +41,16 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
     const [discountType, setDiscountType] = useState(null); // 'percent' | 'fixed' | null
     const [discountValue, setDiscountValue] = useState(0);
 
-    /* ── Mobile : onglet actif ('services' | 'products' | 'recap') ── */
+    /* ── Onglet gauche ('services' | 'produits') — desktop et mobile ── */
+    const [leftTab, setLeftTab] = useState('services');
+
+    /* ── Mobile : onglet actif ('services' | 'recap') ── */
     const [mobileView, setMobileView] = useState('services');
 
     /* ── Modales ── */
     const [showVehicle, setShowVehicle] = useState(false);
     const [showClient, setShowClient] = useState(false);
     const [showWasher, setShowWasher] = useState(false);
-    const [showProducts, setShowProducts] = useState(false);
 
     /* ── Soumission ── */
     const [processing, setProcessing] = useState(false);
@@ -245,18 +248,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                 />
             )}
 
-            {/* Products Overlay */}
-            {showProducts && (
-                <ProductsOverlay
-                    products={sellableProducts}
-                    productLines={productLines}
-                    isAtelierClient={isAtelierClient}
-                    onAdd={handleAddProduct}
-                    onRemove={handleRemoveProduct}
-                    onToggleFree={handleToggleFree}
-                    onClose={() => setShowProducts(false)}
-                />
-            )}
+            {/* Products Overlay — kept for any external onOpenProducts triggers */}
 
             {/* Layout POS deux colonnes (desktop) / onglets (mobile) */}
             <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden">
@@ -264,10 +256,10 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                 {/* ── Onglets mobiles (< lg uniquement) ── */}
                 <div className="flex shrink-0 border-b border-gray-200 bg-white lg:hidden">
                     <button
-                        onClick={() => setMobileView('services')}
+                        onClick={() => { setMobileView('services'); setLeftTab('services'); }}
                         className={clsx(
                             'flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
-                            mobileView === 'services'
+                            mobileView === 'services' && leftTab === 'services'
                                 ? 'border-blue-600 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                         )}
@@ -281,10 +273,12 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                     </button>
                     {sellableProducts.length > 0 && (
                         <button
-                            onClick={() => setShowProducts(true)}
+                            onClick={() => { setMobileView('services'); setLeftTab('produits'); }}
                             className={clsx(
                                 'flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
-                                'border-transparent text-gray-500 hover:text-gray-700'
+                                mobileView === 'services' && leftTab === 'produits'
+                                    ? 'border-green-600 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
                             )}
                         >
                             <Package size={14} />
@@ -427,18 +421,75 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                         </div>
                     </div>
 
-                    {/* Grille des prestations */}
+                    {/* ── Onglets desktop Services / Produits ── */}
+                    {sellableProducts.length > 0 && (
+                        <div className="flex shrink-0 border-b border-gray-200 bg-white px-2">
+                            <button
+                                onClick={() => setLeftTab('services')}
+                                className={clsx(
+                                    'flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors',
+                                    leftTab === 'services'
+                                        ? 'border-blue-600 text-blue-700'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                )}
+                            >
+                                Services
+                                {lines.length > 0 && (
+                                    <span className={clsx(
+                                        'text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none',
+                                        leftTab === 'services' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                    )}>
+                                        {lines.reduce((s, l) => s + l.quantity, 0)}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setLeftTab('produits')}
+                                className={clsx(
+                                    'flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors',
+                                    leftTab === 'produits'
+                                        ? 'border-green-600 text-green-700'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                )}
+                            >
+                                <Package size={12} />
+                                Produits
+                                {productLines.length > 0 && (
+                                    <span className={clsx(
+                                        'text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none',
+                                        leftTab === 'produits' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                    )}>
+                                        {productLines.reduce((s, l) => s + l.quantity, 0)}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Grille des prestations / produits */}
                     <div className="flex-1 overflow-hidden flex flex-col">
                         <ErrorBoundary inline>
-                        <ServiceGrid
-                            services={services}
-                            priceGrid={priceGrid}
-                            vehicleTypes={vehicleTypes}
-                            suggestedTypeId={suggestedTypeId}
-                            lines={lines}
-                            onAdd={handleAddLine}
-                            onRemove={handleRemoveLine}
-                        />
+                            {leftTab === 'produits' ? (
+                                <ProductGrid
+                                    products={sellableProducts}
+                                    productLines={productLines}
+                                    isAtelierClient={isAtelierClient}
+                                    isActive={leftTab === 'produits'}
+                                    onAdd={handleAddProduct}
+                                    onRemove={handleRemoveProduct}
+                                    onToggleFree={handleToggleFree}
+                                />
+                            ) : (
+                                <ServiceGrid
+                                    services={services}
+                                    priceGrid={priceGrid}
+                                    vehicleTypes={vehicleTypes}
+                                    suggestedTypeId={suggestedTypeId}
+                                    lines={lines}
+                                    onAdd={handleAddLine}
+                                    onRemove={handleRemoveLine}
+                                />
+                            )}
                         </ErrorBoundary>
                     </div>
 
@@ -491,7 +542,7 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
                         discountCents={discountCents}
                         onOpenVehicle={handleOpenVehicle}
                         onOpenClient={() => setShowClient(true)}
-                        onOpenProducts={() => setShowProducts(true)}
+                        onOpenProducts={() => { setLeftTab('produits'); setMobileView('services'); }}
                         onRemoveLine={handleRemoveLine}
                         onRemoveProduct={handleRemoveProduct}
                         onToggleFree={handleToggleFree}
@@ -512,130 +563,3 @@ export default function Create({ services, priceGrid, vehicleTypes, brands, wash
     );
 }
 
-/* ─── ProductsOverlay ─────────────────────────────────────────────────────── */
-
-function ProductsOverlay({ products, productLines, isAtelierClient, onAdd, onRemove, onToggleFree, onClose }) {
-    const [search, setSearch] = useState('');
-
-    const filtered = products.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        (p.barcode && p.barcode.includes(search))
-    );
-
-    function getQtyInCart(productId) {
-        const line = productLines.find(l => l.sellable_product_id === productId);
-        return line?.quantity ?? 0;
-    }
-
-    function isFree(productId) {
-        const line = productLines.find(l => l.sellable_product_id === productId);
-        return line?.is_free ?? false;
-    }
-
-    return (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white">
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Package size={20} className="text-green-600" />
-                    Produits à vendre
-                </h2>
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl">
-                    <X size={20} className="text-gray-500" />
-                </button>
-            </div>
-
-            {/* Search */}
-            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 shrink-0">
-                <input
-                    type="text"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Rechercher par nom ou code-barres…"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-            </div>
-
-            {/* Products Grid */}
-            <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {filtered.map(p => {
-                        const qty = getQtyInCart(p.id);
-                        const free = isFree(p.id);
-                        return (
-                            <div
-                                key={p.id}
-                                className={clsx(
-                                    'relative bg-white border-2 rounded-xl p-3 transition-all cursor-pointer',
-                                    qty > 0
-                                        ? 'border-green-500 shadow-sm'
-                                        : 'border-gray-200 hover:border-green-300'
-                                )}
-                                onClick={() => onAdd(p)}
-                            >
-                                <div className="text-sm font-semibold text-gray-900 truncate">{p.name}</div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                    {(p.selling_price_cents / 100).toFixed(2)} MAD
-                                </div>
-                                {p.barcode && (
-                                    <div className="text-[10px] text-gray-400 font-mono mt-0.5">{p.barcode}</div>
-                                )}
-                                <div className="text-xs text-gray-400 mt-1">
-                                    Stock: {p.current_stock} {p.unit}
-                                </div>
-
-                                {qty > 0 && (
-                                    <>
-                                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                                            {qty}
-                                        </div>
-                                        <div className="mt-2 flex gap-1">
-                                            <button
-                                                onClick={e => { e.stopPropagation(); onRemove(p.id); }}
-                                                className="flex-1 px-2 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
-                                            >
-                                                −
-                                            </button>
-                                            {isAtelierClient && (
-                                                <button
-                                                    onClick={e => { e.stopPropagation(); onToggleFree(p.id); }}
-                                                    className={clsx(
-                                                        'flex-1 px-2 py-1 text-xs rounded-lg',
-                                                        free
-                                                            ? 'bg-purple-100 text-purple-700'
-                                                            : 'bg-gray-100 text-gray-600 hover:bg-purple-50'
-                                                    )}
-                                                >
-                                                    {free ? 'Gratuit ✓' : 'Gratuit'}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-                {filtered.length === 0 && (
-                    <div className="text-center text-gray-400 py-12">
-                        <Package size={32} className="mx-auto mb-2" />
-                        Aucun produit trouvé
-                    </div>
-                )}
-            </div>
-
-            {/* Footer */}
-            <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                    {productLines.length} produit{productLines.length !== 1 ? 's' : ''} sélectionné{productLines.length !== 1 ? 's' : ''}
-                </div>
-                <button
-                    onClick={onClose}
-                    className="px-4 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700"
-                >
-                    Valider
-                </button>
-            </div>
-        </div>
-    );
-}
