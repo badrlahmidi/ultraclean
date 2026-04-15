@@ -205,7 +205,7 @@ function TicketCard({ ticket, colKey, onStart, onComplete }) {
             {ticket.services?.length > 0 && (
                 <div className="space-y-0.5">
                     {ticket.services.slice(0, 3).map((ts, i) => (
-                        <div key={i} className="flex items-center justify-between">
+                        <div key={ts.id ?? i} className="flex items-center justify-between">
                             <span className="text-[10px] text-gray-500 truncate">
                                 {ts.service_name ?? ts.service?.name}
                             </span>
@@ -348,6 +348,8 @@ export default function Queue({ tickets, overdue: overdueList, laveurs: _laveurs
         col.key !== 'prepaid' || prepaid.length > 0
     );
 
+    const reloadPreserve = () => router.reload({ preserveScroll: true });
+
     return (
         <AppLayout title="File d'attente">
             <Head title="File d'attente" />
@@ -415,8 +417,8 @@ export default function Queue({ tickets, overdue: overdueList, laveurs: _laveurs
                                 key={col.key}
                                 col={col}
                                 tickets={columnData[col.key] ?? []}
-                                onStart={() => router.reload({ preserveScroll: true })}
-                                onComplete={() => router.reload({ preserveScroll: true })}
+                                onStart={reloadPreserve}
+                                onComplete={reloadPreserve}
                             />
                         ))}
                     </div>
@@ -427,8 +429,8 @@ export default function Queue({ tickets, overdue: overdueList, laveurs: _laveurs
                                 <KanbanColumn
                                     col={col}
                                     tickets={columnData[col.key] ?? []}
-                                    onStart={() => router.reload({ preserveScroll: true })}
-                                    onComplete={() => router.reload({ preserveScroll: true })}
+                                    onStart={reloadPreserve}
+                                    onComplete={reloadPreserve}
                                 />
                             </div>
                         ))}
