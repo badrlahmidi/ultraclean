@@ -95,8 +95,10 @@ class ReportsController extends Controller
         $csv->insertOne(['Tickets payes', $data['stats']['paid_tickets']]);
         $csv->insertOne(['Tickets annules', $data['stats']['cancelled_tickets']]);
         $csv->insertOne(['En cours / en attente', $data['stats']['pending_tickets']]);
+        $csv->insertOne(['Tickets prepaye', $data['prepaidStats']['count']]);
         $csv->insertOne(['CA (MAD)', number_format($data['stats']['revenue'] / 100, 2, '.', '')]);
         $csv->insertOne(['Ticket moyen (MAD)', number_format(($data['stats']['avg_ticket'] ?? 0) / 100, 2, '.', '')]);
+        $csv->insertOne(['Remises totales (MAD)', number_format($data['totalDiscounts'] / 100, 2, '.', '')]);
         $csv->insertOne([]);
 
         $csv->insertOne(['--- TENDANCE CA PAR JOUR ---']);
@@ -118,6 +120,18 @@ class ReportsController extends Controller
                 $s->count,
                 $s->qty,
                 number_format($s->revenue / 100, 2, '.', ''),
+            ]);
+        }
+        $csv->insertOne([]);
+
+        $csv->insertOne(['--- TOP PRODUITS ---']);
+        $csv->insertOne(['Produit', 'Frequence', 'Quantite', 'CA (MAD)']);
+        foreach ($data['topProducts'] as $p) {
+            $csv->insertOne([
+                $p->name,
+                $p->count,
+                $p->qty,
+                number_format($p->revenue / 100, 2, '.', ''),
             ]);
         }
         $csv->insertOne([]);
@@ -144,6 +158,11 @@ class ReportsController extends Controller
 
         $csv->insertOne(['--- DEPENSES ---']);
         $csv->insertOne(['CA brut (MAD)', number_format($data['stats']['revenue'] / 100, 2, '.', '')]);
+        $csv->insertOne(['dont Recette Services (MAD)', number_format($data['servicesRevenue'] / 100, 2, '.', '')]);
+        $csv->insertOne(['dont Recette Produits (MAD)', number_format($data['productsRevenue'] / 100, 2, '.', '')]);
+        $csv->insertOne(['Remises accordees (MAD)', number_format($data['totalDiscounts'] / 100, 2, '.', '')]);
+        $csv->insertOne(['Prepaye (nb)', $data['prepaidStats']['count']]);
+        $csv->insertOne(['Prepaye (CA MAD)', number_format($data['prepaidStats']['revenue'] / 100, 2, '.', '')]);
         $csv->insertOne(['Total depenses (MAD)', number_format($data['expensesTotal'] / 100, 2, '.', '')]);
         $csv->insertOne(['CA net (MAD)', number_format($data['netRevenue'] / 100, 2, '.', '')]);
         $csv->insertOne([]);
@@ -232,6 +251,22 @@ class ReportsController extends Controller
             ->limit(8)
             ->get();
 
+        // ── Top produits vendus ───────────────────────────────────────────
+        $topProducts = DB::table('ticket_products')
+            ->join('tickets', 'tickets.id', '=', 'ticket_products.ticket_id')
+            ->where('tickets.status', 'paid')
+            ->whereBetween('tickets.paid_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->groupBy('ticket_products.product_name')
+            ->select(
+                'ticket_products.product_name as name',
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(ticket_products.line_total_cents) as revenue'),
+                DB::raw('SUM(ticket_products.quantity) as qty')
+            )
+            ->orderByDesc('revenue')
+            ->limit(8)
+            ->get();
+
         $paymentMethods = DB::table('payments')
             ->join('tickets', 'tickets.id', '=', 'payments.ticket_id')
             ->whereBetween('payments.created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
@@ -308,10 +343,35 @@ class ReportsController extends Controller
                 'total'  => (int) $r->total,
             ]);
 
+        // ── Séparation Recette Services / Produits ────────────────────────
+        $servicesRevenue = (int) DB::table('ticket_services')
+            ->join('tickets', 'tickets.id', '=', 'ticket_services.ticket_id')
+            ->where('tickets.status', 'paid')
+            ->whereBetween('tickets.paid_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->sum('ticket_services.line_total_cents');
+
+        $productsRevenue = (int) DB::table('ticket_products')
+            ->join('tickets', 'tickets.id', '=', 'ticket_products.ticket_id')
+            ->where('tickets.status', 'paid')
+            ->whereBetween('tickets.paid_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->sum('ticket_products.line_total_cents');
+
+        // ── Statistiques Prépayé ──────────────────────────────────────────
+        $prepaidStats = [
+            'count'   => (clone $base)->where('status', 'paid')->where('is_prepaid', true)->count(),
+            'revenue' => (int) (clone $base)->where('status', 'paid')->where('is_prepaid', true)->sum('total_cents'),
+        ];
+
+        // ── Total des remises accordées ───────────────────────────────────
+        $totalDiscounts = (int) (clone $base)
+            ->where('status', 'paid')
+            ->sum('discount_cents');
+
         return compact(
-            'stats', 'revenueTrend', 'statusBreakdown', 'topServices',
+            'stats', 'revenueTrend', 'statusBreakdown', 'topServices', 'topProducts',
             'paymentMethods', 'shifts', 'vehicleBreakdown',
-            'expensesTotal', 'expensesByCategory', 'expensesList', 'expensesByMethod', 'netRevenue'
+            'expensesTotal', 'expensesByCategory', 'expensesList', 'expensesByMethod', 'netRevenue',
+            'servicesRevenue', 'productsRevenue', 'prepaidStats', 'totalDiscounts'
         );
     }    private function resolvePeriod(string $period, Request $request): array
     {

@@ -962,6 +962,45 @@ export default function Show({ ticket, settings = {} }) {
                             </table>
                         </div>
 
+                        {/* Produits vendus */}
+                        {ticket.products?.length > 0 && (
+                            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-5 py-4 border-b border-gray-100">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Produits</h3>
+                                </div>
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                        <tr className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                                            <th className="text-left px-5 py-2.5">Produit</th>
+                                            <th className="text-center px-3 py-2.5">Qté</th>
+                                            <th className="text-right px-3 py-2.5">P.U.</th>
+                                            <th className="text-right px-5 py-2.5">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {ticket.products.map(line => (
+                                            <tr key={line.id} className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-5 py-3 font-medium text-gray-800">
+                                                    {line.product_name}
+                                                    {line.is_free && (
+                                                        <span className="ml-2 text-[10px] font-semibold text-purple-600 bg-purple-100 rounded-full px-1.5 py-0.5">Gratuit</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-3 text-center text-gray-500">{line.quantity}</td>
+                                                <td className="px-3 py-3 text-right text-gray-500 tabular-nums">{formatMAD(line.unit_price_cents)}</td>
+                                                <td className="px-5 py-3 text-right font-bold tabular-nums">
+                                                    {line.is_free
+                                                        ? <span className="text-purple-600 font-semibold">Offert</span>
+                                                        : <span className="text-gray-900">{formatMAD(line.line_total_cents)}</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
                         {ticket.payment ? (
                             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
                                 <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-3">✓ Paiement encaissé</h3>

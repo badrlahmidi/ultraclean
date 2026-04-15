@@ -71,6 +71,15 @@ class UpdateTicketRequest extends FormRequest
             'notes'              => ['nullable', 'string', 'max:2000'],
             'payment_mode'       => ['nullable', 'string', 'in:cash,card,wire,advance,credit'],
             'estimated_duration' => ['nullable', 'integer', 'min:0', 'max:480'],
+
+            // ── Products (optional full-replacement) ─────────────────────────
+            // Omit the key entirely to leave existing product lines untouched.
+            'products'                          => ['sometimes', 'nullable', 'array'],
+            'products.*.sellable_product_id'    => ['required', 'exists:sellable_products,id'],
+            'products.*.quantity'               => ['required', 'numeric', 'min:0.01', 'max:1000'],
+            'products.*.unit_price_cents'       => ['required', 'integer', 'min:0'],
+            'products.*.discount_cents'         => ['nullable', 'integer', 'min:0'],
+            'products.*.is_free'                => ['nullable', 'boolean'],
         ];
     }
 
@@ -81,6 +90,8 @@ class UpdateTicketRequest extends FormRequest
             'assigned_to.exists'                   => 'L\'opérateur sélectionné est invalide ou inactif.',
             'services.*.service_id.required'       => 'Service invalide.',
             'services.*.unit_price_cents.required' => 'Prix manquant pour un service.',
+            'products.*.sellable_product_id.required' => 'Produit invalide.',
+            'products.*.unit_price_cents.required'    => 'Prix manquant pour un produit.',
         ];
     }
 }

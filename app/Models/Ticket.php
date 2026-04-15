@@ -295,6 +295,16 @@ class Ticket extends Model
 
     public function canTransitionTo(string $newStatus): bool
     {
+        // Prepaid tickets (paid + is_prepaid + not yet completed) can be started
+        if (
+            $this->status === self::STATUS_PAID
+            && $newStatus === self::STATUS_IN_PROGRESS
+            && $this->is_prepaid
+            && is_null($this->completed_at)
+        ) {
+            return true;
+        }
+
         return in_array($newStatus, self::TRANSITIONS[$this->status] ?? []);
     }
 

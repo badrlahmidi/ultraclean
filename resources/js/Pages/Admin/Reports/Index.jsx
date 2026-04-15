@@ -62,7 +62,7 @@ const TABS = [
     { id: 'shifts', label: 'Shifts', icon: CalendarClock },
 ];
 
-export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, topServices, paymentMethods, shifts, vehicleBreakdown, expensesTotal, expensesByCategory, expensesByMethod, expensesList, netRevenue, filters }) {
+export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, topServices, topProducts, paymentMethods, shifts, vehicleBreakdown, expensesTotal, expensesByCategory, expensesByMethod, expensesList, netRevenue, servicesRevenue, productsRevenue, prepaidStats, totalDiscounts, filters }) {
     const [from, setFrom] = useState(filters?.from ?? '');
     const [to, setTo] = useState(filters?.to ?? '');
     const [activeTab, setActiveTab] = useState(filters?.activeTab ?? 'tickets');
@@ -231,22 +231,57 @@ export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, top
                         </div>
 
                         {/* Top services */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
-                            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Top services</h2>
-                            {(topServices ?? []).length === 0
-                                ? <p className="text-center text-gray-400 py-8 text-sm">Aucune donnée</p>
-                                : <ResponsiveContainer width="100%" height={220}>
-                                    <BarChart data={topServices} layout="vertical" margin={{ left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                                        <XAxis type="number" tick={{ fontSize: 11 }} />
-                                        <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11 }} />
-                                        <Tooltip />
-                                        <Bar dataKey="count" name="Fois" radius={[0, 4, 4, 0]}>
-                                            {topServices.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            }
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Top services</h2>
+                                {(topServices ?? []).length === 0
+                                    ? <p className="text-center text-gray-400 py-8 text-sm">Aucune donnée</p>
+                                    : <ResponsiveContainer width="100%" height={220}>
+                                        <BarChart data={topServices} layout="vertical" margin={{ left: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                                            <XAxis type="number" tick={{ fontSize: 11 }} />
+                                            <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11 }} />
+                                            <Tooltip />
+                                            <Bar dataKey="count" name="Fois" radius={[0, 4, 4, 0]}>
+                                                {topServices.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                }
+                            </div>
+
+                            {/* Top produits */}
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Top produits vendus</h2>
+                                {(topProducts ?? []).length === 0
+                                    ? <p className="text-center text-gray-400 py-8 text-sm">Aucun produit vendu sur la période</p>
+                                    : <ResponsiveContainer width="100%" height={220}>
+                                        <BarChart data={topProducts} layout="vertical" margin={{ left: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                                            <XAxis type="number" tick={{ fontSize: 11 }} />
+                                            <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11 }} />
+                                            <Tooltip formatter={(v, name) => name === 'CA' ? formatMAD(v) : v} />
+                                            <Bar dataKey="count" name="Fois" radius={[0, 4, 4, 0]}>
+                                                {(topProducts ?? []).map((_, i) => <Cell key={i} fill={COLORS[(i + 4) % COLORS.length]} />)}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                }
+                            </div>
+                        </div>
+
+                        {/* Prépayés + Remises */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Tickets prépayés</h2>
+                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{prepaidStats?.count ?? 0}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">CA prépayé : <strong className="text-gray-700 dark:text-gray-200">{formatMAD(prepaidStats?.revenue ?? 0)}</strong></p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Remises accordées</h2>
+                                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">− {formatMAD(totalDiscounts ?? 0)}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total des remises sur tickets payés</p>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -260,6 +295,32 @@ export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, top
                             <StatCard label="Dépenses" value={formatMAD(expensesTotal ?? 0)} icon={ArrowDownRight} color="red" sub="Total période" />
                             <StatCard label="CA net" value={formatMAD(netRevenue ?? 0)} icon={Banknote} color={(netRevenue ?? 0) >= 0 ? 'blue' : 'red'} sub="CA − Dépenses" />
                             <StatCard label="Ticket moyen" value={formatMAD(stats?.avg_ticket ?? 0)} icon={BarChart3} color="amber" sub={`${stats?.paid_tickets ?? 0} tickets payés`} />
+                        </div>
+
+                        {/* Recette Services vs Produits */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+                                <ReceiptText size={15} className="text-blue-500" /> Recette : Services vs Produits
+                            </h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-xs">
+                                    <p className="font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-300 opacity-70 mb-1">Services</p>
+                                    <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{formatMAD(servicesRevenue ?? 0)}</p>
+                                </div>
+                                <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-xs">
+                                    <p className="font-semibold uppercase tracking-wider text-green-600 dark:text-green-300 opacity-70 mb-1">Produits</p>
+                                    <p className="text-xl font-bold text-green-700 dark:text-green-300">{formatMAD(productsRevenue ?? 0)}</p>
+                                </div>
+                                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 text-xs">
+                                    <p className="font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-300 opacity-70 mb-1">Remises</p>
+                                    <p className="text-xl font-bold text-amber-700 dark:text-amber-300">− {formatMAD(totalDiscounts ?? 0)}</p>
+                                </div>
+                                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-xs">
+                                    <p className="font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-300 opacity-70 mb-1">Prépayés</p>
+                                    <p className="text-xl font-bold text-purple-700 dark:text-purple-300">{prepaidStats?.count ?? 0} tickets</p>
+                                    <p className="text-xs text-purple-500 dark:text-purple-400 mt-0.5">{formatMAD(prepaidStats?.revenue ?? 0)}</p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Modes de paiement */}

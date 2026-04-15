@@ -221,6 +221,32 @@ class ShiftController extends Controller
             // table absente — Phase 2 non migrée
         }
 
+        // ── Séparation Recette Services / Produits du shift ───────────────
+        $servicesRevenue = (int) DB::table('ticket_services')
+            ->join('tickets', 'tickets.id', '=', 'ticket_services.ticket_id')
+            ->where('tickets.shift_id', $shift->id)
+            ->where('tickets.status', 'paid')
+            ->sum('ticket_services.line_total_cents');
+
+        $productsRevenue = (int) DB::table('ticket_products')
+            ->join('tickets', 'tickets.id', '=', 'ticket_products.ticket_id')
+            ->where('tickets.shift_id', $shift->id)
+            ->where('tickets.status', 'paid')
+            ->sum('ticket_products.line_total_cents');
+
+        // ── Prépayés du shift ─────────────────────────────────────────────
+        $prepaidCount = DB::table('tickets')
+            ->where('shift_id', $shift->id)
+            ->where('status', 'paid')
+            ->where('is_prepaid', true)
+            ->count();
+
+        // ── Total remises du shift ─────────────────────────────────────────
+        $totalDiscounts = (int) DB::table('tickets')
+            ->where('shift_id', $shift->id)
+            ->where('status', 'paid')
+            ->sum('discount_cents');
+
         $totalCollected = (int) (
             ($breakdown->cash_cents ?? 0) +
             ($breakdown->card_cents ?? 0) +
@@ -229,11 +255,15 @@ class ShiftController extends Controller
         );
 
         return Inertia::render('Caissier/Shift/ZReport', [
-            'shift'          => $shift->load('user'),
-            'breakdown'      => $breakdown,
-            'expenses'       => $expenses,
-            'expenses_total' => $expensesTotal,
-            'net_revenue'    => $totalCollected - $expensesTotal,
+            'shift'            => $shift->load('user'),
+            'breakdown'        => $breakdown,
+            'expenses'         => $expenses,
+            'expenses_total'   => $expensesTotal,
+            'net_revenue'      => $totalCollected - $expensesTotal,
+            'services_revenue' => $servicesRevenue,
+            'products_revenue' => $productsRevenue,
+            'prepaid_count'    => $prepaidCount,
+            'total_discounts'  => $totalDiscounts,
         ]);
     }
 }
