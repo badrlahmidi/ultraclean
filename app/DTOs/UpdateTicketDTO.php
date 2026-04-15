@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs;
 
 use App\Http\Requests\UpdateTicketRequest;
+use App\DTOs\ProductLineDTO;
 
 /**
  * Data Transfer Object for ticket updates.
@@ -12,7 +13,9 @@ use App\Http\Requests\UpdateTicketRequest;
  * Mirrors CreateTicketDTO with two intentional differences:
  *  1. services is nullable — null means "don't touch existing lines";
  *     a ServiceLineDTO[] means "replace all lines atomically".
- *  2. vehicle_type_id is excluded — the type is immutable after creation
+ *  2. products is nullable — null means "don't touch existing product lines";
+ *     a ProductLineDTO[] means "replace all product lines atomically".
+ *  3. vehicle_type_id is excluded — the type is immutable after creation
  *     because it underpins the stored unit prices on each service line.
  *     TicketService::update() reads it directly from the Ticket model.
  */
@@ -20,6 +23,7 @@ final readonly class UpdateTicketDTO
 {
     /**
      * @param  ServiceLineDTO[]|null  $services      null = leave service lines unchanged
+     * @param  ProductLineDTO[]|null  $products      null = leave product lines unchanged
      * @param  int[]                  $assistantIds
      */
     public function __construct(
@@ -34,6 +38,7 @@ final readonly class UpdateTicketDTO
         public ?int    $estimatedDuration = null,
         public ?string $paymentMode = null,
         public ?array  $services = null,
+        public ?array  $products = null,
     ) {}
 
     /**
@@ -50,6 +55,15 @@ final readonly class UpdateTicketDTO
             $serviceLines = array_map(
                 static fn (array $line) => ServiceLineDTO::fromArray($line),
                 $request->validated('services', []),
+            );
+        }
+
+        // Map product lines only when the key was explicitly submitted.
+        $productLines = null;
+        if ($request->has('products')) {
+            $productLines = array_map(
+                static fn (array $line) => ProductLineDTO::fromArray($line),
+                $request->validated('products', []),
             );
         }
 
@@ -71,6 +85,7 @@ final readonly class UpdateTicketDTO
             estimatedDuration:    $request->validated('estimated_duration'),
             paymentMode:          $request->validated('payment_mode'),
             services:             $serviceLines,
+            products:             $productLines,
         );
     }
 }

@@ -176,6 +176,11 @@ class TicketService
             $this->syncPrestations($ticket, $dto->services, $ticket->vehicle_type_id);
         }
 
+        // ── Replace product lines only when explicitly submitted ─────────────
+        if ($dto->products !== null) {
+            $this->syncProductLines($ticket, $dto->products, $ticket->client_id ?? 0);
+        }
+
         // ── Re-sync washer pivot whenever the lead assignment is set ─────────
         if ($dto->assignedTo !== null) {
             $this->syncWashers($ticket, $dto->assignedTo, $dto->assistantIds);
@@ -310,6 +315,26 @@ class TicketService
      *
      * @param  int[]  $assistantIds
      */
+    /**
+     * Atomically replace all product lines on a ticket.
+     *
+     * Existing rows are deleted first, then the new set is written.
+     * Passing an empty array clears all product lines.
+     *
+     * @param  ProductLineDTO[]  $lines
+     */
+    private function syncProductLines(Ticket $ticket, array $lines, int $clientId): void
+    {
+        // Remove all existing product lines before re-writing the new set.
+        TicketProduct::where('ticket_id', $ticket->id)->delete();
+
+        if (!empty($lines)) {
+            $this->attachProductLines($ticket, $lines, $clientId);
+        }
+
+        $ticket->recalculateTotals();
+    }
+
     private function syncWashers(Ticket $ticket, ?int $leadId, array $assistantIds): void
     {
         // Clear stale assignments before writing the current set.

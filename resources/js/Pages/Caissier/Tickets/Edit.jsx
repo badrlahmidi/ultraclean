@@ -1,27 +1,30 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
-import { Car, User, X, UserCog, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Car, User, X, UserCog, ChevronRight, ArrowLeft, Package } from 'lucide-react';
 import clsx from 'clsx';
 
 import VehicleOverlay from './components/VehicleOverlay';
 import ClientDrawer from './components/ClientDrawer';
 import WasherOverlay from './components/WasherOverlay';
 import ServiceGrid from './components/ServiceGrid';
+import ProductGrid from './components/ProductGrid';
 import TicketRecap from './components/TicketRecap';
 
 /**
  * Page caissier — Modification d'un ticket existant
  *
  * Props Inertia :
- *   ticket        — TicketResource (données actuelles)
- *   services      — { [category]: [svc…] }
- *   priceGrid     — { [serviceId]: { [vehicleTypeId]: priceCents } }
- *   vehicleTypes  — [{id, name}]
- *   brands        — [{id, name, slug, logo_url, models:[…]}]
- *   washers       — [{id, name, avatar}]
+ *   ticket           — TicketResource (données actuelles)
+ *   services         — { [category]: [svc…] }
+ *   priceGrid        — { [serviceId]: { [vehicleTypeId]: priceCents } }
+ *   vehicleTypes     — [{id, name}]
+ *   brands           — [{id, name, slug, logo_url, models:[…]}]
+ *   washers          — [{id, name, avatar}]
+ *   sellableProducts — [{id, name, barcode, selling_price_cents, current_stock, unit}]
+ *   atelierClientId  — int
  */
-export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands, washers = [] }) {
+export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands, washers = [], sellableProducts = [], atelierClientId }) {
 
     /* ── Initialisation depuis le ticket existant ── */
     const initBrand = ticket.vehicle_brand_id
@@ -42,6 +45,14 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
         variantLabel: null,
     }));
 
+    const initProductLines = (ticket.products ?? []).map(p => ({
+        sellable_product_id: p.sellable_product_id,
+        name: p.product_name,
+        unit_price_cents: p.unit_price_cents,
+        quantity: p.quantity,
+        is_free: p.is_free ?? false,
+    }));
+
     /* ── État principal ── */
     const [vehicle, setVehicle] = useState({
         brand: initBrand,
@@ -50,9 +61,13 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
     });
     const [client, setClient] = useState(ticket.client ?? null);
     const [lines, setLines] = useState(initLines);
+    const [productLines, setProductLines] = useState(initProductLines);
     const [washerId, setWasherId] = useState(ticket.assigned_to ?? null);
     const [notes, setNotes] = useState(ticket.notes ?? '');
     const [durationOverride, setDurationOverride] = useState(ticket.estimated_duration ?? null);
+
+    /* ── Onglet gauche ── */
+    const [leftTab, setLeftTab] = useState('services');
 
     /* ── Mobile ── */
     const [mobileView, setMobileView] = useState('services');
@@ -66,19 +81,27 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState({});
 
+    /* ── Client Atelier? ── */
+    const isAtelierClient = client?.id === atelierClientId;
+
     const autoDuration = useMemo(
         () => lines.reduce((s, l) => s + (l.duration_minutes ?? 0) * l.quantity, 0),
         [lines]
     );
-    const mobileTotal = useMemo(
+    const servicesSubtotal = useMemo(
         () => lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0),
         [lines]
     );
+    const productsSubtotal = useMemo(
+        () => productLines.reduce((s, l) => l.is_free ? s : s + l.unit_price_cents * l.quantity, 0),
+        [productLines]
+    );
+    const mobileTotal = servicesSubtotal + productsSubtotal;
     const mobileTotalFmt = `${(mobileTotal / 100).toFixed(0)} MAD`;
     const duration = { auto: durationOverride === null, minutes: durationOverride ?? autoDuration };
     const suggestedTypeId = vehicle.model?.suggested_vehicle_type_id ?? null;
 
-    /* ── Gestion des lignes ── */
+    /* ── Gestion des lignes services ── */
     function handleAddLine(line) {
         const variantLabel = line.price_variant_id
             ? (vehicleTypes.find(vt => vt.id === line.price_variant_id)?.name ?? null)
@@ -97,6 +120,36 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
             if (prev[idx].quantity <= 1) return prev.filter((_, i) => i !== idx);
             return prev.map((l, i) => i === idx ? { ...l, quantity: l.quantity - 1 } : l);
         });
+    }
+
+    /* ── Gestion des lignes produits ── */
+    function handleAddProduct(product) {
+        setProductLines(prev => {
+            const idx = prev.findIndex(l => l.sellable_product_id === product.id);
+            if (idx !== -1) return prev.map((l, i) => i === idx ? { ...l, quantity: l.quantity + 1 } : l);
+            return [...prev, {
+                sellable_product_id: product.id,
+                name: product.name,
+                unit_price_cents: product.selling_price_cents,
+                quantity: 1,
+                is_free: false,
+            }];
+        });
+    }
+
+    function handleRemoveProduct(productId) {
+        setProductLines(prev => {
+            const idx = prev.findIndex(l => l.sellable_product_id === productId);
+            if (idx === -1) return prev;
+            if (prev[idx].quantity <= 1) return prev.filter((_, i) => i !== idx);
+            return prev.map((l, i) => i === idx ? { ...l, quantity: l.quantity - 1 } : l);
+        });
+    }
+
+    function handleToggleFree(productId) {
+        setProductLines(prev =>
+            prev.map(l => l.sellable_product_id === productId ? { ...l, is_free: !l.is_free } : l)
+        );
     }
 
     function handleOpenVehicle(...args) {
@@ -127,6 +180,13 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                 quantity: l.quantity,
                 discount_cents: 0,
                 price_variant_id: l.price_variant_id ?? null,
+            })),
+            products: productLines.map(l => ({
+                sellable_product_id: l.sellable_product_id,
+                unit_price_cents: l.unit_price_cents,
+                quantity: l.quantity,
+                discount_cents: 0,
+                is_free: l.is_free,
             })),
         }, {
             onError: errs => { setErrors(errs); setProcessing(false); },
@@ -171,14 +231,25 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
 
                 {/* Onglets mobiles */}
                 <div className="flex shrink-0 border-b border-gray-200 bg-white lg:hidden">
-                    <button onClick={() => setMobileView('services')}
+                    <button onClick={() => { setMobileView('services'); setLeftTab('services'); }}
                         className={clsx('flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
-                            mobileView === 'services' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>
+                            mobileView === 'services' && leftTab === 'services' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>
                         Prestations
                         {lines.length > 0 && (
                             <span className="text-[11px] bg-blue-100 text-blue-600 font-bold rounded-full px-1.5 py-0.5 leading-none">{lines.length}</span>
                         )}
                     </button>
+                    {sellableProducts.length > 0 && (
+                        <button onClick={() => { setMobileView('services'); setLeftTab('produits'); }}
+                            className={clsx('flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
+                                mobileView === 'services' && leftTab === 'produits' ? 'border-green-600 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>
+                            <Package size={14} />
+                            Produits
+                            {productLines.length > 0 && (
+                                <span className="text-[11px] bg-green-100 text-green-600 font-bold rounded-full px-1.5 py-0.5 leading-none">{productLines.length}</span>
+                            )}
+                        </button>
+                    )}
                     <button onClick={() => setMobileView('recap')}
                         className={clsx('flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',
                             mobileView === 'recap' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700')}>
@@ -256,16 +327,67 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                         </div>
                     </div>
 
+                    {/* Desktop tabs: Prestations | Produits */}
+                    {sellableProducts.length > 0 && (
+                        <div className="hidden lg:flex shrink-0 border-b border-gray-100 bg-white px-4 gap-2 pt-2">
+                            <button
+                                onClick={() => setLeftTab('services')}
+                                className={clsx(
+                                    'flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-t-xl border-b-2 transition-colors',
+                                    leftTab === 'services'
+                                        ? 'border-blue-600 text-blue-600 bg-blue-50'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                )}>
+                                Prestations
+                                {lines.length > 0 && (
+                                    <span className={clsx('text-[11px] font-bold rounded-full px-1.5 py-0.5 leading-none',
+                                        leftTab === 'services' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600')}>
+                                        {lines.length}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setLeftTab('produits')}
+                                className={clsx(
+                                    'flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-t-xl border-b-2 transition-colors',
+                                    leftTab === 'produits'
+                                        ? 'border-green-600 text-green-600 bg-green-50'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                )}>
+                                <Package size={13} />
+                                Produits
+                                {productLines.length > 0 && (
+                                    <span className={clsx('text-[11px] font-bold rounded-full px-1.5 py-0.5 leading-none',
+                                        leftTab === 'produits' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600')}>
+                                        {productLines.reduce((s, l) => s + l.quantity, 0)}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    )}
+
                     <div className="flex-1 overflow-hidden flex flex-col">
-                        <ServiceGrid
-                            services={services}
-                            priceGrid={priceGrid}
-                            vehicleTypes={vehicleTypes}
-                            suggestedTypeId={suggestedTypeId}
-                            lines={lines}
-                            onAdd={handleAddLine}
-                            onRemove={handleRemoveLine}
-                        />
+                        {leftTab === 'produits' ? (
+                            <ProductGrid
+                                products={sellableProducts}
+                                productLines={productLines}
+                                isAtelierClient={isAtelierClient}
+                                isActive={leftTab === 'produits'}
+                                onAdd={handleAddProduct}
+                                onRemove={handleRemoveProduct}
+                                onToggleFree={handleToggleFree}
+                            />
+                        ) : (
+                            <ServiceGrid
+                                services={services}
+                                priceGrid={priceGrid}
+                                vehicleTypes={vehicleTypes}
+                                suggestedTypeId={suggestedTypeId}
+                                lines={lines}
+                                onAdd={handleAddLine}
+                                onRemove={handleRemoveLine}
+                            />
+                        )}
                     </div>
 
                     {/* Barre bas mobile */}
@@ -277,9 +399,9 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                             {mobileTotal > 0 && <span className="text-sm text-gray-500 truncate">— {mobileTotalFmt}</span>}
                         </div>
                         <div className="flex-1" />
-                        <button onClick={() => setMobileView('recap')} disabled={lines.length === 0}
+                        <button onClick={() => setMobileView('recap')} disabled={lines.length === 0 && productLines.length === 0}
                             className={clsx('flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all',
-                                lines.length > 0 ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
+                                (lines.length > 0 || productLines.length > 0) ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
                             Récap <ChevronRight size={14} />
                         </button>
                     </div>
@@ -292,6 +414,9 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                         vehicle={vehicle}
                         client={client}
                         lines={lines}
+                        productLines={productLines}
+                        isAtelierClient={isAtelierClient}
+                        sellableProducts={sellableProducts}
                         washers={washers}
                         duration={duration}
                         washer={washerId}
@@ -301,7 +426,10 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
                         submitLabel="Enregistrer les modifications"
                         onOpenVehicle={handleOpenVehicle}
                         onOpenClient={() => setShowClient(true)}
+                        onOpenProducts={() => { setLeftTab('produits'); setMobileView('services'); }}
                         onRemoveLine={handleRemoveLine}
+                        onRemoveProduct={handleRemoveProduct}
+                        onToggleFree={handleToggleFree}
                         onSetDuration={setDurationOverride}
                         onSetWasher={setWasherId}
                         onSetNotes={setNotes}

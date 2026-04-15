@@ -78,6 +78,7 @@ class TicketResource extends JsonResource
             'paidBy'               => UserResource::make($this->whenLoaded('paidBy')),
             'client'               => ClientResource::make($this->whenLoaded('client')),
             'shift'                => $this->whenLoaded('shift'),            'services'             => $this->whenLoaded('services'),
+            'products'             => $this->whenLoaded('products'),
             'washers'              => $this->whenLoaded('washers'),
             'payment'              => $this->whenLoaded('payment'),
 
