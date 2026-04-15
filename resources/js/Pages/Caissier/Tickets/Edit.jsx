@@ -229,7 +229,8 @@ export default function Edit({ ticket, services, priceGrid, vehicleTypes, brands
             {/* Layout POS identique au Create */}
             <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden">
 
-                {/* Onglets mobiles */}
+                {/* Onglets mobiles — "services" mobileView shows the left panel (ServiceGrid or ProductGrid
+                     depending on leftTab); "recap" shows the right recap panel. */}
                 <div className="flex shrink-0 border-b border-gray-200 bg-white lg:hidden">
                     <button onClick={() => { setMobileView('services'); setLeftTab('services'); }}
                         className={clsx('flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors',

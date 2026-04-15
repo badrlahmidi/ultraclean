@@ -322,6 +322,7 @@ class TicketService
      * Passing an empty array clears all product lines.
      *
      * @param  ProductLineDTO[]  $lines
+     * @param  int               $clientId  Used to determine Atelier-free eligibility.
      */
     private function syncProductLines(Ticket $ticket, array $lines, int $clientId): void
     {

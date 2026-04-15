@@ -141,8 +141,15 @@ class TicketController extends Controller
         $this->authorize('view', $ticket);
 
         $ticket->load([
-            'vehicleType', 'creator', 'assignedTo', 'paidBy',
-            'client', 'shift', 'services.service', 'products', 'payment.processedBy',
+            'vehicleType',
+            'creator',
+            'assignedTo',
+            'paidBy',
+            'client',
+            'shift',
+            'services.service',
+            'products',
+            'payment.processedBy',
         ]);        $settings = \App\Models\Setting::getMany([
             'center_name', 'center_subtitle', 'center_address', 'center_phone',
             'center_city', 'center_logo', 'receipt_footer',

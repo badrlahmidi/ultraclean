@@ -136,7 +136,7 @@ function TicketCard({ ticket, colKey, onStart, onComplete }) {
     const minutesLate = dueAt && isLate ? Math.round((Date.now() - dueAt.getTime()) / 60000) : null;
 
     const washerInitials = ticket.assigned_to
-        ? ticket.assigned_to.name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
+        ? ticket.assigned_to.name.split(' ').filter(Boolean).map(p => p[0]).join('').slice(0, 2).toUpperCase()
         : null;
 
     return (
