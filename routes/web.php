@@ -29,6 +29,7 @@ use App\Http\Controllers\Caissier\ExpenseController;
 use App\Http\Controllers\Caissier\PaymentController;
 use App\Http\Controllers\Caissier\PlanningController;
 use App\Http\Controllers\Caissier\ShiftController;
+use App\Http\Controllers\Caissier\SaleOrderController;
 use App\Http\Controllers\Caissier\TicketController;
 use App\Http\Controllers\Laveur\QueueController;
 use App\Http\Controllers\Laveur\StatsController as LaveurStatsController;
@@ -307,6 +308,13 @@ Route::middleware(['auth'])->group(function () {    // Profil utilisateur (tous 
 
         // Promotions (lecture seule — écriture réservée à l'admin)
         Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+
+        // Point de Vente (POS)
+        Route::get('/pos',                       [SaleOrderController::class, 'index'])->name('pos.index');
+        Route::get('/pos/nouveau',               [SaleOrderController::class, 'create'])->name('pos.create');
+        Route::post('/pos',                      [SaleOrderController::class, 'store'])->name('pos.store');
+        Route::get('/pos/{sale}',                [SaleOrderController::class, 'show'])->name('pos.show');
+        Route::post('/pos/{sale}/annuler',       [SaleOrderController::class, 'cancel'])->name('pos.cancel');
     });
 
     /*

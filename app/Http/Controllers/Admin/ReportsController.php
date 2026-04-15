@@ -367,11 +367,72 @@ class ReportsController extends Controller
             ->where('status', 'paid')
             ->sum('discount_cents');
 
+        // ── POS (Point de Vente) — ventes express ─────────────────────────
+        $posStats = [
+            'total_sales'     => 0,
+            'revenue'         => 0,
+            'avg_sale'        => 0,
+            'total_discounts' => 0,
+        ];
+        $posTopProducts  = collect();
+        $posPaymentMethods = collect();
+        $posRevenueTrend   = collect();
+
+        try {
+            $posBase = \App\Models\SaleOrder::whereBetween('created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+                ->where('status', 'paid');
+
+            $posStats = [
+                'total_sales'     => (clone $posBase)->count(),
+                'revenue'         => (int) (clone $posBase)->sum('total_cents'),
+                'avg_sale'        => (int) ((clone $posBase)->avg('total_cents') ?? 0),
+                'total_discounts' => (int) (clone $posBase)->sum('discount_cents'),
+            ];
+
+            $posTopProducts = DB::table('sale_order_lines')
+                ->join('sale_orders', 'sale_orders.id', '=', 'sale_order_lines.sale_order_id')
+                ->where('sale_orders.status', 'paid')
+                ->whereBetween('sale_orders.created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+                ->groupBy('sale_order_lines.product_name')
+                ->select(
+                    'sale_order_lines.product_name as name',
+                    DB::raw('COUNT(*) as count'),
+                    DB::raw('SUM(sale_order_lines.line_total_cents) as revenue'),
+                    DB::raw('SUM(sale_order_lines.quantity) as qty')
+                )
+                ->orderByDesc('revenue')
+                ->limit(10)
+                ->get();
+
+            $posPaymentMethods = (clone $posBase)
+                ->groupBy('payment_method')
+                ->select('payment_method as method', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_cents) as total'))
+                ->get();
+
+            $posRevenueTrend = (clone $posBase)
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->select(
+                    DB::raw('DATE(created_at) as day'),
+                    DB::raw('COUNT(*) as sales'),
+                    DB::raw('SUM(total_cents) as revenue')
+                )
+                ->orderBy('day')
+                ->get()
+                ->map(fn ($r) => [
+                    'date'    => $r->day,
+                    'revenue' => (int) $r->revenue,
+                    'sales'   => (int) $r->sales,
+                ]);
+        } catch (\Throwable) {
+            // sale_orders table may not exist in older environments
+        }
+
         return compact(
             'stats', 'revenueTrend', 'statusBreakdown', 'topServices', 'topProducts',
             'paymentMethods', 'shifts', 'vehicleBreakdown',
             'expensesTotal', 'expensesByCategory', 'expensesList', 'expensesByMethod', 'netRevenue',
-            'servicesRevenue', 'productsRevenue', 'prepaidStats', 'totalDiscounts'
+            'servicesRevenue', 'productsRevenue', 'prepaidStats', 'totalDiscounts',
+            'posStats', 'posTopProducts', 'posPaymentMethods', 'posRevenueTrend'
         );
     }    private function resolvePeriod(string $period, Request $request): array
     {

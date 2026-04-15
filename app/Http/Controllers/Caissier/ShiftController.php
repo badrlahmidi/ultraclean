@@ -49,11 +49,31 @@ class ShiftController extends Controller
                     COALESCE(SUM(CASE WHEN tickets.status = 'partial' THEN tickets.balance_due_cents ELSE 0 END), 0) as pending_balance_cents
                 ")
                 ->first();
+
+            // ── POS (sale_orders) breakdown for this shift ─────────────────
+            $posBreakdown = null;
+            try {
+                $posBreakdown = DB::table('sale_orders')
+                    ->where('shift_id', $shift->id)
+                    ->where('status', 'paid')
+                    ->selectRaw("
+                        COUNT(*) as pos_count,
+                        COALESCE(SUM(total_cents), 0) as pos_revenue_cents,
+                        COALESCE(SUM(CASE WHEN payment_method = 'cash'   THEN total_cents ELSE 0 END), 0) as pos_cash_cents,
+                        COALESCE(SUM(CASE WHEN payment_method = 'card'   THEN total_cents ELSE 0 END), 0) as pos_card_cents,
+                        COALESCE(SUM(CASE WHEN payment_method = 'mobile' THEN total_cents ELSE 0 END), 0) as pos_mobile_cents,
+                        COALESCE(SUM(CASE WHEN payment_method = 'wire'   THEN total_cents ELSE 0 END), 0) as pos_wire_cents
+                    ")
+                    ->first();
+            } catch (\Throwable) {
+                // sale_orders table may not exist yet in older environments
+            }
         }
 
         return Inertia::render('Caissier/Shift/Index', [
             'activeShift'      => $shift,
             'paymentBreakdown' => $paymentBreakdown,
+            'posBreakdown'     => $posBreakdown ?? null,
             'history'          => $history,
         ]);
     }
@@ -247,11 +267,41 @@ class ShiftController extends Controller
             ->where('status', 'paid')
             ->sum('discount_cents');
 
+        // ── POS (ventes express) du shift ─────────────────────────────────
+        $posRevenue   = 0;
+        $posCount     = 0;
+        $posDiscounts = 0;
+        $posBreakdown = null;
+        try {
+            $posStats = DB::table('sale_orders')
+                ->where('shift_id', $shift->id)
+                ->where('status', 'paid')
+                ->selectRaw("
+                    COUNT(*) as pos_count,
+                    COALESCE(SUM(total_cents), 0) as pos_revenue_cents,
+                    COALESCE(SUM(discount_cents), 0) as pos_discount_cents,
+                    COALESCE(SUM(CASE WHEN payment_method = 'cash'   THEN total_cents ELSE 0 END), 0) as pos_cash_cents,
+                    COALESCE(SUM(CASE WHEN payment_method = 'card'   THEN total_cents ELSE 0 END), 0) as pos_card_cents,
+                    COALESCE(SUM(CASE WHEN payment_method = 'mobile' THEN total_cents ELSE 0 END), 0) as pos_mobile_cents,
+                    COALESCE(SUM(CASE WHEN payment_method = 'wire'   THEN total_cents ELSE 0 END), 0) as pos_wire_cents
+                ")
+                ->first();
+            if ($posStats) {
+                $posRevenue   = (int) ($posStats->pos_revenue_cents ?? 0);
+                $posCount     = (int) ($posStats->pos_count ?? 0);
+                $posDiscounts = (int) ($posStats->pos_discount_cents ?? 0);
+                $posBreakdown = $posStats;
+            }
+        } catch (\Throwable) {
+            // sale_orders table may not exist yet
+        }
+
         $totalCollected = (int) (
             ($breakdown->cash_cents ?? 0) +
             ($breakdown->card_cents ?? 0) +
             ($breakdown->mobile_cents ?? 0) +
-            ($breakdown->wire_cents ?? 0)
+            ($breakdown->wire_cents ?? 0) +
+            $posRevenue
         );
 
         return Inertia::render('Caissier/Shift/ZReport', [
@@ -264,6 +314,10 @@ class ShiftController extends Controller
             'products_revenue' => $productsRevenue,
             'prepaid_count'    => $prepaidCount,
             'total_discounts'  => $totalDiscounts,
+            'pos_revenue'      => $posRevenue,
+            'pos_count'        => $posCount,
+            'pos_discounts'    => $posDiscounts,
+            'pos_breakdown'    => $posBreakdown,
         ]);
     }
 }

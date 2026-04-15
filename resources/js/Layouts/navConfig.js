@@ -100,6 +100,8 @@ export const ROLE_NAV = {
                 { label: 'Accès Caisse', href: 'caissier.dashboard', icon: ShieldCheck },
                 { label: 'Tickets en cours', href: 'caissier.tickets.index', icon: ListOrdered },
                 { label: 'Nouveau ticket', href: 'caissier.tickets.create', icon: FilePlus, accent: true },
+                { label: 'Point de Vente', href: 'caissier.pos.create', icon: ShoppingCart, accent: true },
+                { label: 'Ventes POS', href: 'caissier.pos.index', icon: ReceiptText },
                 { label: 'Historique paiements', href: 'admin.payments.index', icon: CreditCard },
                 { label: 'Shifts / Caisse', href: 'caissier.shift.index', icon: ShieldCheck },
                 { label: 'Dépenses', href: 'caissier.depenses.index', icon: Banknote },
@@ -199,6 +201,12 @@ export const ROLE_NAV = {
         { label: 'Tickets du jour', href: 'caissier.tickets.index', icon: ClipboardList },
         { label: 'Recherche tickets', href: 'caissier.tickets.search', icon: Search },
 
+        { type: 'divider' },
+        /* ── Point de Vente ── */
+        { label: 'Point de Vente', href: 'caissier.pos.create', icon: ShoppingCart, accent: true },
+        { label: 'Ventes du jour', href: 'caissier.pos.index', icon: ReceiptText },
+        { type: 'divider' },
+
         /* ── Rendez-vous (sous-menu) ── */
         {
             type: 'group', icon: CalendarDays, key: 'caissier-appointments',
@@ -250,6 +258,11 @@ export const PERMISSION_NAV = [
     { label: 'Nouveau ticket',        href: 'caissier.tickets.create', icon: Ticket, accent: true, permission: 'tickets.create' },
     { label: 'Tickets du jour',       href: 'caissier.tickets.index',  icon: ClipboardList,         permission: 'tickets.view' },
     { label: 'Recherche tickets',     href: 'caissier.tickets.search', icon: Search,                permission: 'tickets.view' },
+    { type: 'divider' },
+
+    /* ── Point de Vente ── */
+    { label: 'Point de Vente', href: 'caissier.pos.create', icon: ShoppingCart, accent: true, permission: 'pos.access' },
+    { label: 'Ventes du jour', href: 'caissier.pos.index',  icon: ReceiptText,                permission: 'pos.access' },
     { type: 'divider' },
 
     /* ── Rendez-vous admin ── */
