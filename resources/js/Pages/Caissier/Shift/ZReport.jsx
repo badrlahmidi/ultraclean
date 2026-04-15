@@ -65,7 +65,7 @@ const CATEGORY_LABELS = {
     autre: 'Autre',
 };
 
-export default function ZReport({ shift, breakdown, expenses, expenses_total, net_revenue }) {
+export default function ZReport({ shift, breakdown, expenses, expenses_total, net_revenue, services_revenue, products_revenue, prepaid_count, total_discounts }) {
     const bd = breakdown ?? {};
     const cash = bd.cash_cents ?? 0;
     const card = bd.card_cents ?? 0;
@@ -75,6 +75,10 @@ export default function ZReport({ shift, breakdown, expenses, expenses_total, ne
     const creditCount = bd.credit_count ?? 0;
     const pending = bd.pending_balance_cents ?? 0;
     const totalCollected = cash + card + mobile + wire;
+    const servicesRev = services_revenue ?? 0;
+    const productsRev = products_revenue ?? 0;
+    const prepaidCnt = prepaid_count ?? 0;
+    const discounts = total_discounts ?? 0;
 
     const diff = shift.difference_cents ?? 0;
 
@@ -122,17 +126,32 @@ export default function ZReport({ shift, breakdown, expenses, expenses_total, ne
                     </p>
                 </div>
 
-                {/* ── Tickets ── */}
+                {/* ── Activité tickets ── */}
                 <Section title="Activité tickets">
                     <table className="w-full">
                         <tbody>
                             <Row label="Total tickets" value={bd.ticket_count ?? 0} />
                             <Row label="Tickets payés" value={bd.paid_count ?? 0} />
+                            {prepaidCnt > 0 && <Row label="dont Prépayés" value={prepaidCnt} />}
                             {creditCount > 0 && <Row label="Crédits différés" value={`${creditCount}×`} />}
+                            {discounts > 0 && <Row label="Remises accordées" value={`− ${formatMAD(discounts)}`} />}
                             <Row label="CA tickets payés" value={formatMAD(bd.paid_revenue_cents ?? 0)} bold />
                         </tbody>
                     </table>
                 </Section>
+
+                {/* ── Détail Recette Services / Produits ── */}
+                {(servicesRev > 0 || productsRev > 0) && (
+                    <Section title="Recette : services vs produits">
+                        <table className="w-full">
+                            <tbody>
+                                <Row label="Recette services" value={formatMAD(servicesRev)} />
+                                <Row label="Recette produits" value={formatMAD(productsRev)} />
+                                <Row label="TOTAL" value={formatMAD(servicesRev + productsRev)} bold highlight />
+                            </tbody>
+                        </table>
+                    </Section>
+                )}
 
                 {/* ── Encaissements ── */}
                 <Section title="Ventilation encaissements">
