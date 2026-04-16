@@ -36,11 +36,10 @@ export default function POSCreate({ sellableProducts = [] }) {
     const [mobileView, setMobileView] = useState('products'); // 'products' | 'recap'
 
     /* ── Desktop detection — SSR-safe ── */
-    const [isDesktop, setIsDesktop] = useState(() =>
-        typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
-    );
+    const [isDesktop, setIsDesktop] = useState(true);
     useEffect(() => {
         const mql = window.matchMedia('(min-width: 1024px)');
+        setIsDesktop(mql.matches);
         const handler = (e) => setIsDesktop(e.matches);
         mql.addEventListener('change', handler);
         return () => mql.removeEventListener('change', handler);

@@ -364,15 +364,31 @@ class SaleOrderServiceTest extends TestCase
     public function test_sale_numbers_are_unique_and_sequential(): void
     {
         $sale1 = $this->service->create([
-            'client_id'   => null,
-            'products'    => [['sellable_product_id' => $this->product->id, 'unit_price_cents' => 100, 'quantity' => 1, 'discount_cents' => 0, 'is_free' => false]],
-            'discount_type' => null, 'discount_value' => null, 'payment_method' => 'cash',
+            'client_id'      => null,
+            'products'       => [[
+                'sellable_product_id' => $this->product->id,
+                'unit_price_cents'    => 100,
+                'quantity'            => 1,
+                'discount_cents'      => 0,
+                'is_free'             => false,
+            ]],
+            'discount_type'  => null,
+            'discount_value' => null,
+            'payment_method' => 'cash',
         ], $this->caissier);
 
         $sale2 = $this->service->create([
-            'client_id'   => null,
-            'products'    => [['sellable_product_id' => $this->product->id, 'unit_price_cents' => 100, 'quantity' => 1, 'discount_cents' => 0, 'is_free' => false]],
-            'discount_type' => null, 'discount_value' => null, 'payment_method' => 'card',
+            'client_id'      => null,
+            'products'       => [[
+                'sellable_product_id' => $this->product->id,
+                'unit_price_cents'    => 100,
+                'quantity'            => 1,
+                'discount_cents'      => 0,
+                'is_free'             => false,
+            ]],
+            'discount_type'  => null,
+            'discount_value' => null,
+            'payment_method' => 'card',
         ], $this->caissier);
 
         $this->assertNotEquals($sale1->sale_number, $sale2->sale_number);
