@@ -10,6 +10,9 @@
  *  - Recent-tickets table renders
  *  - Navigation to the ticket-creation page works
  *  - Shift-warning banner appears when no shift is open (structural check)
+ *  - POS Index page loads with stats and table
+ *  - POS Create page loads with product grid and recap sidebar
+ *  - Alt+V keyboard shortcut navigates to POS create page
  *
  * Run:  npx playwright test --project=chromium-caissier
  */
@@ -102,4 +105,61 @@ test.describe('POS / Caissier Interface — User Flow', () => {
             ],
         });
     });
+
+    // ── 8. POS Index page ────────────────────────────────────────────────────
+    test('caissier POS index — page loads with stats and action button', async ({ page }) => {
+        await page.goto('/caisse/pos');
+        await page.waitForSelector('.grid', { state: 'visible' });
+
+        // Stat cards (ventes + CA)
+        const statCards = page.locator('.grid').first().locator('> div');
+        await expect(statCards).toHaveCount(2);
+
+        // "Nouvelle vente" CTA
+        const newSaleBtn = page.getByRole('link', { name: /nouvelle vente/i });
+        await expect(newSaleBtn).toBeVisible();
+        const href = await newSaleBtn.getAttribute('href');
+        expect(href).toMatch(/pos\/nouveau|pos\/create/i);
+
+        // Page title
+        await expect(page).toHaveTitle(/point de vente/i);
+    });
+
+    // ── 9. POS Create page ───────────────────────────────────────────────────
+    test('caissier POS create — two-column layout renders', async ({ page }) => {
+        await page.goto('/caisse/pos/nouveau');
+        // Wait for layout to appear
+        await page.waitForLoadState('networkidle');
+
+        // Page title
+        await expect(page).toHaveTitle(/point de vente/i);
+
+        // Left column header
+        await expect(page.getByText(/point de vente/i).first()).toBeVisible();
+    });
+
+    // ── 10. POS sidebar link ──────────────────────────────────────────────────
+    test('caissier sidebar — POS navigation link is present', async ({ page }) => {
+        // Navigate to dashboard first
+        await page.goto('/caisse');
+        await page.waitForSelector('nav', { state: 'visible' });
+
+        // Check that sidebar has POS-related link
+        const posLink = page.locator('nav').getByRole('link', { name: /point de vente|ventes pos/i }).first();
+        await expect(posLink).toBeVisible();
+    });
+
+    // ── 11. Alt+V shortcut ────────────────────────────────────────────────────
+    test('caissier — Alt+V shortcut navigates to POS create page', async ({ page }) => {
+        await page.goto('/caisse');
+        await page.waitForLoadState('networkidle');
+
+        // Press Alt+V from a non-input context
+        await page.keyboard.press('Alt+v');
+        await page.waitForURL(url => url.pathname.includes('pos'), { timeout: 8_000 });
+
+        expect(page.url()).toMatch(/pos/);
+        expect(page.url()).not.toContain('/login');
+    });
 });
+

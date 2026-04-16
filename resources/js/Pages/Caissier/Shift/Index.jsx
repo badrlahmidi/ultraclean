@@ -2,7 +2,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { formatMAD, formatDateTime } from '@/utils/format';
 import { Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { AlertTriangle, Banknote, CheckCircle2, CreditCard, History, Printer, Smartphone, Wifi } from 'lucide-react';
+import { AlertTriangle, Banknote, CheckCircle2, CreditCard, History, Printer, ShoppingCart, Smartphone, Wifi } from 'lucide-react';
 import clsx from 'clsx';
 
 /* ─── Carte statistique (reserved for future use) ─── */
@@ -22,6 +22,56 @@ function _StatCard({ label, value, sub, color = 'slate', icon: Icon }) {
                     {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
                 </div>
                 {Icon && <Icon size={22} className="opacity-40 mt-1" />}
+            </div>
+        </div>
+    );
+}
+
+/* ─── POS récap (ventes express du shift) ─── */
+function POSBreakdown({ pd }) {
+    if (!pd) return null;
+
+    const count    = pd.pos_count ?? 0;
+    const revenue  = pd.pos_revenue_cents ?? 0;
+    const cash     = pd.pos_cash_cents ?? 0;
+    const card     = pd.pos_card_cents ?? 0;
+    const mobile   = pd.pos_mobile_cents ?? 0;
+    const wire     = pd.pos_wire_cents ?? 0;
+
+    if (count === 0) return null;
+
+    const rows = [
+        { icon: Banknote,   label: 'Espèces',  color: 'text-green-600',  bg: 'bg-green-50',  value: cash },
+        { icon: CreditCard, label: 'Carte',    color: 'text-blue-600',   bg: 'bg-blue-50',   value: card },
+        { icon: Smartphone, label: 'Mobile',   color: 'text-violet-600', bg: 'bg-violet-50', value: mobile },
+        { icon: Wifi,       label: 'Virement', color: 'text-cyan-600',   bg: 'bg-cyan-50',   value: wire },
+    ].filter(r => r.value > 0);
+
+    return (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-5">
+            <div className="flex items-center gap-2 mb-4">
+                <ShoppingCart size={16} className="text-emerald-600" />
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    Ventes POS du shift
+                </h3>
+                <span className="ml-auto text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full px-2 py-0.5">
+                    {count} vente{count > 1 ? 's' : ''}
+                </span>
+            </div>
+            <div className="space-y-2">
+                {rows.map(({ icon: Icon, label, color, bg, value }) => (
+                    <div key={label} className={clsx('flex items-center justify-between rounded-xl px-4 py-2.5', bg)}>
+                        <div className="flex items-center gap-2.5">
+                            <Icon size={15} className={color} />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+                        </div>
+                        <span className={clsx('text-sm font-bold', color)}>{formatMAD(value)}</span>
+                    </div>
+                ))}
+                <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-emerald-700 mt-1">
+                    <span className="text-sm font-bold text-white">Total POS encaissé</span>
+                    <span className="text-base font-bold text-white">{formatMAD(revenue)}</span>
+                </div>
             </div>
         </div>
     );
@@ -309,7 +359,7 @@ function CloseShiftForm({ shift, breakdown }) {
 }
 
 /* ─── Page principale ─── */
-export default function ShiftIndex({ activeShift, paymentBreakdown, history }) {
+export default function ShiftIndex({ activeShift, paymentBreakdown, posBreakdown, history }) {
     return (
         <AppLayout title="Shift / Caisse">
             <div className="max-w-2xl mx-auto space-y-8">
@@ -332,6 +382,9 @@ export default function ShiftIndex({ activeShift, paymentBreakdown, history }) {
                 ) : (
                     <OpenShiftForm />
                 )}
+
+                {/* Ventes POS du shift actif */}
+                {activeShift && <POSBreakdown pd={posBreakdown} />}
 
                 {/* Historique récent */}
                 {history.length > 0 && (

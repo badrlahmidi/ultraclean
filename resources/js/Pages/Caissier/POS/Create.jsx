@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import clsx from 'clsx';
 import { Package } from 'lucide-react';
 
@@ -34,6 +34,17 @@ export default function POSCreate({ sellableProducts = [] }) {
     const [showClient, setShowClient] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [mobileView, setMobileView] = useState('products'); // 'products' | 'recap'
+
+    /* ── Desktop detection — SSR-safe ── */
+    const [isDesktop, setIsDesktop] = useState(() =>
+        typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+    );
+    useEffect(() => {
+        const mql = window.matchMedia('(min-width: 1024px)');
+        const handler = (e) => setIsDesktop(e.matches);
+        mql.addEventListener('change', handler);
+        return () => mql.removeEventListener('change', handler);
+    }, []);
 
     /* ── Totaux ── */
     const subtotal = useMemo(
@@ -168,7 +179,7 @@ export default function POSCreate({ sellableProducts = [] }) {
                         products={sellableProducts}
                         productLines={productLines}
                         isAtelierClient={false}
-                        isActive={mobileView === 'products' || window.innerWidth >= 1024}
+                        isActive={mobileView === 'products' || isDesktop}
                         onAdd={handleAddProduct}
                         onRemove={handleRemoveProduct}
                         onToggleFree={() => {}}

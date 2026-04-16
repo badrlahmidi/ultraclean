@@ -65,7 +65,7 @@ const CATEGORY_LABELS = {
     autre: 'Autre',
 };
 
-export default function ZReport({ shift, breakdown, expenses, expenses_total, net_revenue, services_revenue, products_revenue, prepaid_count, total_discounts }) {
+export default function ZReport({ shift, breakdown, expenses, expenses_total, net_revenue, services_revenue, products_revenue, prepaid_count, total_discounts, pos_revenue, pos_count, pos_discounts, pos_breakdown }) {
     const bd = breakdown ?? {};
     const cash = bd.cash_cents ?? 0;
     const card = bd.card_cents ?? 0;
@@ -79,6 +79,10 @@ export default function ZReport({ shift, breakdown, expenses, expenses_total, ne
     const productsRev = products_revenue ?? 0;
     const prepaidCnt = prepaid_count ?? 0;
     const discounts = total_discounts ?? 0;
+    const posRevenue  = pos_revenue  ?? 0;
+    const posCount    = pos_count    ?? 0;
+    const posDisc     = pos_discounts ?? 0;
+    const posBd       = pos_breakdown ?? null;
 
     const diff = shift.difference_cents ?? 0;
 
@@ -178,6 +182,23 @@ export default function ZReport({ shift, breakdown, expenses, expenses_total, ne
                     )}
                 </Section>
 
+                {/* ── POS (Ventes express) ── */}
+                {posCount > 0 && (
+                    <Section title="Ventes POS (express)">
+                        <table className="w-full">
+                            <tbody>
+                                <Row label="Nombre de ventes" value={`${posCount}×`} />
+                                {posBd?.pos_cash_cents   > 0 && <Row label="Espèces"  value={formatMAD(posBd.pos_cash_cents)}   />}
+                                {posBd?.pos_card_cents   > 0 && <Row label="Carte"    value={formatMAD(posBd.pos_card_cents)}   />}
+                                {posBd?.pos_mobile_cents > 0 && <Row label="Mobile"   value={formatMAD(posBd.pos_mobile_cents)} />}
+                                {posBd?.pos_wire_cents   > 0 && <Row label="Virement" value={formatMAD(posBd.pos_wire_cents)}   />}
+                                {posDisc > 0 && <Row label="Remises accordées" value={`− ${formatMAD(posDisc)}`} />}
+                                <Row label="CA POS" value={formatMAD(posRevenue)} bold highlight />
+                            </tbody>
+                        </table>
+                    </Section>
+                )}
+
                 {/* ── Dépenses ── */}
                 {expenses.length > 0 && (
                     <Section title="Dépenses du shift">
@@ -200,6 +221,8 @@ export default function ZReport({ shift, breakdown, expenses, expenses_total, ne
                 <Section title="CA net">
                     <table className="w-full">
                         <tbody>
+                            <Row label="Encaissements tickets" value={formatMAD(totalCollected - posRevenue)} />
+                            {posCount > 0 && <Row label="Ventes POS" value={formatMAD(posRevenue)} />}
                             <Row label="Total encaissé" value={formatMAD(totalCollected)} />
                             <Row label="Total dépenses" value={`- ${formatMAD(expenses_total)}`} />
                             <Row label="CA NET" value={formatMAD(net_revenue)} bold highlight />

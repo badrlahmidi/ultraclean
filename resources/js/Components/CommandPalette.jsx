@@ -26,6 +26,8 @@ const STATIC_COMMANDS = {
         { id: 'tickets', label: 'Tickets du jour', group: 'Navigation', icon: Ticket, route: 'caissier.tickets.index' },
         { id: 'search-tickets', label: 'Recherche tickets', group: 'Navigation', icon: Search, route: 'caissier.tickets.search' },
         { id: 'clients', label: 'Clients', group: 'Navigation', icon: Users, route: 'caissier.clients.index' },
+        { id: 'pos-new', label: 'Nouvelle vente POS (Alt+V)', group: 'Action rapide', icon: Package, route: 'caissier.pos.create' },
+        { id: 'pos-list', label: 'Ventes POS', group: 'Navigation', icon: Package, route: 'caissier.pos.index' },
     ],
     laveur: [
         { id: 'queue', label: "File d'attente", group: 'Navigation', icon: LayoutDashboard, route: 'laveur.queue' },
