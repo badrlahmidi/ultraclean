@@ -41,12 +41,25 @@ use Inertia\Inertia;
 | Routes publiques (non authentifiées)
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', fn () => redirect()->route('reservations.create'));
 
 // Public ticket tracking (signed URL — prevents enumeration even if ULID leaks)
 Route::get('/ticket/{ulid}', [\App\Http\Controllers\PublicTicketController::class, 'show'])
     ->name('ticket.public')
     ->middleware(['signed', 'throttle:100,15']);
+
+// ── Réservation en ligne (visiteurs non authentifiés) ─────────────────────
+// Règle métier : un seul RDV par (service, heure pleine).
+Route::middleware(['throttle:30,10'])->group(function () {
+    Route::get('/reservations',                          [\App\Http\Controllers\PublicAppointmentController::class, 'create'])
+        ->name('reservations.create');
+    Route::post('/reservations',                         [\App\Http\Controllers\PublicAppointmentController::class, 'store'])
+        ->name('reservations.store');
+    Route::get('/reservations/confirmation/{ulid}',      [\App\Http\Controllers\PublicAppointmentController::class, 'confirmation'])
+        ->name('reservations.confirmation');
+    Route::get('/api/reservations/availability',         [\App\Http\Controllers\PublicAppointmentController::class, 'availability'])
+        ->name('reservations.availability');
+});
 
 // Webhook paiement async (HMAC-sécurisé, pas d'auth session)
 Route::post('/webhooks/payment/{ulid}', [\App\Http\Controllers\WebhookController::class, 'paymentConfirmed'])

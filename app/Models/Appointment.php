@@ -48,9 +48,11 @@ class Appointment extends Model
 
     protected $fillable = [
         'ulid', 'client_id', 'assigned_to', 'created_by', 'ticket_id',
+        'service_id',
         'scheduled_at', 'confirmed_at', 'estimated_duration',
         'vehicle_plate', 'vehicle_brand', 'vehicle_brand_id', 'vehicle_model_id', 'vehicle_type_id',
         'notes', 'cancelled_reason',
+        'guest_name', 'guest_phone', 'guest_email',
         'status', 'source',
     ];
 
@@ -106,7 +108,14 @@ class Appointment extends Model
     public function vehicleType(): BelongsTo
     {
         return $this->belongsTo(VehicleType::class, 'vehicle_type_id');
-    }    // ── Scopes ───────────────────────────────────────────────────────────
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    // ── Scopes ───────────────────────────────────────────────────────────
 
     /**
      * Scope : RDV confirmés/arrivés/in_progress qui chevauchent un créneau donné pour un laveur.
@@ -154,6 +163,41 @@ class Appointment extends Model
         return static::conflicting($washerId, $start, $durationMinutes, $excludeId)
             ->with('client:id,name')
             ->get(['id', 'ulid', 'client_id', 'scheduled_at', 'estimated_duration', 'status', 'vehicle_plate']);
+    }
+
+    // ── Règle métier publique : 1 seul RDV par (service, heure pleine) ────
+
+    /** Statuts considérés comme "occupant" un créneau horaire. */
+    public const SLOT_BLOCKING_STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_CONFIRMED,
+        self::STATUS_ARRIVED,
+        self::STATUS_IN_PROGRESS,
+    ];
+
+    /**
+     * Scope : RDV actifs pour un service dans le créneau horaire [hourStart, hourStart+1h[.
+     * Utilisé par la réservation publique pour appliquer la règle "1 service par heure".
+     */
+    public function scopeForServiceHour($query, int $serviceId, \Carbon\Carbon $hourStart)
+    {
+        $hourEnd = $hourStart->copy()->addHour();
+
+        return $query
+            ->where('service_id', $serviceId)
+            ->whereIn('status', self::SLOT_BLOCKING_STATUSES)
+            ->where('scheduled_at', '>=', $hourStart)
+            ->where('scheduled_at', '<', $hourEnd);
+    }
+
+    /**
+     * Vrai si un créneau (service, heure pleine) est déjà occupé par un RDV actif.
+     */
+    public static function isServiceHourTaken(int $serviceId, \Carbon\Carbon $hourStart, ?int $excludeId = null): bool
+    {
+        return static::forServiceHour($serviceId, $hourStart)
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->exists();
     }
 
     // ── State Machine ─────────────────────────────────────────────────────
