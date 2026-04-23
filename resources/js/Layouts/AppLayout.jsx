@@ -223,6 +223,7 @@ function AppLayout({ children, title }) {
             : auth.user?.role === 'caissier' ? 'caissier.dashboard' : 'laveur.queue')),
         'g t': () => auth.user?.role === 'caissier' && router.visit(safeRoute('caissier.tickets.create')),
         'g q': () => auth.user?.role !== 'laveur' && router.visit(safeRoute('laveur.queue')),
+        'alt+v': () => auth.user?.role === 'caissier' && router.visit(safeRoute('caissier.pos.create')),
     });
 
     // Ctrl+K → palette de commandes

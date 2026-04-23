@@ -60,9 +60,10 @@ const TABS = [
     { id: 'caisse', label: 'Caisse', icon: Wallet },
     { id: 'vehicles', label: 'Véhicules', icon: Car },
     { id: 'shifts', label: 'Shifts', icon: CalendarClock },
+    { id: 'pos', label: 'Point de Vente', icon: ReceiptText },
 ];
 
-export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, topServices, topProducts, paymentMethods, shifts, vehicleBreakdown, expensesTotal, expensesByCategory, expensesByMethod, expensesList, netRevenue, servicesRevenue, productsRevenue, prepaidStats, totalDiscounts, filters }) {
+export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, topServices, topProducts, paymentMethods, shifts, vehicleBreakdown, expensesTotal, expensesByCategory, expensesByMethod, expensesList, netRevenue, servicesRevenue, productsRevenue, prepaidStats, totalDiscounts, posStats, posTopProducts, posPaymentMethods, posRevenueTrend, filters }) {
     const [from, setFrom] = useState(filters?.from ?? '');
     const [to, setTo] = useState(filters?.to ?? '');
     const [activeTab, setActiveTab] = useState(filters?.activeTab ?? 'tickets');
@@ -555,6 +556,94 @@ export default function ReportsIndex({ stats, revenueTrend, statusBreakdown, top
                                     })}
                                 </div>
                             }
+                        </div>
+                    </div>
+                )}
+
+                {/* === POS (Point de Vente) === */}
+                {activeTab === 'pos' && (
+                    <div className="space-y-6">
+                        {/* Stats résumé POS */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <StatCard label="Ventes POS" value={posStats?.total_sales ?? 0} icon={ReceiptText} color="green" />
+                            <StatCard label="CA POS" value={formatMAD(posStats?.revenue ?? 0)} icon={TrendingUp} color="green" />
+                            <StatCard label="Vente moyenne" value={formatMAD(posStats?.avg_sale ?? 0)} icon={Banknote} color="blue" />
+                            <StatCard label="Remises accordées" value={formatMAD(posStats?.total_discounts ?? 0)} icon={MinusCircle} color="amber" />
+                        </div>
+
+                        {/* Tendance CA POS */}
+                        {(posRevenueTrend ?? []).length > 0 && (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+                                    <TrendingUp size={15} className="text-emerald-500" /> Tendance CA POS
+                                </h2>
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <LineChart data={posRevenueTrend}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                                        <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 100).toFixed(0)}`} />
+                                        <Tooltip content={<MadTooltip />} />
+                                        <Line type="monotone" dataKey="revenue" name="CA" stroke="#10b981" strokeWidth={2} dot={false} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Top produits POS */}
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+                                    <ReceiptText size={15} className="text-emerald-500" /> Top produits vendus (POS)
+                                </h2>
+                                {(posTopProducts ?? []).length === 0
+                                    ? <p className="text-center text-gray-400 py-8 text-sm">Aucune vente POS sur la période</p>
+                                    : <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b dark:border-gray-700 text-xs text-gray-400">
+                                                <th className="text-left pb-2 font-medium">Produit</th>
+                                                <th className="text-center pb-2 font-medium">Qté</th>
+                                                <th className="text-right pb-2 font-medium">CA</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
+                                            {posTopProducts.map((p, i) => (
+                                                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                                                    <td className="py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: COLORS[i % COLORS.length] }}>{i + 1}</span>
+                                                            <span className="text-gray-700 dark:text-gray-300 truncate max-w-[160px]">{p.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-2 text-center text-gray-500 dark:text-gray-400">{Number(p.qty).toFixed(0)}</td>
+                                                    <td className="py-2 text-right font-semibold text-emerald-700 dark:text-emerald-400">{formatMAD(p.revenue)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                }
+                            </div>
+
+                            {/* Modes de paiement POS */}
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 shadow-sm p-5">
+                                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+                                    <Wallet size={15} className="text-blue-500" /> Modes de paiement POS
+                                </h2>
+                                {(posPaymentMethods ?? []).length === 0
+                                    ? <p className="text-center text-gray-400 py-8 text-sm">Aucun paiement POS sur la période</p>
+                                    : <div className="space-y-2">
+                                        {posPaymentMethods.map((m, i) => (
+                                            <div key={i} className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/60">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
+                                                    <span className="text-gray-700 dark:text-gray-300 capitalize">{METHOD_LABELS[m.method] ?? m.method}</span>
+                                                    <span className="text-gray-400 dark:text-gray-500 text-xs">({m.count})</span>
+                                                </div>
+                                                <span className="font-semibold text-emerald-700 dark:text-emerald-400 text-sm">{formatMAD(m.total)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 )}

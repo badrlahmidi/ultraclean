@@ -52,6 +52,11 @@ class Shift extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function saleOrders(): HasMany
+    {
+        return $this->hasMany(\App\Models\SaleOrder::class);
+    }
+
     public function expenses(): HasMany
     {
         return $this->hasMany(\App\Models\Expense::class);

@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Ticket, TrendingUp, Clock, CheckCircle, Plus, ChevronRight, Banknote, Wallet } from 'lucide-react';
+import { Ticket, TrendingUp, Clock, CheckCircle, Plus, ChevronRight, Banknote, Wallet, ShoppingCart, ReceiptText } from 'lucide-react';
 import { formatMAD } from '@/utils/format';
 import StatusBadge from '@/Components/StatusBadge';
 
@@ -71,16 +71,38 @@ export default function CaissierDashboard({ stats, recentTickets, activeShift })
                 )}
 
                 {/* Actions rapides */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                     <Link href={route('caissier.tickets.create')}
                         className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors">
                         <Plus size={16} /> Nouveau ticket
+                    </Link>
+                    <Link href={route('caissier.pos.create')}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors">
+                        <ShoppingCart size={16} /> Point de Vente
                     </Link>
                     <Link href={route('caissier.tickets.index')}
                         className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold transition-colors">
                         Voir tous les tickets
                     </Link>
                 </div>
+
+                {/* Stats POS */}
+                {(stats.pos_sales_today > 0 || stats.pos_revenue_today > 0) && (
+                    <div className="grid grid-cols-2 gap-3">
+                        <StatCard
+                            label="Ventes POS aujourd'hui"
+                            value={stats.pos_sales_today}
+                            icon={ShoppingCart}
+                            color="bg-emerald-500"
+                        />
+                        <StatCard
+                            label="CA POS aujourd'hui"
+                            value={formatMAD(stats.pos_revenue_today)}
+                            icon={ReceiptText}
+                            color="bg-teal-500"
+                        />
+                    </div>
+                )}
 
                 {/* Tickets récents */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

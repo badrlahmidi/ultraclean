@@ -29,6 +29,7 @@ use App\Http\Controllers\Caissier\ExpenseController;
 use App\Http\Controllers\Caissier\PaymentController;
 use App\Http\Controllers\Caissier\PlanningController;
 use App\Http\Controllers\Caissier\ShiftController;
+use App\Http\Controllers\Caissier\SaleOrderController;
 use App\Http\Controllers\Caissier\TicketController;
 use App\Http\Controllers\Laveur\QueueController;
 use App\Http\Controllers\Laveur\StatsController as LaveurStatsController;
@@ -40,12 +41,25 @@ use Inertia\Inertia;
 | Routes publiques (non authentifiées)
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', fn () => redirect()->route('reservations.create'));
 
 // Public ticket tracking (signed URL — prevents enumeration even if ULID leaks)
 Route::get('/ticket/{ulid}', [\App\Http\Controllers\PublicTicketController::class, 'show'])
     ->name('ticket.public')
     ->middleware(['signed', 'throttle:100,15']);
+
+// ── Réservation en ligne (visiteurs non authentifiés) ─────────────────────
+// Règle métier : un seul RDV par (service, heure pleine).
+Route::middleware(['throttle:30,10'])->group(function () {
+    Route::get('/reservations',                          [\App\Http\Controllers\PublicAppointmentController::class, 'create'])
+        ->name('reservations.create');
+    Route::post('/reservations',                         [\App\Http\Controllers\PublicAppointmentController::class, 'store'])
+        ->name('reservations.store');
+    Route::get('/reservations/confirmation/{ulid}',      [\App\Http\Controllers\PublicAppointmentController::class, 'confirmation'])
+        ->name('reservations.confirmation');
+    Route::get('/api/reservations/availability',         [\App\Http\Controllers\PublicAppointmentController::class, 'availability'])
+        ->name('reservations.availability');
+});
 
 // Webhook paiement async (HMAC-sécurisé, pas d'auth session)
 Route::post('/webhooks/payment/{ulid}', [\App\Http\Controllers\WebhookController::class, 'paymentConfirmed'])
@@ -307,6 +321,13 @@ Route::middleware(['auth'])->group(function () {    // Profil utilisateur (tous 
 
         // Promotions (lecture seule — écriture réservée à l'admin)
         Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+
+        // Point de Vente (POS)
+        Route::get('/pos',                       [SaleOrderController::class, 'index'])->name('pos.index');
+        Route::get('/pos/nouveau',               [SaleOrderController::class, 'create'])->name('pos.create');
+        Route::post('/pos',                      [SaleOrderController::class, 'store'])->name('pos.store');
+        Route::get('/pos/{sale}',                [SaleOrderController::class, 'show'])->name('pos.show');
+        Route::post('/pos/{sale}/annuler',       [SaleOrderController::class, 'cancel'])->name('pos.cancel');
     });
 
     /*

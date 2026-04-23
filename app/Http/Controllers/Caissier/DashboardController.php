@@ -41,16 +41,30 @@ class DashboardController extends Controller
 
         $ticketsToday = Ticket::whereDate('created_at', $today);
 
+        // POS ventes du jour
+        $posSalesToday = 0;
+        $posRevenueToday = 0;
+        try {
+            $posQuery = \App\Models\SaleOrder::whereDate('created_at', $today)->where('status', 'paid');
+            $posSalesToday   = $posQuery->count();
+            $posRevenueToday = (int) $posQuery->sum('total_cents');
+        } catch (\Throwable) {
+            // sale_orders table may not exist yet
+        }
+
         $stats = [
-            'tickets_today'   => (clone $ticketsToday)->count(),
-            'tickets_pending' => Ticket::where('status', 'pending')->count(),
-            'tickets_wip'     => Ticket::where('status', 'in_progress')->count(),
+            'tickets_today'    => (clone $ticketsToday)->count(),
+            'tickets_pending'  => Ticket::where('status', 'pending')->count(),
+            'tickets_wip'      => Ticket::where('status', 'in_progress')->count(),
             // CA cohérent : basé sur date de paiement, pas de création du ticket
-            'revenue_today'   => $revenueToday,
+            'revenue_today'    => $revenueToday,
             // CA spécifique au shift ouvert (null si aucun shift)
-            'revenue_shift'   => $revenueShift,
-            'expenses_shift'  => $expensesShift,
-            'net_shift'       => $revenueShift !== null ? $revenueShift - $expensesShift : null,
+            'revenue_shift'    => $revenueShift,
+            'expenses_shift'   => $expensesShift,
+            'net_shift'        => $revenueShift !== null ? $revenueShift - $expensesShift : null,
+            // POS Express
+            'pos_sales_today'  => $posSalesToday,
+            'pos_revenue_today' => $posRevenueToday,
         ];
 
         $recentTickets = Ticket::with(['vehicleType', 'services'])

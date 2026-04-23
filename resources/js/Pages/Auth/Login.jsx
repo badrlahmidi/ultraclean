@@ -1,8 +1,8 @@
-﻿import { Head, useForm } from '@inertiajs/react';
+﻿import { Head, useForm, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     Eye, EyeOff, LogIn, Lock, User as UserIcon,
-    ShieldCheck, CheckCircle2,
+    ShieldCheck, CheckCircle2, Calendar,
 } from 'lucide-react';
 import InputError from '@/Components/InputError';
 import clsx from 'clsx';
@@ -316,6 +316,18 @@ export default function Login({ status, centerName, centerLogo }) {
                                         </>
                                     )}
                                 </button>
+
+                                {/* Lien vers la réservation publique */}
+                                <div className="pt-2 text-center border-t border-gray-100 mt-4">
+                                    <p className="text-xs text-gray-500 mb-2">Vous êtes un client ?</p>
+                                    <Link
+                                        href={route('reservations.create')}
+                                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                        <Calendar size={14} />
+                                        Réserver un lavage en ligne
+                                    </Link>
+                                </div>
                             </form>
                         </div>
 
