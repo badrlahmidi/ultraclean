@@ -50,8 +50,8 @@ export default function POSIndex({ sales, stats, filters }) {
             search:    overrides.search   ?? search,
             status:    overrides.status   ?? status,
             today:     overrides.today    ?? (overrides.date_from || overrides.date_to ? undefined : (!dateFrom && !dateTo ? 1 : undefined)),
-            date_from: overrides.date_from ?? dateFrom || undefined,
-            date_to:   overrides.date_to   ?? dateTo   || undefined,
+            date_from: (overrides.date_from ?? dateFrom) || undefined,
+            date_to:   (overrides.date_to   ?? dateTo)   || undefined,
         }, { preserveState: true, replace: true });
     }
 

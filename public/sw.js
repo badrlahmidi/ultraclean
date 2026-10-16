@@ -10,7 +10,7 @@
  * Cache names are versioned so old entries are cleaned up on SW activation.
  */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const SHELL_CACHE   = `ultraclean-shell-${CACHE_VERSION}`;
 const ASSET_CACHE   = `ultraclean-assets-${CACHE_VERSION}`;
 const ALL_CACHES    = [SHELL_CACHE, ASSET_CACHE];

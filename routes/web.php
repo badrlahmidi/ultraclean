@@ -43,6 +43,12 @@ use Inertia\Inertia;
 */
 Route::get('/', fn () => redirect()->route('reservations.create'));
 
+// Public, self-contained fallback pre-cached by the service worker. It does not
+// need Inertia's shared settings or any database access to render.
+Route::view('/offline', 'offline')
+    ->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class)
+    ->name('offline');
+
 // Public ticket tracking (signed URL — prevents enumeration even if ULID leaks)
 Route::get('/ticket/{ulid}', [\App\Http\Controllers\PublicTicketController::class, 'show'])
     ->name('ticket.public')
