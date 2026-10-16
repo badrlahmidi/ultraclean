@@ -21,7 +21,7 @@
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
         <!-- Scripts -->
-        @routes(['nonce' => \Illuminate\Support\Facades\Vite::cspNonce()])
+        @routes(nonce: \Illuminate\Support\Facades\Vite::cspNonce())
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
