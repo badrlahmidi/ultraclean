@@ -1,0 +1,1 @@
+import{j as r}from"./app-DOCiQ9zB.js";import t from"./ErrorPage-LfqeniSk.js";import"./createLucideIcon-CZoIVSNa.js";import"./triangle-alert-CoPs36_q.js";import"./waves-Cp5qbLML.js";import"./arrow-left-DsmVScUx.js";function e(){return r.jsx(t,{status:403})}export{e as default};
